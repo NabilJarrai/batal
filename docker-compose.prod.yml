@@ -1,25 +1,35 @@
-version: "3.8"
-
 services:
   postgres:
+    image: postgres:15-alpine
     environment:
+      POSTGRES_DB: batal_db
+      POSTGRES_USER: batal_user
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - batal-network
     restart: unless-stopped
 
   minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
+    networks:
+      - batal-network
     restart: unless-stopped
 
   backend:
     image: ${BACKEND_IMAGE:-ghcr.io/nabiljarrai/batal-backend:latest}
     environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/batal_db
+      SPRING_DATASOURCE_USERNAME: batal_user
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      MINIO_ENDPOINT: http://minio:9000
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
@@ -28,6 +38,11 @@ services:
       SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+    depends_on:
+      - postgres
+      - minio
+    networks:
+      - batal-network
     restart: unless-stopped
 
   frontend:
@@ -35,6 +50,10 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: https://${DOMAIN:-batal.nabiljarrai.com}/api
       NODE_ENV: production
+    depends_on:
+      - backend
+    networks:
+      - batal-network
     restart: unless-stopped
 
 volumes:
@@ -45,4 +64,4 @@ volumes:
 
 networks:
   batal-network:
-    driver: bridge
+    external: true
