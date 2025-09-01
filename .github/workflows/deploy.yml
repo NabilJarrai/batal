@@ -7,8 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME_FRONTEND: ${{ github.repository }}-frontend
-  IMAGE_NAME_BACKEND: ${{ github.repository }}-backend
+  REPO_NAME: ${{ github.repository }}
 
 jobs:
   build-and-deploy:
@@ -20,6 +19,11 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+    
+    - name: Set lowercase repository name
+      run: |
+        echo "IMAGE_NAME_FRONTEND=$(echo ${{ env.REPO_NAME }}-frontend | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+        echo "IMAGE_NAME_BACKEND=$(echo ${{ env.REPO_NAME }}-backend | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
     - name: Log in to Container Registry
       uses: docker/login-action@v3
