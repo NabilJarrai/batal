@@ -2,7 +2,7 @@ name: Deploy Batal Academy
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, develop ]
   workflow_dispatch:
 
 env:
@@ -73,14 +73,34 @@ jobs:
         username: ${{ secrets.VPS_USER }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          # Navigate to project directory
-          cd /opt/batal || exit 1
+          # Determine environment based on branch
+          if [[ "${{ github.ref_name }}" == "develop" ]]; then
+            ENV="dev"
+            DOMAIN="batal.dev.nabiljarrai.com"
+            PROJECT_DIR="/opt/batal-dev"
+          else
+            ENV="prod"
+            DOMAIN="batal.nabiljarrai.com" 
+            PROJECT_DIR="/opt/batal"
+          fi
           
-          # Pull latest changes
-          git pull origin main
+          echo "Deploying to $ENV environment with domain $DOMAIN"
+          
+          # Create project directory if it doesn't exist
+          sudo mkdir -p $PROJECT_DIR
+          cd $PROJECT_DIR || exit 1
+          
+          # Clone or pull latest changes
+          if [ ! -d ".git" ]; then
+            sudo git clone https://github.com/NabilJarrai/batal.git .
+          fi
+          
+          sudo git fetch origin
+          sudo git checkout ${{ github.ref_name }}
+          sudo git pull origin ${{ github.ref_name }}
           
           # Create environment file from secrets
-          cat > .env << EOF
+          sudo tee .env > /dev/null << EOF
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}
           MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}
@@ -91,21 +111,37 @@ jobs:
           SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }}
           FRONTEND_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
           BACKEND_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
+          DOMAIN=$DOMAIN
           EOF
           
           # Login to GitHub Container Registry
-          echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+          echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
           
           # Pull latest images
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
+          sudo docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
+          sudo docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
           
           # Deploy with docker-compose
-          docker-compose -f docker-compose.prod.yml down
-          docker-compose -f docker-compose.prod.yml up -d
+          sudo docker-compose -f docker-compose.prod.yml down || true
+          sudo docker-compose -f docker-compose.prod.yml up -d
+          
+          # Set up nginx configuration for the domain
+          sudo cp nginx-batal.conf /etc/nginx/sites-available/batal-$ENV
+          sudo sed -i "s/batal\.nabiljarrai\.com/$DOMAIN/g" /etc/nginx/sites-available/batal-$ENV
+          sudo ln -sf /etc/nginx/sites-available/batal-$ENV /etc/nginx/sites-enabled/
+          
+          # Get SSL certificate if it doesn't exist
+          if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+            sudo certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email ${{ secrets.ADMIN_EMAIL }}
+          fi
+          
+          # Reload nginx
+          sudo nginx -t && sudo systemctl reload nginx
           
           # Clean up old images
-          docker image prune -f
+          sudo docker image prune -f
           
           # Show status
-          docker-compose -f docker-compose.prod.yml ps
+          sudo docker-compose -f docker-compose.prod.yml ps
+          
+          echo "Deployment completed! Application accessible at: https://$DOMAIN"

@@ -43,6 +43,11 @@ SPRING_MAIL_USERNAME = your_email@gmail.com
 SPRING_MAIL_PASSWORD = your_app_password
 ```
 
+### Admin Configuration
+```
+ADMIN_EMAIL = your_email@example.com
+```
+
 ## SSH Key Setup
 
 ### 1. Generate SSH Key (if you don't have one)

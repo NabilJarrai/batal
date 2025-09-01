@@ -1,13 +1,18 @@
 # Batal Academy - GitHub Actions Deployment Guide
 
-This guide will help you deploy the Batal Football Academy Management System using GitHub Actions to your VPS at `batal.nabiljarrai.com`.
+This guide will help you deploy the Batal Football Academy Management System using GitHub Actions to your VPS with branch-based environments.
+
+## Environment Strategy
+
+- **Develop Branch** → `batal.dev.nabiljarrai.com` (Staging)
+- **Master Branch** → `batal.nabiljarrai.com` (Production)
 
 ## Prerequisites
 
 - VPS with Ubuntu/Debian (your VPS: 31.97.216.38)
 - GitHub repository with Actions enabled
 - SSH access to your VPS
-- Domain/subdomain configured (batal.nabiljarrai.com)
+- Domain/subdomain configured (both dev and prod domains)
 
 ## Deployment Process
 
@@ -17,17 +22,22 @@ Connect to your VPS and run the setup script:
 
 ```bash
 ssh your-username@31.97.216.38
-git clone https://github.com/NabilJarrai/batal.git /tmp/batal-setup
-cd /tmp/batal-setup
-sudo bash deploy.sh
+
+# Install initial dependencies
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y git nginx certbot python3-certbot-nginx
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+
+# Install Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/download/v2.21.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
 ```
 
-This will:
-- Install Docker, Nginx, Certbot
-- Setup project directory at `/opt/batal`
-- Configure Nginx reverse proxy
-- Generate SSL certificate
-- Clone your repository
+This will prepare your server for automated deployments.
 
 ### 2. Configure GitHub Secrets
 
