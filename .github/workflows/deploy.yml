@@ -119,15 +119,18 @@ jobs:
           DOMAIN="$DOMAIN"
           EOF
           
-          # Login to GitHub Container Registry
+          # Login to GitHub Container Registry (preserve auth for root)
           echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
           
-          # Pull latest images
+          # Pull latest images with force
           sudo docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
           sudo docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
           
-          # Deploy with docker compose
-          sudo docker compose -f docker-compose.prod.yml down || true
+          # Stop and remove containers to force image refresh
+          sudo docker compose -f docker-compose.prod.yml down
+          sudo docker system prune -f
+          
+          # Deploy with docker compose (will use latest pulled images)
           sudo docker compose -f docker-compose.prod.yml up -d
           
           # Set up nginx configuration for the domain
