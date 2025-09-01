@@ -100,3 +100,9 @@ temp/
 # Application specific
 uploads/
 storage/
+
+# Environment files
+.env
+.env.local
+.env.prod
+.env.production
