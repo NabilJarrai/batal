@@ -19,6 +19,9 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     networks:
       - batal-network
     restart: unless-stopped
@@ -38,6 +41,8 @@ services:
       SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+    ports:
+      - "8080:8080"
     depends_on:
       - postgres
       - minio
@@ -50,6 +55,8 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: https://${DOMAIN:-batal.nabiljarrai.com}/api
       NODE_ENV: production
+    ports:
+      - "3000:3000"
     depends_on:
       - backend
     networks:
