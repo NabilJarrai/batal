@@ -21,7 +21,6 @@ services:
   backend:
     image: ${BACKEND_IMAGE:-ghcr.io/nabiljarrai/batal-backend:develop}
     container_name: batal-backend-dev
-    pull_policy: always
     environment:
       SPRING_PROFILES_ACTIVE: dev
       SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
@@ -36,7 +35,6 @@ services:
   frontend:
     image: ${FRONTEND_IMAGE:-ghcr.io/nabiljarrai/batal-frontend:develop}
     container_name: batal-frontend-dev
-    pull_policy: always
     environment:
       NEXT_PUBLIC_API_URL: https://${DOMAIN:-batal.dev.nabiljarrai.com}/api
     ports:

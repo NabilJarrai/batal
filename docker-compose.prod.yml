@@ -10,7 +10,6 @@ services:
 
   backend:
     image: ${BACKEND_IMAGE:-ghcr.io/nabiljarrai/batal-backend:latest}
-    pull_policy: always
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
@@ -22,7 +21,6 @@ services:
 
   frontend:
     image: ${FRONTEND_IMAGE:-ghcr.io/nabiljarrai/batal-frontend:latest}
-    pull_policy: always
     environment:
       NEXT_PUBLIC_API_URL: https://${DOMAIN:-batal.nabiljarrai.com}/api
     ports:

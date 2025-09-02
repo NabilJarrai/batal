@@ -139,16 +139,48 @@ jobs:
             sudo docker compose $COMPOSE_FILES down || true
             sudo docker system prune -f
 
+            # Remove pull_policy temporarily to avoid auth issues
+            sudo sed -i 's/pull_policy: always/# pull_policy: always/g' docker-compose.*.yml || true
+
             # Deploy with docker compose (will use latest pulled images)
             sudo docker compose $COMPOSE_FILES up -d
 
-            # Wait a moment for containers to start
-            echo "Waiting for containers to start..."
-            sleep 30
+            # Verify deployment success - fail fast if services don't start
+            echo "Verifying deployment..."
 
-            # Check container status
+            # Wait for containers to be in running state (max 60 seconds)
             echo "Checking container status..."
-            sudo docker compose $COMPOSE_FILES ps
+            for i in {1..12}; do
+              if sudo docker compose $COMPOSE_FILES ps --format "table {{.Name}}\t{{.Status}}" | grep -v "Up\|running"; then
+                if [ $i -eq 12 ]; then
+                  echo "❌ DEPLOYMENT FAILED: Containers failed to start within 60 seconds"
+                  sudo docker compose $COMPOSE_FILES logs
+                  exit 1
+                fi
+                echo "Attempt $i/12: Waiting for containers to start..."
+                sleep 5
+              else
+                echo "✅ All containers are running"
+                break
+              fi
+            done
+
+            # Verify services are responding (max 30 seconds each)
+            echo "Testing backend health endpoint..."
+            if ! timeout 30 bash -c 'until curl -f http://localhost:8080/actuator/health >/dev/null 2>&1; do sleep 2; done'; then
+              echo "❌ DEPLOYMENT FAILED: Backend health check failed"
+              sudo docker compose $COMPOSE_FILES logs backend
+              exit 1
+            fi
+            echo "✅ Backend is healthy"
+
+            echo "Testing frontend endpoint..."
+            if ! timeout 30 bash -c 'until curl -f http://localhost:3000 >/dev/null 2>&1; do sleep 2; done'; then
+              echo "❌ DEPLOYMENT FAILED: Frontend health check failed"
+              sudo docker compose $COMPOSE_FILES logs frontend
+              exit 1
+            fi
+            echo "✅ Frontend is healthy"
 
             # Set up nginx configuration for the domain
             sudo cp nginx-batal.conf /etc/nginx/sites-available/batal-$ENV
@@ -166,12 +198,9 @@ jobs:
             # Clean up old images
             sudo docker image prune -f
 
-            # Final status check
-            echo "Final deployment status:"
+            # Final verification and status
+            echo "🎉 DEPLOYMENT SUCCESSFUL!"
+            echo "📊 Final status:"
             sudo docker compose $COMPOSE_FILES ps
 
-            # Show recent logs for debugging
-            echo "Recent container logs:"
-            sudo docker compose $COMPOSE_FILES logs --tail=20
-
-            echo "Deployment completed! Application accessible at: https://$DOMAIN"
+            echo "✅ Application accessible at: https://$DOMAIN"
