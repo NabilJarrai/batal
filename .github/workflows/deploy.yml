@@ -174,7 +174,7 @@ jobs:
 
             # Verify services are responding (max 30 seconds each)
             echo "Testing backend health endpoint..."
-            if ! timeout 30 bash -c 'until curl -f http://localhost:8080/actuator/health >/dev/null 2>&1; do sleep 2; done'; then
+            if ! timeout 30 bash -c 'until curl -f http://localhost:8080/api >/dev/null 2>&1; do sleep 2; done'; then
               echo "❌ DEPLOYMENT FAILED: Backend health check failed"
               sudo docker compose $COMPOSE_FILES logs backend
               exit 1
