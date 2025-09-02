@@ -60,7 +60,7 @@ export const withRoleGuard = <P extends object>(
               Access Denied
             </h2>
             <p className="text-blue-200 mb-6">
-              You don't have permission to access this page.
+              You don&apos;t have permission to access this page.
             </p>
             <p className="text-sm text-blue-300">
               Required roles: {allowedRoles.join(", ")}

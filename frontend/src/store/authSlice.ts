@@ -4,7 +4,6 @@ import {
   LoginRequest,
   RegisterRequest,
   LoginResponse,
-  UserResponse,
 } from "@/types/auth";
 import { authAPI, tokenManager } from "@/lib/api";
 
@@ -65,7 +64,7 @@ export const initializeAuth = createAsyncThunk(
         token,
         user: null,
       };
-    } catch (error) {
+    } catch {
       tokenManager.removeToken();
       return rejectWithValue("Token invalid or expired");
     }
@@ -125,7 +124,7 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
+      .addCase(registerUser.fulfilled, (state) => {
         state.isLoading = false;
         state.error = null;
         // Registration successful, but user still needs to login
