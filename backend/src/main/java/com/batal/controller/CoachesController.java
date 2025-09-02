@@ -44,18 +44,4 @@ public class CoachesController {
         userService.deleteUser(id);
         return ResponseEntity.ok("Coach deleted successfully!");
     }
-
-    @PutMapping("/{id}/activate")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> activateCoach(@PathVariable Long id) {
-        userService.activateUser(id);
-        return ResponseEntity.ok("Coach activated successfully!");
-    }
-
-    @PutMapping("/{id}/deactivate")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deactivateCoach(@PathVariable Long id) {
-        userService.deactivateUser(id);
-        return ResponseEntity.ok("Coach deactivated successfully!");
-    }
 }

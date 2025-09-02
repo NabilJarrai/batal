@@ -25,6 +25,7 @@ public class UserController {
     private UserRepository userRepository;
     
     @GetMapping("/profile")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getCurrentUserProfile() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -77,22 +78,6 @@ public class UserController {
                 .collect(Collectors.toList());
         
         return ResponseEntity.ok(userResponses);
-    }
-    
-    @GetMapping("/validate-token")
-    public ResponseEntity<?> validateToken() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Token is valid");
-            response.put("user", authentication.getName());
-            response.put("authorities", authentication.getAuthorities());
-            return ResponseEntity.ok(response);
-        } else {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", "Invalid token");
-            return ResponseEntity.badRequest().body(error);
-        }
     }
     
     // Helper method for security expression

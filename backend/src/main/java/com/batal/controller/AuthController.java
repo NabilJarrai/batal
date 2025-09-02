@@ -8,6 +8,7 @@ import com.batal.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -34,6 +35,7 @@ public class AuthController {
     }
     
     @PostMapping("/register")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
             UserResponse response = authService.register(registerRequest);
@@ -46,12 +48,5 @@ public class AuthController {
             error.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(error);
         }
-    }
-    
-    @GetMapping("/test")
-    public ResponseEntity<?> test() {
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Auth controller is working");
-        return ResponseEntity.ok(response);
     }
 }
