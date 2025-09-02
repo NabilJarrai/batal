@@ -60,6 +60,8 @@ jobs:
           context: ./frontend
           push: true
           no-cache: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ github.ref_name == 'develop' && 'https://batal.dev.nabiljarrai.com/api' || 'https://batal.nabiljarrai.com/api' }}
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
 
