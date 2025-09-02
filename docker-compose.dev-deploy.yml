@@ -1,45 +1,28 @@
 services:
   postgres:
-    image: postgres:15-alpine
     container_name: batal-postgres-dev
-    environment:
-      POSTGRES_DB: batal_db
-      POSTGRES_USER: batal_user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
     networks:
       - batal-network-dev
-    restart: unless-stopped
+    ports:
+      - "5432:5432"
 
   minio:
-    image: minio/minio:latest
     container_name: batal-minio-dev
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data_dev:/data
+    networks:
+      - batal-network-dev
     ports:
       - "9000:9000"
       - "9001:9001"
-    networks:
-      - batal-network-dev
-    restart: unless-stopped
 
   backend:
     image: ${BACKEND_IMAGE:-ghcr.io/nabiljarrai/batal-backend:develop}
     container_name: batal-backend-dev
     pull_policy: always
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/batal_db
-      SPRING_DATASOURCE_USERNAME: batal_user
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
       SPRING_PROFILES_ACTIVE: dev
       SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
       SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
@@ -47,12 +30,14 @@ services:
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
     ports:
       - "8080:8080"
-    depends_on:
-      - postgres
-      - minio
     networks:
       - batal-network-dev
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   frontend:
     image: ${FRONTEND_IMAGE:-ghcr.io/nabiljarrai/batal-frontend:develop}
@@ -60,14 +45,16 @@ services:
     pull_policy: always
     environment:
       NEXT_PUBLIC_API_URL: https://${DOMAIN:-batal.dev.nabiljarrai.com}/api
-      NODE_ENV: production
     ports:
       - "3000:3000"
-    depends_on:
-      - backend
     networks:
       - batal-network-dev
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
 volumes:
   postgres_data_dev:
