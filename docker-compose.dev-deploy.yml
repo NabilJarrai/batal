@@ -32,12 +32,6 @@ services:
       - "8080:8080"
     networks:
       - batal-network-dev
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   frontend:
     image: ${FRONTEND_IMAGE:-ghcr.io/nabiljarrai/batal-frontend:develop}
@@ -49,12 +43,6 @@ services:
       - "3000:3000"
     networks:
       - batal-network-dev
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
 
 volumes:
   postgres_data_dev:

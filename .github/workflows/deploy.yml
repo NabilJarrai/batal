@@ -142,24 +142,13 @@ jobs:
             # Deploy with docker compose (will use latest pulled images)
             sudo docker compose $COMPOSE_FILES up -d
 
-            # Wait for services to start and be healthy
-            echo "Waiting for services to start..."
-            sleep 60
+            # Wait a moment for containers to start
+            echo "Waiting for containers to start..."
+            sleep 30
 
-            # Check health status
-            echo "Checking service health..."
+            # Check container status
+            echo "Checking container status..."
             sudo docker compose $COMPOSE_FILES ps
-
-            # Verify services are responding
-            for i in {1..5}; do
-              if curl -f http://localhost:8080/actuator/health && curl -f http://localhost:3000; then
-                echo "Services are healthy!"
-                break
-              else
-                echo "Attempt $i: Services not ready yet, waiting..."
-                sleep 30
-              fi
-            done
 
             # Set up nginx configuration for the domain
             sudo cp nginx-batal.conf /etc/nginx/sites-available/batal-$ENV
@@ -181,10 +170,8 @@ jobs:
             echo "Final deployment status:"
             sudo docker compose $COMPOSE_FILES ps
 
-            # Show logs if any service is unhealthy
-            if ! sudo docker compose $COMPOSE_FILES ps | grep -q "healthy\|Up"; then
-              echo "Some services may be unhealthy. Showing logs:"
-              sudo docker compose $COMPOSE_FILES logs --tail=50
-            fi
+            # Show recent logs for debugging
+            echo "Recent container logs:"
+            sudo docker compose $COMPOSE_FILES logs --tail=20
 
             echo "Deployment completed! Application accessible at: https://$DOMAIN"

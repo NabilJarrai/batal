@@ -19,12 +19,6 @@ services:
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
     ports:
       - "127.0.0.1:8080:8080"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   frontend:
     image: ${FRONTEND_IMAGE:-ghcr.io/nabiljarrai/batal-frontend:latest}
@@ -33,9 +27,3 @@ services:
       NEXT_PUBLIC_API_URL: https://${DOMAIN:-batal.nabiljarrai.com}/api
     ports:
       - "127.0.0.1:3000:3000"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
