@@ -62,24 +62,24 @@ This document contains all issues for the Batal Football Academy Management Syst
 
 ### 🗄️ Issue #3: Database Schema & Models
 
-**Priority:** Critical | **Time:** 2-3 days | **Status:** Open
+**Priority:** Critical | **Time:** 2-3 days | **Status:** ✅ Closed
 
 **Goal:** Design and implement core database schema and models
 
 **Tasks:**
 
-- [ ] Design database schema
-- [ ] Create JPA entities (User, Group, Assessment, etc.)
-- [ ] Set up database migrations
-- [ ] Create TypeScript types for frontend
-- [ ] Set up repositories and basic CRUD
+- [x] Design database schema
+- [x] Create JPA entities (User, Group, Assessment, etc.)
+- [x] Set up database migrations
+- [ ] Create TypeScript types for frontend *(Will be done during user journey)*
+- [x] Set up repositories and basic CRUD
 
 **Done When:**
 
-- [ ] All entities created with proper relationships
-- [ ] Database migrations work
-- [ ] Basic CRUD operations functional
-- [ ] Frontend types match backend models
+- [x] All entities created with proper relationships
+- [x] Database migrations work
+- [ ] Basic CRUD operations functional *(Will be implemented during user journey)*
+- [ ] Frontend types match backend models *(Will be implemented during user journey)*
 
 ---
 
