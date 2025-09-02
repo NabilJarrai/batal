@@ -1,0 +1,104 @@
+package com.batal.service;
+
+import com.batal.dto.LoginRequest;
+import com.batal.dto.LoginResponse;
+import com.batal.dto.RegisterRequest;
+import com.batal.dto.UserResponse;
+import com.batal.entity.Role;
+import com.batal.entity.User;
+import com.batal.repository.RoleRepository;
+import com.batal.repository.UserRepository;
+import com.batal.security.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class AuthService {
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private RoleRepository roleRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
+    
+    @Transactional
+    public UserResponse register(RegisterRequest registerRequest) {
+        // Check if user already exists
+        if (userRepository.existsByEmail(registerRequest.getEmail())) {
+            throw new RuntimeException("Email is already taken!");
+        }
+        
+        // Create new user
+        User user = new User();
+        user.setEmail(registerRequest.getEmail());
+        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        user.setFirstName(registerRequest.getFirstName());
+        user.setLastName(registerRequest.getLastName());
+        user.setPhone(registerRequest.getPhone());
+        user.setDateOfBirth(registerRequest.getDateOfBirth());
+        user.setGender(registerRequest.getGender());
+        user.setAddress(registerRequest.getAddress());
+        user.setEmergencyContactName(registerRequest.getEmergencyContactName());
+        user.setEmergencyContactPhone(registerRequest.getEmergencyContactPhone());
+        user.setIsActive(true);
+        
+        // Add role
+        Role role = roleRepository.findByName(registerRequest.getRole())
+                .orElseThrow(() -> new RuntimeException("Role not found: " + registerRequest.getRole()));
+        
+        user.addRole(role);
+        
+        User savedUser = userRepository.save(user);
+        
+        List<String> roleNames = savedUser.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toList());
+        
+        return new UserResponse(savedUser, roleNames);
+    }
+    
+    public LoginResponse login(LoginRequest loginRequest) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getEmail(),
+                        loginRequest.getPassword())
+        );
+        
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtil.generateJwtToken(authentication);
+        
+        UserDetailsServiceImpl.UserPrincipal userPrincipal = 
+                (UserDetailsServiceImpl.UserPrincipal) authentication.getPrincipal();
+        
+        List<String> roles = userPrincipal.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(role -> role.replace("ROLE_", ""))
+                .collect(Collectors.toList());
+        
+        // Get user details
+        User user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        return new LoginResponse(jwt, user.getId(), user.getEmail(), 
+                user.getFirstName(), user.getLastName(), roles);
+    }
+}

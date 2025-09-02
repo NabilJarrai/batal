@@ -36,23 +36,25 @@ This document contains all issues for the Batal Football Academy Management Syst
 
 **Priority:** Critical | **Time:** 3-4 days | **Status:** Open
 
-**Goal:** Implement secure authentication and authorization system
+**Goal:** Implement secure authentication and authorization system with JWT (no refresh tokens - new login required when token expires)
 
 **Tasks:**
 
-- [ ] JWT authentication system
+- [ ] JWT authentication system (single token, no refresh)
 - [ ] Password hashing with bcrypt
 - [ ] Login/register endpoints
 - [ ] Role-based access control (RBAC)
 - [ ] Authentication middleware
 - [ ] CORS and security headers
+- [ ] Flyway database migrations
 
 **Done When:**
 
 - [ ] Users can register and login
-- [ ] JWT tokens generated and validated
+- [ ] JWT tokens generated and validated (expire after session)
 - [ ] Role-based access working
 - [ ] Security headers configured
+- [ ] Database migrations implemented with Flyway
 
 ---
 
