@@ -152,14 +152,19 @@ jobs:
 
             # Wait for containers to be in running state (max 60 seconds)
             echo "Checking container status..."
-            for i in {1..12}; do
-              if sudo docker compose $COMPOSE_FILES ps --format "table {{.Name}}\t{{.Status}}" | grep -v "Up\|running"; then
-                if [ $i -eq 12 ]; then
+            for i in {1..5}; do
+              # Check if any containers are not running
+              NOT_RUNNING=$(sudo docker compose $COMPOSE_FILES ps --format "table {{.Name}}\t{{.Status}}" | grep -v "STATUS" | grep -v "Up")
+              if [ -n "$NOT_RUNNING" ]; then
+                if [ $i -eq 5 ]; then
                   echo "❌ DEPLOYMENT FAILED: Containers failed to start within 60 seconds"
+                  echo "Non-running containers:"
+                  echo "$NOT_RUNNING"
                   sudo docker compose $COMPOSE_FILES logs
                   exit 1
                 fi
-                echo "Attempt $i/12: Waiting for containers to start..."
+                echo "Attempt $i/5: Waiting for containers to start..."
+                echo "Non-running containers: $NOT_RUNNING"
                 sleep 5
               else
                 echo "✅ All containers are running"
