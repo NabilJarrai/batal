@@ -1,5 +1,11 @@
 // Authentication related types matching backend DTOs
 
+// Import UserResponse type
+import type { UserResponse } from './users';
+
+// Re-export UserResponse for convenience
+export type { UserResponse } from './users';
+
 // Login Request DTO (matches backend LoginRequest.java)
 export interface LoginRequest {
   email: string;
@@ -23,15 +29,6 @@ export interface LoginResponse {
   phoneNumber: string;
   roles: string[];
   token: string;
-}
-
-// User Response DTO (matches backend UserResponse.java)
-export interface UserResponse {
-  id: number;
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  roles: string[];
 }
 
 // User roles enum (matches backend roles)

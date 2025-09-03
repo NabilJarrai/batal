@@ -1,8 +1,10 @@
 package com.batal.service;
 
+import com.batal.dto.GroupCreateRequest;
 import com.batal.dto.PlayerDTO;
 import com.batal.entity.Player;
 import com.batal.entity.Group;
+import com.batal.entity.enums.AgeGroup;
 import com.batal.repository.PlayerRepository;
 import com.batal.repository.GroupRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -26,10 +29,20 @@ public class PlayerService {
     @Autowired
     private GroupRepository groupRepository;
     
+    @Autowired
+    private GroupService groupService;
+    
     /**
-     * Create a new player
+     * Create a new player with automatic group assignment if no group specified
      */
     public PlayerDTO createPlayer(PlayerDTO playerDTO) {
+        return createPlayer(playerDTO, true);
+    }
+    
+    /**
+     * Create a new player with option for automatic group assignment
+     */
+    public PlayerDTO createPlayer(PlayerDTO playerDTO, boolean autoAssignGroup) {
         // Check if email already exists
         if (playerRepository.existsByEmail(playerDTO.getEmail())) {
             throw new RuntimeException("Player with email " + playerDTO.getEmail() + " already exists");
@@ -39,11 +52,20 @@ public class PlayerService {
         player.setCreatedAt(LocalDateTime.now());
         player.setUpdatedAt(LocalDateTime.now());
         
-        // Set group if provided
+        // Set group if provided, otherwise auto-assign if enabled
         if (playerDTO.getGroupId() != null) {
             Group group = groupRepository.findById(playerDTO.getGroupId())
                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + playerDTO.getGroupId()));
             player.setGroup(group);
+        } else if (autoAssignGroup && player.getDateOfBirth() != null && player.getLevel() != null) {
+            // Save player first, then auto-assign to group
+            player = playerRepository.save(player);
+            try {
+                autoAssignPlayerToGroup(player);
+            } catch (Exception e) {
+                // If auto-assignment fails, we still keep the player but log the issue
+                System.out.println("Warning: Could not auto-assign player to group: " + e.getMessage());
+            }
         }
         
         Player savedPlayer = playerRepository.save(player);
@@ -178,6 +200,113 @@ public class PlayerService {
         return players.stream()
             .map(this::convertToDTO)
             .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get players without assigned group
+     */
+    @Transactional(readOnly = true)
+    public List<PlayerDTO> getUnassignedPlayers() {
+        List<Player> players = playerRepository.findByGroupIsNullAndIsActiveTrue();
+        return players.stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
+    }
+    
+    /**
+     * Auto-assign player to appropriate group based on age and level
+     */
+    public PlayerDTO autoAssignPlayerToGroup(Long playerId) {
+        Player player = playerRepository.findById(playerId)
+            .orElseThrow(() -> new RuntimeException("Player not found with id: " + playerId));
+        
+        autoAssignPlayerToGroup(player);
+        Player updatedPlayer = playerRepository.save(player);
+        return convertToDTO(updatedPlayer);
+    }
+    
+    /**
+     * Internal method to auto-assign player to group
+     */
+    private void autoAssignPlayerToGroup(Player player) {
+        if (player.getDateOfBirth() == null || player.getLevel() == null) {
+            throw new RuntimeException("Player must have date of birth and level to be auto-assigned");
+        }
+        
+        // Calculate player age
+        int playerAge = LocalDate.now().getYear() - player.getDateOfBirth().getYear();
+        AgeGroup ageGroup = AgeGroup.getByAge(playerAge);
+        
+        if (ageGroup == null) {
+            throw new RuntimeException("Player age (" + playerAge + ") is not within supported age range (4-16 years)");
+        }
+        
+        // Find available group with matching level and age group
+        List<Group> availableGroups = groupRepository.findAvailableGroupsByLevelAndAgeGroup(
+            player.getLevel(), ageGroup);
+        
+        if (availableGroups.isEmpty()) {
+            // Create new group if none available
+            createNewGroupForPlayer(player, ageGroup);
+        } else {
+            // Assign to first available group
+            Group targetGroup = availableGroups.get(0);
+            player.setGroup(targetGroup);
+        }
+    }
+    
+    /**
+     * Create a new group for the player when no available groups exist
+     */
+    private void createNewGroupForPlayer(Player player, AgeGroup ageGroup) {
+        // Find next group number for this level and age group
+        List<Group> existingGroups = groupRepository.findByLevelAndAgeGroup(player.getLevel(), ageGroup);
+        int nextGroupNumber = existingGroups.size() + 1;
+        
+        // Create new group
+        Group newGroup = new Group();
+        newGroup.setLevel(player.getLevel());
+        newGroup.setAgeGroup(ageGroup);
+        newGroup.setGroupNumber(nextGroupNumber);
+        newGroup.setCapacity(15); // Default capacity
+        newGroup.setMinAge(ageGroup.getMinAge());
+        newGroup.setMaxAge(ageGroup.getMaxAge());
+        newGroup.setIsActive(true);
+        
+        // Generate group name
+        String suffix = nextGroupNumber > 1 ? " " + nextGroupNumber : "";
+        newGroup.setName(player.getLevel().getDisplayName() + " " + 
+                        ageGroup.getDisplayName() + suffix);
+        
+        Group savedGroup = groupRepository.save(newGroup);
+        player.setGroup(savedGroup);
+    }
+    
+    /**
+     * Promote player to advanced level and reassign to appropriate group
+     */
+    public PlayerDTO promotePlayerToAdvanced(Long playerId) {
+        Player player = playerRepository.findById(playerId)
+            .orElseThrow(() -> new RuntimeException("Player not found with id: " + playerId));
+        
+        if (player.getLevel() == com.batal.entity.enums.Level.ADVANCED) {
+            throw new RuntimeException("Player is already at Advanced level");
+        }
+        
+        // Update level
+        player.setLevel(com.batal.entity.enums.Level.ADVANCED);
+        player.setUpdatedAt(LocalDateTime.now());
+        
+        // Remove from current group
+        if (player.getGroup() != null) {
+            player.setGroup(null);
+        }
+        
+        // Auto-assign to new Advanced group
+        autoAssignPlayerToGroup(player);
+        
+        Player updatedPlayer = playerRepository.save(player);
+        return convertToDTO(updatedPlayer);
     }
     
     /**

@@ -84,6 +84,7 @@ public class UserService {
         user.setEmergencyContactName(request.getEmergencyContactName());
         user.setEmergencyContactPhone(request.getEmergencyContactPhone());
         user.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+        user.setJoiningDate(java.time.LocalDate.now()); // Set joining date for coaches/staff
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
         

@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/players")
+@RequestMapping("/players")
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class PlayerController {
     
@@ -230,5 +230,48 @@ public class PlayerController {
         );
         
         return ResponseEntity.ok(stats);
+    }
+    
+    /**
+     * Get unassigned players (players without groups)
+     * All authenticated users can view this
+     */
+    @GetMapping("/unassigned")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('COACH')")
+    public ResponseEntity<List<PlayerDTO>> getUnassignedPlayers() {
+        List<PlayerDTO> unassignedPlayers = playerService.getUnassignedPlayers();
+        return ResponseEntity.ok(unassignedPlayers);
+    }
+    
+    /**
+     * Auto-assign player to appropriate group
+     * Only ADMIN and MANAGER can perform this action
+     */
+    @PostMapping("/{id}/auto-assign-group")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<?> autoAssignPlayerToGroup(@PathVariable Long id) {
+        try {
+            PlayerDTO updatedPlayer = playerService.autoAssignPlayerToGroup(id);
+            return ResponseEntity.ok(updatedPlayer);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "Failed to auto-assign player to group", "message", e.getMessage()));
+        }
+    }
+    
+    /**
+     * Promote player to Advanced level and reassign to appropriate group
+     * Only ADMIN and MANAGER can promote players
+     */
+    @PostMapping("/{id}/promote")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<?> promotePlayerToAdvanced(@PathVariable Long id) {
+        try {
+            PlayerDTO promotedPlayer = playerService.promotePlayerToAdvanced(id);
+            return ResponseEntity.ok(promotedPlayer);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "Failed to promote player", "message", e.getMessage()));
+        }
     }
 }

@@ -1,0 +1,362 @@
+"use client";
+
+import { Fragment, useState, useEffect } from 'react';
+import { Dialog, Transition, Listbox } from '@headlessui/react';
+import { GroupCreateRequest, AgeGroup, AGE_GROUP_METADATA } from '@/types/groups';
+import { Level } from '@/types/players';
+import { UserResponse, UserType } from '@/types/users';
+import { apiClient } from '@/lib/apiClient';
+import { groupsAPI, usersAPI } from '@/lib/api';
+
+interface CreateGroupModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onComplete: () => void;
+}
+
+export default function CreateGroupModal({ 
+  isOpen, 
+  onClose, 
+  onComplete 
+}: CreateGroupModalProps) {
+  const [formData, setFormData] = useState<GroupCreateRequest>({
+    level: Level.DEVELOPMENT,
+    ageGroup: AgeGroup.COOKIES,
+    capacity: 20,
+    zone: '',
+    description: '',
+    isActive: true
+  });
+
+  const [availableCoaches, setAvailableCoaches] = useState<UserResponse[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadAvailableCoaches();
+    }
+  }, [isOpen]);
+
+  const loadAvailableCoaches = async () => {
+    try {
+      const users = await usersAPI.getAll();
+      const coaches = users.filter(u => 
+        u.userType === UserType.COACH && u.isActive
+      );
+      setAvailableCoaches(coaches);
+    } catch (err) {
+      console.error('Failed to load coaches:', err);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      console.log('Creating group with data:', formData);
+      await groupsAPI.create(formData);
+      console.log('Group created successfully');
+      onComplete();
+      handleClose();
+    } catch (err) {
+      console.error('Error creating group:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create group');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    setFormData({
+      level: Level.DEVELOPMENT,
+      ageGroup: AgeGroup.COOKIES,
+      capacity: 20,
+      zone: '',
+      description: '',
+      isActive: true
+    });
+    setError(null);
+    onClose();
+  };
+
+  const getAgeGroupColor = (ageGroup: AgeGroup) => {
+    switch (ageGroup) {
+      case AgeGroup.COOKIES: return 'from-yellow-500 to-yellow-600';
+      case AgeGroup.DOLPHINS: return 'from-blue-500 to-blue-600';
+      case AgeGroup.TIGERS: return 'from-orange-500 to-orange-600';
+      case AgeGroup.LIONS: return 'from-red-500 to-red-600';
+      default: return 'from-gray-500 to-gray-600';
+    }
+  };
+
+  const getLevelColor = (level: Level) => {
+    return level === Level.DEVELOPMENT
+      ? 'from-blue-500 to-blue-600'
+      : 'from-purple-500 to-purple-600';
+  };
+
+  const metadata = AGE_GROUP_METADATA[formData.ageGroup];
+
+  return (
+    <Transition appear show={isOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={handleClose}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-black bg-opacity-50" />
+        </Transition.Child>
+
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Title as="h3" className="text-lg font-medium text-white mb-4">
+                  Create New Group
+                </Dialog.Title>
+
+                {error && (
+                  <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                    <p className="text-sm text-red-300">{error}</p>
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Age Group Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Age Group *
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {Object.values(AgeGroup).map((ageGroup) => {
+                        const meta = AGE_GROUP_METADATA[ageGroup];
+                        return (
+                          <button
+                            key={ageGroup}
+                            type="button"
+                            onClick={() => setFormData({...formData, ageGroup})}
+                            className={`p-4 rounded-lg border-2 transition-all ${
+                              formData.ageGroup === ageGroup
+                                ? 'border-blue-500 bg-blue-500/20'
+                                : 'border-gray-600 bg-gray-700 hover:bg-gray-600'
+                            }`}
+                          >
+                            <div className={`inline-flex px-2 py-1 rounded-full text-xs font-medium text-white bg-gradient-to-r ${getAgeGroupColor(ageGroup)} mb-2`}>
+                              {meta.displayName}
+                            </div>
+                            <p className="text-sm text-gray-300">Ages {meta.minAge}-{meta.maxAge}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Level Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Level *
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {Object.values(Level).map((level) => (
+                        <button
+                          key={level}
+                          type="button"
+                          onClick={() => setFormData({...formData, level})}
+                          className={`p-4 rounded-lg border-2 transition-all ${
+                            formData.level === level
+                              ? 'border-purple-500 bg-purple-500/20'
+                              : 'border-gray-600 bg-gray-700 hover:bg-gray-600'
+                          }`}
+                        >
+                          <div className={`inline-flex px-3 py-1 rounded-full text-sm font-medium text-white bg-gradient-to-r ${getLevelColor(level)} mb-2`}>
+                            {level}
+                          </div>
+                          <p className="text-xs text-gray-400">
+                            {level === Level.DEVELOPMENT ? 'Foundation skills' : 'Competitive training'}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Group Details */}
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                    <p className="text-sm text-blue-200 mb-2">Group will be named:</p>
+                    <p className="text-lg font-medium text-white">
+                      {metadata.displayName} {formData.level === Level.ADVANCED ? 'Advanced' : 'Development'}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      For ages {metadata.minAge}-{metadata.maxAge} • {formData.level} level
+                    </p>
+                  </div>
+
+                  {/* Capacity and Zone */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                        Capacity *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="5"
+                        max="30"
+                        value={formData.capacity}
+                        onChange={(e) => setFormData({...formData, capacity: parseInt(e.target.value)})}
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        placeholder="20"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Maximum number of players</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                        Zone/Location
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.zone || ''}
+                        onChange={(e) => setFormData({...formData, zone: e.target.value})}
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        placeholder="North Field, Main Campus..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      value={formData.description || ''}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      rows={3}
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      placeholder="Additional notes about this group..."
+                    />
+                  </div>
+
+                  {/* Coach Assignment (Optional) */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Assign Coach (Optional)
+                    </label>
+                    <Listbox 
+                      value={formData.coachId} 
+                      onChange={(value) => setFormData({...formData, coachId: value})}
+                    >
+                      <div className="relative">
+                        <Listbox.Button className="relative w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-blue-400">
+                          <span className="block truncate">
+                            {formData.coachId 
+                              ? availableCoaches.find(c => c.id === formData.coachId)?.firstName + ' ' + 
+                                availableCoaches.find(c => c.id === formData.coachId)?.lastName
+                              : 'Select a coach (optional)'}
+                          </span>
+                          <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                            <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </span>
+                        </Listbox.Button>
+                        <Transition
+                          as={Fragment}
+                          leave="transition ease-in duration-100"
+                          leaveFrom="opacity-100"
+                          leaveTo="opacity-0"
+                        >
+                          <Listbox.Options className="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-gray-700 border border-gray-600 rounded-lg shadow-lg">
+                            <Listbox.Option
+                              value={undefined}
+                              className={({ active }) =>
+                                `cursor-pointer px-3 py-2 ${
+                                  active ? 'bg-gray-600 text-white' : 'text-gray-300'
+                                }`
+                              }
+                            >
+                              No coach assigned
+                            </Listbox.Option>
+                            {availableCoaches.map((coach) => (
+                              <Listbox.Option
+                                key={coach.id}
+                                value={coach.id}
+                                className={({ active }) =>
+                                  `cursor-pointer px-3 py-2 ${
+                                    active ? 'bg-gray-600 text-white' : 'text-gray-300'
+                                  }`
+                                }
+                              >
+                                {coach.firstName} {coach.lastName}
+                                {coach.title && <span className="text-xs text-gray-400 ml-2">({coach.title})</span>}
+                              </Listbox.Option>
+                            ))}
+                          </Listbox.Options>
+                        </Transition>
+                      </div>
+                    </Listbox>
+                    {availableCoaches.length === 0 && (
+                      <p className="text-xs text-yellow-400 mt-1">No coaches available. Create a coach user first.</p>
+                    )}
+                  </div>
+
+                  {/* Status */}
+                  <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.isActive}
+                        onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+                        className="h-4 w-4 rounded text-green-600"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-white">Active Group</p>
+                        <p className="text-xs text-gray-400">
+                          Players can be assigned to this group immediately
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={handleClose}
+                      className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-white transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white font-medium transition-all disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'Creating...' : 'Create Group'}
+                    </button>
+                  </div>
+                </form>
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
+        </div>
+      </Dialog>
+    </Transition>
+  );
+}

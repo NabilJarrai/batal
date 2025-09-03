@@ -165,6 +165,38 @@ public class UserController {
         }
     }
     
+    // GET /api/users/coaches - Get all coaches
+    @GetMapping("/coaches")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<?> getAllCoaches() {
+        try {
+            List<UserResponse> coaches = userService.getUsersByRole("COACH");
+            return ResponseEntity.ok(coaches);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Error fetching coaches: " + e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+    
+    // GET /api/users/coaches/available - Get available coaches (coaches without full group load)
+    @GetMapping("/coaches/available") 
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<?> getAvailableCoaches() {
+        try {
+            // For now, return all active coaches - could be enhanced with workload logic
+            List<UserResponse> coaches = userService.getUsersByRole("COACH");
+            List<UserResponse> availableCoaches = coaches.stream()
+                .filter(coach -> coach.getIsActive())
+                .toList();
+            return ResponseEntity.ok(availableCoaches);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Error fetching available coaches: " + e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
     // Helper method for security expression
     public boolean isCurrentUser(Long userId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

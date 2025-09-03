@@ -77,36 +77,234 @@ export const authAPI = {
   },
 };
 
-// Coaches API calls (example for future use)
-export const coachesAPI = {
+// Users API calls  
+export const usersAPI = {
   getAll: async (): Promise<UserResponse[]> => {
-    return apiRequest<UserResponse[]>("/coaches");
+    return apiRequest<UserResponse[]>("/users");
   },
 
   getById: async (id: number): Promise<UserResponse> => {
-    return apiRequest<UserResponse>(`/coaches/${id}`);
+    return apiRequest<UserResponse>(`/users/${id}`);
   },
 
-  create: async (coachData: RegisterRequest): Promise<UserResponse> => {
-    return apiRequest<UserResponse>("/coaches", {
+  create: async (userData: any): Promise<UserResponse> => {
+    return apiRequest<UserResponse>("/users", {
       method: "POST",
-      body: JSON.stringify(coachData),
+      body: JSON.stringify(userData),
     });
   },
 
-  update: async (
-    id: number,
-    coachData: Partial<RegisterRequest>
-  ): Promise<UserResponse> => {
-    return apiRequest<UserResponse>(`/coaches/${id}`, {
+  update: async (id: number, userData: any): Promise<UserResponse> => {
+    return apiRequest<UserResponse>(`/users/${id}`, {
       method: "PUT",
-      body: JSON.stringify(coachData),
+      body: JSON.stringify(userData),
+    });
+  },
+
+  updateStatus: async (id: number, statusData: any): Promise<UserResponse> => {
+    return apiRequest<UserResponse>(`/users/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify(statusData),
     });
   },
 
   delete: async (id: number): Promise<void> => {
-    return apiRequest<void>(`/coaches/${id}`, {
+    return apiRequest<void>(`/users/${id}`, {
       method: "DELETE",
+    });
+  },
+
+  // Coach-specific endpoints
+  getCoaches: async (): Promise<UserResponse[]> => {
+    return apiRequest<UserResponse[]>("/users/coaches");
+  },
+
+  getAvailableCoaches: async (): Promise<UserResponse[]> => {
+    return apiRequest<UserResponse[]>("/users/coaches/available");
+  },
+
+  getCurrentUser: async (): Promise<UserResponse> => {
+    return apiRequest<UserResponse>("/users/me");
+  },
+};
+
+// Players API calls
+export const playersAPI = {
+  getAll: async (params?: any): Promise<any> => {
+    const queryParams = params ? `?${new URLSearchParams(params)}` : '';
+    const response = await apiRequest<any>(`/players${queryParams}`);
+    // Handle paginated response - return just the content array if it's a Page object
+    return response.content || response;
+  },
+
+  getAllList: async (): Promise<any[]> => {
+    // Get unpaginated list of all players
+    const response = await apiRequest<any>(`/players?size=1000`);
+    return response.content || response || [];
+  },
+  
+  getActive: async (): Promise<any[]> => {
+    return apiRequest<any[]>("/players/active");
+  },
+
+  getById: async (id: number): Promise<any> => {
+    return apiRequest<any>(`/players/${id}`);
+  },
+
+  getByEmail: async (email: string): Promise<any> => {
+    return apiRequest<any>(`/players/email/${email}`);
+  },
+
+  create: async (playerData: any): Promise<any> => {
+    return apiRequest<any>("/players", {
+      method: "POST",
+      body: JSON.stringify(playerData),
+    });
+  },
+
+  update: async (id: number, playerData: any): Promise<any> => {
+    return apiRequest<any>(`/players/${id}`, {
+      method: "PUT", 
+      body: JSON.stringify(playerData),
+    });
+  },
+
+  deactivate: async (id: number, reason: string): Promise<any> => {
+    return apiRequest<any>(`/players/${id}/deactivate`, {
+      method: "PATCH",
+      body: JSON.stringify({ reason }),
+    });
+  },
+
+  reactivate: async (id: number): Promise<any> => {
+    return apiRequest<any>(`/players/${id}/reactivate`, {
+      method: "PATCH",
+    });
+  },
+
+  delete: async (id: number): Promise<void> => {
+    return apiRequest<void>(`/players/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  searchByName: async (searchTerm: string): Promise<any[]> => {
+    return apiRequest<any[]>(`/players/search?name=${encodeURIComponent(searchTerm)}`);
+  },
+
+  getByGroup: async (groupId: number): Promise<any[]> => {
+    return apiRequest<any[]>(`/players/group/${groupId}`);
+  },
+
+  getStats: async (): Promise<any> => {
+    return apiRequest<any>("/players/stats");
+  },
+
+  // New assignment endpoints
+  getUnassigned: async (): Promise<any[]> => {
+    return apiRequest<any[]>("/players/unassigned");
+  },
+
+  autoAssignGroup: async (id: number): Promise<any> => {
+    return apiRequest<any>(`/players/${id}/auto-assign-group`, {
+      method: "POST",
+    });
+  },
+
+  promote: async (id: number): Promise<any> => {
+    return apiRequest<any>(`/players/${id}/promote`, {
+      method: "POST",
+    });
+  },
+};
+
+// Groups API calls
+export const groupsAPI = {
+  getAll: async (params?: any): Promise<any> => {
+    const queryParams = params ? `?${new URLSearchParams(params)}` : '';
+    const response = await apiRequest<any>(`/groups${queryParams}`);
+    // Handle paginated response - return just the content array if it's a Page object
+    return response.content || response;
+  },
+
+  getById: async (id: number): Promise<any> => {
+    return apiRequest<any>(`/groups/${id}`);
+  },
+
+  create: async (groupData: any): Promise<any> => {
+    return apiRequest<any>("/groups", {
+      method: "POST",
+      body: JSON.stringify(groupData),
+    });
+  },
+
+  update: async (id: number, groupData: any): Promise<any> => {
+    return apiRequest<any>(`/groups/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(groupData),
+    });
+  },
+
+  delete: async (id: number): Promise<void> => {
+    return apiRequest<void>(`/groups/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  // Specialized group queries
+  getAllList: async (): Promise<any[]> => {
+    // Get unpaginated list of all groups
+    const response = await apiRequest<any>(`/groups?size=1000`);
+    return response.content || response || [];
+  },
+  
+  getAvailable: async (): Promise<any[]> => {
+    return apiRequest<any[]>("/groups/available");
+  },
+
+  getByLevel: async (level: string): Promise<any[]> => {
+    return apiRequest<any[]>(`/groups/by-level/${level}`);
+  },
+
+  getByAgeGroup: async (ageGroup: string): Promise<any[]> => {
+    return apiRequest<any[]>(`/groups/by-age-group/${ageGroup}`);
+  },
+
+  getCoachGroups: async (coachId: number): Promise<any[]> => {
+    const response = await apiRequest<any>(`/groups/coach/${coachId}`);
+    return Array.isArray(response) ? response : (response.content || []);
+  },
+
+  // Assignment operations
+  assignPlayer: async (assignmentData: any): Promise<any> => {
+    return apiRequest<any>("/groups/assign-player", {
+      method: "POST",
+      body: JSON.stringify(assignmentData),
+    });
+  },
+
+  removePlayer: async (groupId: number, playerId: number): Promise<any> => {
+    return apiRequest<any>(`/groups/${groupId}/remove-player/${playerId}`, {
+      method: "DELETE",
+    });
+  },
+
+  assignCoach: async (assignmentData: any): Promise<any> => {
+    return apiRequest<any>("/groups/assign-coach", {
+      method: "POST",
+      body: JSON.stringify(assignmentData),
+    });
+  },
+
+  removeCoach: async (groupId: number): Promise<any> => {
+    return apiRequest<any>(`/groups/${groupId}/remove-coach`, {
+      method: "DELETE",
+    });
+  },
+
+  autoAssignPlayer: async (playerId: number): Promise<any> => {
+    return apiRequest<any>(`/groups/auto-assign-player/${playerId}`, {
+      method: "POST",
     });
   },
 };

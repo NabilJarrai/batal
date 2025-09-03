@@ -40,6 +40,9 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     
     List<Player> findByIsActiveTrue();
     
+    // Unassigned players query
+    List<Player> findByGroupIsNullAndIsActiveTrue();
+    
     // Group-based queries
     @Query("SELECT p FROM Player p WHERE p.group.id = :groupId")
     List<Player> findByGroupId(Long groupId);

@@ -5,7 +5,23 @@ import {
   RegisterRequest,
   LoginResponse,
 } from "@/types/auth";
-import { authAPI, tokenManager } from "@/lib/api";
+import { authAPI, tokenManager, usersAPI } from "@/lib/api";
+
+// Helper function to decode JWT token
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
 
 // Initial state
 const initialState: AuthState = {
@@ -58,12 +74,41 @@ export const initializeAuth = createAsyncThunk(
         return null;
       }
 
-      // If token exists in localStorage, assume it's valid for now
-      // In a real app, you might want to add a /auth/me endpoint to fetch current user
-      return {
-        token,
-        user: null,
-      };
+      // Decode the token to get user info
+      const tokenData = parseJwt(token);
+      if (!tokenData) {
+        tokenManager.removeToken();
+        return null;
+      }
+
+      // Check if token is expired
+      const currentTime = Date.now() / 1000;
+      if (tokenData.exp && tokenData.exp < currentTime) {
+        tokenManager.removeToken();
+        return null;
+      }
+
+      // Try to fetch current user data from API
+      try {
+        const currentUser = await usersAPI.getCurrentUser();
+        return {
+          token,
+          user: currentUser,
+        };
+      } catch {
+        // If API call fails, use data from token
+        return {
+          token,
+          user: {
+            id: tokenData.userId || tokenData.sub,
+            email: tokenData.email || tokenData.username,
+            firstName: tokenData.firstName,
+            lastName: tokenData.lastName,
+            roles: tokenData.roles || [],
+            token: token,
+          },
+        };
+      }
     } catch {
       tokenManager.removeToken();
       return rejectWithValue("Token invalid or expired");
@@ -142,8 +187,8 @@ const authSlice = createSlice({
         state.isLoading = false;
         if (action.payload) {
           state.token = action.payload.token;
+          state.user = action.payload.user;
           state.isAuthenticated = true;
-          // Note: user data would be null here, might want to fetch from /auth/me
         }
       })
       .addCase(initializeAuth.rejected, (state) => {
