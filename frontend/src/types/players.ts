@@ -40,19 +40,15 @@ export interface PlayerDTO {
 }
 
 // Player Create Request
-export interface PlayerCreateRequest extends Omit<PlayerDTO, 'id' | 'createdAt' | 'updatedAt'> {
-  // All required fields from PlayerDTO except auto-generated ones
-}
+export type PlayerCreateRequest = Omit<PlayerDTO, 'id' | 'createdAt' | 'updatedAt'>;
 
 // Player Update Request  
-export interface PlayerUpdateRequest extends Partial<Omit<PlayerDTO, 'id' | 'createdAt' | 'updatedAt'>> {
-  // All fields optional for updates except auto-generated ones
-}
+export type PlayerUpdateRequest = Partial<Omit<PlayerDTO, 'id' | 'createdAt' | 'updatedAt'>>;
 
 // Player Form Data (for frontend forms)
-export interface PlayerFormData extends Omit<PlayerDTO, 'id' | 'createdAt' | 'updatedAt'> {
-  // Form-specific fields can be added here
-}
+export type PlayerFormData = Omit<PlayerDTO, 'id' | 'createdAt' | 'updatedAt'> & {
+  // Form-specific fields can be added here when needed
+};
 
 // Player Filters
 export interface PlayerFilters {

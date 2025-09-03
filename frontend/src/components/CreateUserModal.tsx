@@ -27,8 +27,7 @@ export default function CreateUserModal({
     userType: UserType.COACH,
     title: '',
     address: '',
-    isActive: true,
-    joiningDate: new Date().toISOString().split('T')[0]
+    isActive: true
   });
 
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -80,8 +79,7 @@ export default function CreateUserModal({
       userType: UserType.COACH,
       title: '',
       address: '',
-      isActive: true,
-      joiningDate: new Date().toISOString().split('T')[0]
+      isActive: true
     });
     setConfirmPassword('');
     setError(null);
@@ -333,19 +331,6 @@ export default function CreateUserModal({
                       onChange={(e) => setFormData({...formData, address: e.target.value})}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                       placeholder="Enter address"
-                    />
-                  </div>
-
-                  {/* Joining Date */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
-                      Joining Date
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.joiningDate || ''}
-                      onChange={(e) => setFormData({...formData, joiningDate: e.target.value})}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                   </div>
 

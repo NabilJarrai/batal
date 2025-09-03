@@ -78,9 +78,9 @@ export default function ManagerDashboard() {
       const admins = usersResponse.filter(user => 
         user.userType === UserType.ADMIN || user.roles.includes('ADMIN')
       );
-      const activeGroups = groupsResponse.filter(group => group.isActive);
-      const totalCapacity = groupsResponse.reduce((acc, g) => acc + g.capacity, 0);
-      const totalOccupancy = groupsResponse.reduce((acc, g) => acc + g.currentPlayerCount, 0);
+      const activeGroups = groupsResponse.filter((group: GroupResponse) => group.isActive);
+      const totalCapacity = groupsResponse.reduce((acc: number, g: GroupResponse) => acc + g.capacity, 0);
+      const totalOccupancy = groupsResponse.reduce((acc: number, g: GroupResponse) => acc + g.currentPlayerCount, 0);
       const capacityUtilization = totalCapacity > 0 ? Math.round((totalOccupancy / totalCapacity) * 100) : 0;
 
       setStats({

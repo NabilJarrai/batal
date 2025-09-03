@@ -4,6 +4,7 @@ import {
   LoginRequest,
   RegisterRequest,
   LoginResponse,
+  UserResponse,
 } from "@/types/auth";
 import { authAPI, tokenManager, usersAPI } from "@/lib/api";
 
@@ -40,7 +41,24 @@ export const loginUser = createAsyncThunk(
       const response = await authAPI.login(credentials);
       // Store token in localStorage
       tokenManager.setToken(response.token);
-      return response;
+      
+      // The API returns a response with token and user fields mixed together
+      // Extract user data and create proper UserResponse format
+      const userResponse: UserResponse = {
+        id: response.id,
+        email: response.email,
+        firstName: response.firstName || '',
+        lastName: response.lastName || '',
+        roles: response.roles || [],
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      return {
+        user: userResponse,
+        token: response.token
+      };
     } catch (error) {
       tokenManager.removeToken();
       return rejectWithValue(
@@ -97,16 +115,20 @@ export const initializeAuth = createAsyncThunk(
         };
       } catch {
         // If API call fails, use data from token
+        const userResponse: UserResponse = {
+          id: tokenData.userId || tokenData.sub,
+          email: tokenData.email || tokenData.username,
+          firstName: tokenData.firstName || '',
+          lastName: tokenData.lastName || '',
+          roles: tokenData.roles || [],
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        
         return {
           token,
-          user: {
-            id: tokenData.userId || tokenData.sub,
-            email: tokenData.email || tokenData.username,
-            firstName: tokenData.firstName,
-            lastName: tokenData.lastName,
-            roles: tokenData.roles || [],
-            token: token,
-          },
+          user: userResponse,
         };
       }
     } catch {
@@ -133,7 +155,7 @@ const authSlice = createSlice({
     },
     setCredentials: (
       state,
-      action: PayloadAction<{ user: LoginResponse; token: string }>
+      action: PayloadAction<{ user: UserResponse; token: string }>
     ) => {
       const { user, token } = action.payload;
       state.user = user;
@@ -151,7 +173,7 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload;
+        state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
         state.error = null;

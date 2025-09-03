@@ -89,7 +89,7 @@ export default function AdminDashboard() {
       const coaches = usersResponse.filter(user => 
         user.userType === UserType.COACH || user.roles.includes('COACH')
       );
-      const activeGroups = groupsResponse.filter(group => group.isActive);
+      const activeGroups = groupsResponse.filter((group: GroupResponse) => group.isActive);
       const unassignedPlayers = playersResponse.content ? 
         playersResponse.content.filter((player: PlayerDTO) => !player.groupId).length :
         playersResponse.filter((player: PlayerDTO) => !player.groupId).length;
@@ -314,7 +314,7 @@ export default function AdminDashboard() {
             ].map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key as any)}
+                onClick={() => setActiveTab(tab.key as 'overview' | 'groups' | 'users' | 'players')}
                 className={`
                   flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200
                   ${activeTab === tab.key

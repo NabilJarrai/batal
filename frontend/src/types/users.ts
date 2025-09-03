@@ -74,10 +74,10 @@ export interface UserStatusUpdateRequest {
 }
 
 // Coach-specific types
-export interface CoachResponse extends UserResponse {
+export type CoachResponse = UserResponse & {
   userType: UserType.COACH;
-  // Additional coach-specific fields can be added here
-}
+  // Additional coach-specific fields can be added here when needed
+};
 
 // Helper utility types
 export interface UserFormData extends Omit<UserCreateRequest, 'password'> {

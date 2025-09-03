@@ -79,9 +79,9 @@ export interface GroupAssignmentRequest {
 }
 
 // Group Form Data (for frontend forms)
-export interface GroupFormData extends Omit<GroupCreateRequest, ''> {
-  // Form-specific fields can be added here
-}
+export type GroupFormData = GroupCreateRequest & {
+  // Form-specific fields can be added here when needed
+};
 
 // Group Filters
 export interface GroupFilters {

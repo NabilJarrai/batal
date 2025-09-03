@@ -24,11 +24,12 @@ export interface RegisterRequest {
 // Login Response DTO (matches backend LoginResponse.java)
 export interface LoginResponse {
   id: number;
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  phoneNumber: string;
   roles: string[];
   token: string;
+  type: string;
 }
 
 // User roles enum (matches backend roles)
@@ -80,7 +81,7 @@ export interface FormState {
 
 // RTK Auth State
 export interface AuthState {
-  user: LoginResponse | null;
+  user: UserResponse | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;

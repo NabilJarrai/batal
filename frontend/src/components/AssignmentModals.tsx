@@ -286,10 +286,10 @@ export function CoachAssignmentModal({
       
       setAvailableCoaches(coachesResponse);
       // Filter groups without coaches
-      setAvailableGroups(groupsResponse.filter(g => !g.coach));
+      setAvailableGroups(groupsResponse.filter((g: GroupResponse) => !g.coach));
       
       if (groupId && !selectedGroup) {
-        const group = groupsResponse.find(g => g.id === groupId);
+        const group = groupsResponse.find((g: GroupResponse) => g.id === groupId);
         setSelectedGroup_(group || null);
       }
     } catch (err) {
