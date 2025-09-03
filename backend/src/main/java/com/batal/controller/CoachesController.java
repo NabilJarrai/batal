@@ -1,6 +1,7 @@
 package com.batal.controller;
 
 import com.batal.dto.UserResponse;
+import com.batal.dto.UserUpdateRequest;
 import com.batal.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,7 @@ public class CoachesController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or (hasRole('COACH') and #id == authentication.principal.id)")
-    public ResponseEntity<UserResponse> updateCoach(@PathVariable Long id, @RequestBody UserResponse userDTO) {
+    public ResponseEntity<UserResponse> updateCoach(@PathVariable Long id, @RequestBody UserUpdateRequest userDTO) {
         UserResponse updatedCoach = userService.updateUser(id, userDTO);
         return ResponseEntity.ok(updatedCoach);
     }

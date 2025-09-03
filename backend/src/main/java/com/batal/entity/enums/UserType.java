@@ -1,7 +1,6 @@
 package com.batal.entity.enums;
 
 public enum UserType {
-    PLAYER("Player"),
     COACH("Coach"),
     ADMIN("Admin"),
     MANAGER("Manager");

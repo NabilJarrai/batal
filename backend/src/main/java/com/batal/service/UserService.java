@@ -1,19 +1,49 @@
 package com.batal.service;
 
+import com.batal.dto.UserCreateRequest;
 import com.batal.dto.UserResponse;
+import com.batal.dto.UserUpdateRequest;
+import com.batal.dto.UserStatusUpdateRequest;
 import com.batal.entity.User;
+import com.batal.entity.Role;
+import com.batal.entity.enums.UserType;
 import com.batal.repository.UserRepository;
+import com.batal.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private RoleRepository roleRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    
+    // Get all users
+    public List<UserResponse> getAllUsers() {
+        List<User> users = userRepository.findAllWithRoles();
+        return users.stream()
+                .map(user -> new UserResponse(user, user.getRoles().stream()
+                        .map(role -> role.getName())
+                        .collect(Collectors.toList())))
+                .collect(Collectors.toList());
+    }
 
     public List<UserResponse> getUsersByRole(String roleName) {
         List<User> users = userRepository.findAllByRoleName(roleName);
@@ -25,44 +55,121 @@ public class UserService {
     }
 
     public UserResponse getUserById(Long id) {
-        User user = userRepository.findById(id)
+        User user = userRepository.findByIdWithRoles(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         List<String> roles = user.getRoles().stream()
                 .map(role -> role.getName())
                 .collect(Collectors.toList());
         return new UserResponse(user, roles);
     }
-
-    public UserResponse updateUser(Long id, UserResponse userResponse) {
-        User user = userRepository.findById(id)
+    
+    // Create new user
+    public UserResponse createUser(UserCreateRequest request) {
+        // Check if email already exists
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
+        
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setPhone(request.getPhone());
+        user.setDateOfBirth(request.getDateOfBirth());
+        user.setGender(request.getGender());
+        user.setAddress(request.getAddress());
+        user.setUserType(request.getUserType() != null ? request.getUserType() : UserType.COACH);
+        user.setTitle(request.getTitle());
+        user.setEmergencyContactName(request.getEmergencyContactName());
+        user.setEmergencyContactPhone(request.getEmergencyContactPhone());
+        user.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        
+        // Assign role based on user type (only for authenticated users: COACH, ADMIN, MANAGER)
+        Set<Role> roles = new HashSet<>();
+        if (request.getUserType() != null) {
+            String defaultRoleName = null;
+            switch (request.getUserType()) {
+                case COACH:
+                    defaultRoleName = "COACH";
+                    break;
+                case ADMIN:
+                    defaultRoleName = "ADMIN";
+                    break;
+                case MANAGER:
+                    defaultRoleName = "MANAGER";
+                    break;
+                default:
+                    defaultRoleName = "COACH"; // Default to COACH if no specific type
+                    break;
+            }
+            
+            if (defaultRoleName != null) {
+                Optional<Role> defaultRole = roleRepository.findByName(defaultRoleName);
+                if (defaultRole.isPresent()) {
+                    roles.add(defaultRole.get());
+                }
+            }
+        }
+        user.setRoles(roles);
+        
+        User savedUser = userRepository.save(user);
+        List<String> roleNames = savedUser.getRoles().stream()
+                .map(role -> role.getName())
+                .collect(Collectors.toList());
+        return new UserResponse(savedUser, roleNames);
+    }
+    
+    // Update user
+    public UserResponse updateUser(Long id, UserUpdateRequest request) {
+        User user = userRepository.findByIdWithRoles(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
-        // Update user fields
-        if (userResponse.getFirstName() != null) {
-            user.setFirstName(userResponse.getFirstName());
+        // Update user fields only if they're provided
+        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail())) {
+                throw new RuntimeException("Email already exists");
+            }
+            user.setEmail(request.getEmail());
         }
-        if (userResponse.getLastName() != null) {
-            user.setLastName(userResponse.getLastName());
+        if (request.getFirstName() != null) {
+            user.setFirstName(request.getFirstName());
         }
-        if (userResponse.getPhone() != null) {
-            user.setPhone(userResponse.getPhone());
+        if (request.getLastName() != null) {
+            user.setLastName(request.getLastName());
         }
-        if (userResponse.getDateOfBirth() != null) {
-            user.setDateOfBirth(userResponse.getDateOfBirth());
+        if (request.getPhone() != null) {
+            user.setPhone(request.getPhone());
         }
-        if (userResponse.getGender() != null) {
-            user.setGender(userResponse.getGender());
+        if (request.getDateOfBirth() != null) {
+            user.setDateOfBirth(request.getDateOfBirth());
         }
-        if (userResponse.getAddress() != null) {
-            user.setAddress(userResponse.getAddress());
+        if (request.getGender() != null) {
+            user.setGender(request.getGender());
         }
-        if (userResponse.getEmergencyContactName() != null) {
-            user.setEmergencyContactName(userResponse.getEmergencyContactName());
+        if (request.getAddress() != null) {
+            user.setAddress(request.getAddress());
         }
-        if (userResponse.getEmergencyContactPhone() != null) {
-            user.setEmergencyContactPhone(userResponse.getEmergencyContactPhone());
+        if (request.getUserType() != null) {
+            user.setUserType(request.getUserType());
         }
-
+        if (request.getTitle() != null) {
+            user.setTitle(request.getTitle());
+        }
+        if (request.getEmergencyContactName() != null) {
+            user.setEmergencyContactName(request.getEmergencyContactName());
+        }
+        if (request.getEmergencyContactPhone() != null) {
+            user.setEmergencyContactPhone(request.getEmergencyContactPhone());
+        }
+        if (request.getIsActive() != null) {
+            user.setIsActive(request.getIsActive());
+        }
+        
+        user.setUpdatedAt(LocalDateTime.now());
+        
         User savedUser = userRepository.save(user);
         List<String> roles = savedUser.getRoles().stream()
                 .map(role -> role.getName())
@@ -75,11 +182,31 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         userRepository.delete(user);
     }
+    
+    // Update user status
+    public UserResponse updateUserStatus(Long id, UserStatusUpdateRequest request) {
+        User user = userRepository.findByIdWithRoles(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        user.setIsActive(request.getIsActive());
+        if (request.getInactiveReason() != null) {
+            user.setInactiveReason(request.getInactiveReason());
+        }
+        user.setUpdatedAt(LocalDateTime.now());
+        
+        User savedUser = userRepository.save(user);
+        List<String> roles = savedUser.getRoles().stream()
+                .map(role -> role.getName())
+                .collect(Collectors.toList());
+        return new UserResponse(savedUser, roles);
+    }
 
     public void activateUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         user.setIsActive(true);
+        user.setInactiveReason(null);
+        user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
     }
 
@@ -87,6 +214,7 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         user.setIsActive(false);
+        user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
     }
 }

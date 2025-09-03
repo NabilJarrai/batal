@@ -27,7 +27,7 @@ public class Membership {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false)
-    private User player;
+    private Player player;
     
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
@@ -74,7 +74,7 @@ public class Membership {
         this.updatedAt = LocalDateTime.now();
     }
     
-    public Membership(User player, MembershipType membershipType, LocalDate startDate, LocalDate endDate) {
+    public Membership(Player player, MembershipType membershipType, LocalDate startDate, LocalDate endDate) {
         this();
         this.player = player;
         this.membershipType = membershipType;
@@ -98,11 +98,11 @@ public class Membership {
         this.id = id;
     }
     
-    public User getPlayer() {
+    public Player getPlayer() {
         return player;
     }
     
-    public void setPlayer(User player) {
+    public void setPlayer(Player player) {
         this.player = player;
     }
     

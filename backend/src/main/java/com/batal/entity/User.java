@@ -62,7 +62,7 @@ public class User {
     
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type", nullable = false)
-    private UserType userType = UserType.PLAYER;
+    private UserType userType; // No default - must be set explicitly
     
     @Size(max = 100)
     @Column(length = 100)
@@ -328,9 +328,8 @@ public class User {
         role.getUsers().remove(this);
     }
     
-    public boolean isPlayer() {
-        return userType == UserType.PLAYER;
-    }
+    // Since players are now separate entities, users are only authenticated staff
+    // No need for isPlayer() method anymore
     
     public boolean isCoach() {
         return userType == UserType.COACH;

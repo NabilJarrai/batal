@@ -123,7 +123,9 @@ public class CommunicationReply {
     }
     
     public boolean isFromPlayer() {
-        return author != null && author.isPlayer();
+        // Since users are now only authenticated staff (Admin/Manager/Coach),
+        // and players are separate entities, User authors cannot be players
+        return false;
     }
     
     @Override

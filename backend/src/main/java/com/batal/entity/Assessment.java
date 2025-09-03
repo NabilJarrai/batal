@@ -25,7 +25,7 @@ public class Assessment {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false)
-    private User player;
+    private Player player;
     
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
@@ -67,7 +67,7 @@ public class Assessment {
         this.updatedAt = LocalDateTime.now();
     }
     
-    public Assessment(User player, User assessor, LocalDate assessmentDate, AssessmentPeriod period) {
+    public Assessment(Player player, User assessor, LocalDate assessmentDate, AssessmentPeriod period) {
         this();
         this.player = player;
         this.assessor = assessor;
@@ -89,11 +89,11 @@ public class Assessment {
         this.id = id;
     }
     
-    public User getPlayer() {
+    public Player getPlayer() {
         return player;
     }
     
-    public void setPlayer(User player) {
+    public void setPlayer(Player player) {
         this.player = player;
     }
     
