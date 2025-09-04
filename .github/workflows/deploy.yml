@@ -2,7 +2,7 @@ name: Deploy Batal Academy
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [develop]
   workflow_dispatch:
 
 env:
@@ -41,7 +41,7 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=sha
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
 
       - name: Extract metadata for backend
         id: meta-backend
@@ -52,7 +52,7 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=sha
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
 
       - name: Build and push frontend image
         uses: docker/build-push-action@v5
@@ -61,7 +61,7 @@ jobs:
           push: true
           no-cache: true
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ github.ref_name == 'develop' && 'https://batal.dev.nabiljarrai.com/api' || 'https://batal.nabiljarrai.com/api' }}
+            NEXT_PUBLIC_API_URL=https://batal.dev.nabiljarrai.com/api
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
 
@@ -73,25 +73,18 @@ jobs:
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
 
-      - name: Deploy to VPS
+      - name: Deploy to Development Server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            # Determine environment based on branch
-            if [[ "${{ github.ref_name }}" == "develop" ]]; then
-              ENV="dev"
-              DOMAIN="batal.dev.nabiljarrai.com"
-              PROJECT_DIR="/opt/batal-dev"
-            else
-              ENV="prod"
-              DOMAIN="batal.nabiljarrai.com" 
-              PROJECT_DIR="/opt/batal"
-            fi
+            ENV="dev"
+            DOMAIN="batal.dev.nabiljarrai.com"
+            PROJECT_DIR="/opt/batal-dev"
 
-            echo "Deploying to $ENV environment with domain $DOMAIN"
+            echo "Deploying to $DOMAIN"
 
             # Create project directory if it doesn't exist
             sudo mkdir -p $PROJECT_DIR
@@ -103,17 +96,12 @@ jobs:
             fi
 
             sudo git fetch origin
-            sudo git checkout ${{ github.ref_name }}
-            sudo git pull origin ${{ github.ref_name }}
+            sudo git checkout develop
+            sudo git pull origin develop
 
-            # Set compose files based on environment
-            if [[ "${{ github.ref_name }}" == "develop" ]]; then
-              COMPOSE_FILES="-f docker-compose.yml -f docker-compose.dev-deploy.yml"
-              IMAGE_TAG="develop"
-            else
-              COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml"
-              IMAGE_TAG="${{ github.ref_name }}"
-            fi
+            # Use deployment configuration
+            COMPOSE_FILES="-f docker-compose.yml -f docker-compose.deploy.yml"
+            IMAGE_TAG="develop"
 
             # Create environment file from secrets
             sudo tee .env > /dev/null << EOF
@@ -130,10 +118,10 @@ jobs:
             DOMAIN="$DOMAIN"
             EOF
 
-            # Login to GitHub Container Registry (preserve auth for root)
+            # Login to GitHub Container Registry
             echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
 
-            # Pull latest images with force
+            # Pull latest images
             sudo docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:$IMAGE_TAG
             sudo docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:$IMAGE_TAG
 
@@ -141,74 +129,83 @@ jobs:
             sudo docker compose $COMPOSE_FILES down || true
             sudo docker system prune -f
 
-            # Remove pull_policy temporarily to avoid auth issues
-            sudo sed -i 's/pull_policy: always/# pull_policy: always/g' docker-compose.*.yml || true
-
-            # Deploy with docker compose (will use latest pulled images)
+            # Deploy with docker compose
             sudo docker compose $COMPOSE_FILES up -d
 
-            # Verify deployment success - fail fast if services don't start
-            echo "Verifying deployment..."
+            # Wait for services to start
+            echo "Waiting for services to start..."
+            sleep 10
 
-            # Wait for containers to be in running state (max 60 seconds)
-            echo "Checking container status..."
-            for i in {1..5}; do
-              # Check if any containers are not running
-              NOT_RUNNING=$(sudo docker compose $COMPOSE_FILES ps --format "table {{.Name}}\t{{.Status}}" | grep -v "STATUS" | grep -v "Up")
+            # Verify deployment
+            echo "Verifying deployment..."
+            
+            # Check container status
+            for i in {1..6}; do
+              NOT_RUNNING=$(sudo docker compose $COMPOSE_FILES ps --format "table {{.Name}}\t{{.Status}}" | grep -v "STATUS" | grep -v "Up" | head -5)
               if [ -n "$NOT_RUNNING" ]; then
-                if [ $i -eq 5 ]; then
-                  echo "❌ DEPLOYMENT FAILED: Containers failed to start within 60 seconds"
+                if [ $i -eq 6 ]; then
+                  echo "❌ DEPLOYMENT FAILED: Containers failed to start"
                   echo "Non-running containers:"
                   echo "$NOT_RUNNING"
-                  sudo docker compose $COMPOSE_FILES logs
+                  sudo docker compose $COMPOSE_FILES logs --tail=50
                   exit 1
                 fi
-                echo "Attempt $i/5: Waiting for containers to start..."
-                echo "Non-running containers: $NOT_RUNNING"
-                sleep 5
+                echo "Attempt $i/6: Waiting for containers to start..."
+                sleep 10
               else
                 echo "✅ All containers are running"
                 break
               fi
             done
 
-            # Verify services are responding (max 30 seconds each)
-            echo "Testing backend health endpoint..."
-            if ! timeout 30 bash -c 'until curl -f http://localhost:8080/health >/dev/null 2>&1; do sleep 2; done'; then
-              echo "❌ DEPLOYMENT FAILED: Backend health check failed"
-              sudo docker compose $COMPOSE_FILES logs backend
-              exit 1
-            fi
-            echo "✅ Backend is healthy"
+            # Test backend health
+            echo "Testing backend health..."
+            for i in {1..15}; do
+              if curl -f http://localhost:8080/health >/dev/null 2>&1; then
+                echo "✅ Backend is healthy"
+                break
+              elif [ $i -eq 15 ]; then
+                echo "❌ Backend health check failed"
+                sudo docker compose $COMPOSE_FILES logs backend --tail=20
+                exit 1
+              else
+                echo "Attempt $i/15: Backend not ready yet..."
+                sleep 2
+              fi
+            done
 
-            echo "Testing frontend endpoint..."
-            if ! timeout 30 bash -c 'until curl -f http://localhost:3000 >/dev/null 2>&1; do sleep 2; done'; then
-              echo "❌ DEPLOYMENT FAILED: Frontend health check failed"
-              sudo docker compose $COMPOSE_FILES logs frontend
-              exit 1
-            fi
-            echo "✅ Frontend is healthy"
+            # Test frontend
+            echo "Testing frontend..."
+            for i in {1..15}; do
+              if curl -f http://localhost:3000 >/dev/null 2>&1; then
+                echo "✅ Frontend is healthy"
+                break
+              elif [ $i -eq 15 ]; then
+                echo "❌ Frontend health check failed"
+                sudo docker compose $COMPOSE_FILES logs frontend --tail=20
+                exit 1
+              else
+                echo "Attempt $i/15: Frontend not ready yet..."
+                sleep 2
+              fi
+            done
 
-            # Set up nginx configuration for the domain
-            if [[ "${{ github.ref_name }}" == "develop" ]]; then
-              sudo cp nginx-batal-dev.conf /etc/nginx/sites-available/batal-$ENV
-            else
-              sudo cp nginx-batal.conf /etc/nginx/sites-available/batal-$ENV
-            fi
-            sudo ln -sf /etc/nginx/sites-available/batal-$ENV /etc/nginx/sites-enabled/
+            # Set up nginx configuration
+            sudo cp nginx-batal.conf /etc/nginx/sites-available/batal
+            sudo ln -sf /etc/nginx/sites-available/batal /etc/nginx/sites-enabled/
 
             # Get SSL certificate if it doesn't exist
             if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
               sudo certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email ${{ secrets.ADMIN_EMAIL }}
             fi
 
-            # Reload nginx
+            # Test and reload nginx
             sudo nginx -t && sudo systemctl reload nginx
 
             # Clean up old images
             sudo docker image prune -f
 
-            # Final verification and status
+            # Final status
             echo "🎉 DEPLOYMENT SUCCESSFUL!"
             echo "📊 Final status:"
             sudo docker compose $COMPOSE_FILES ps

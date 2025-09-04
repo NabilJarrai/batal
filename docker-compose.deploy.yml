@@ -1,26 +1,26 @@
 services:
   postgres:
-    container_name: batal-postgres-dev
+    container_name: batal-postgres
     volumes:
-      - postgres_data_dev:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
-      - batal-network-dev
+      - batal-network
     ports:
       - "5432:5432"
 
   minio:
-    container_name: batal-minio-dev
+    container_name: batal-minio
     volumes:
-      - minio_data_dev:/data
+      - minio_data:/data
     networks:
-      - batal-network-dev
+      - batal-network
     ports:
       - "9000:9000"
       - "9001:9001"
 
   backend:
     image: ${BACKEND_IMAGE:-ghcr.io/nabiljarrai/batal-backend:develop}
-    container_name: batal-backend-dev
+    container_name: batal-backend
     environment:
       SPRING_PROFILES_ACTIVE: dev
       SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
@@ -30,24 +30,24 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - batal-network-dev
+      - batal-network
 
   frontend:
     image: ${FRONTEND_IMAGE:-ghcr.io/nabiljarrai/batal-frontend:develop}
-    container_name: batal-frontend-dev
+    container_name: batal-frontend
     environment:
       NEXT_PUBLIC_API_URL: https://${DOMAIN:-batal.dev.nabiljarrai.com}/api
     ports:
       - "3000:3000"
     networks:
-      - batal-network-dev
+      - batal-network
 
 volumes:
-  postgres_data_dev:
+  postgres_data:
     driver: local
-  minio_data_dev:
+  minio_data:
     driver: local
 
 networks:
-  batal-network-dev:
+  batal-network:
     driver: bridge
