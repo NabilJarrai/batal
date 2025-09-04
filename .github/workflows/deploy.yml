@@ -97,7 +97,15 @@ jobs:
 
             sudo git fetch origin
             sudo git checkout develop
+            sudo git reset --hard origin/develop
             sudo git pull origin develop
+
+            # Verify required files exist
+            if [ ! -f "docker-compose.deploy.yml" ]; then
+              echo "❌ docker-compose.deploy.yml not found!"
+              ls -la docker-compose*
+              exit 1
+            fi
 
             # Use deployment configuration
             COMPOSE_FILES="-f docker-compose.yml -f docker-compose.deploy.yml"
@@ -160,16 +168,23 @@ jobs:
 
             # Test backend health
             echo "Testing backend health..."
-            for i in {1..15}; do
-              if curl -f http://localhost:8080/health >/dev/null 2>&1; then
+            for i in {1..30}; do
+              if curl -f http://localhost:8080/api/actuator/health >/dev/null 2>&1 || curl -f http://localhost:8080/api/health >/dev/null 2>&1; then
                 echo "✅ Backend is healthy"
                 break
-              elif [ $i -eq 15 ]; then
-                echo "❌ Backend health check failed"
-                sudo docker compose $COMPOSE_FILES logs backend --tail=20
+              elif [ $i -eq 30 ]; then
+                echo "❌ Backend health check failed after 60 seconds"
+                echo "Container status:"
+                sudo docker compose $COMPOSE_FILES ps
+                echo "Backend logs:"
+                sudo docker compose $COMPOSE_FILES logs backend --tail=50
                 exit 1
               else
-                echo "Attempt $i/15: Backend not ready yet..."
+                echo "Attempt $i/30: Backend not ready yet..."
+                if [ $((i % 5)) -eq 0 ]; then
+                  echo "Checking container status..."
+                  sudo docker compose $COMPOSE_FILES ps backend
+                fi
                 sleep 2
               fi
             done
