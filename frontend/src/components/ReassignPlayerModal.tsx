@@ -44,14 +44,14 @@ export default function ReassignPlayerModal({
     try {
       const groups = await groupsAPI.getAll();
       // Filter out the current group and show groups that aren't full
-      const availableForReassignment = groups.filter(group => 
+      const availableForReassignment = groups.filter((group: GroupResponse) => 
         group.id !== currentGroupId && 
         !group.isFull && 
         group.isActive
       );
       
       // Sort groups consistently
-      availableForReassignment.sort((a, b) => {
+      availableForReassignment.sort((a: GroupResponse, b: GroupResponse) => {
         const nameComparison = a.name.localeCompare(b.name);
         if (nameComparison !== 0) return nameComparison;
         return a.id - b.id;
