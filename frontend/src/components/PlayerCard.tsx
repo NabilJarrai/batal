@@ -10,6 +10,8 @@ interface PlayerCardProps {
   onReactivate?: (playerId: number) => void;
   onPromote?: (playerId: number) => void;
   onAssignGroup?: (playerId: number) => void;
+  onUnassignGroup?: (playerId: number) => void;
+  onReassignGroup?: (playerId: number) => void;
   onViewDetails?: (playerId: number) => void;
   showActions?: boolean;
   isSelectable?: boolean;
@@ -24,6 +26,8 @@ export default function PlayerCard({
   onReactivate,
   onPromote,
   onAssignGroup,
+  onUnassignGroup,
+  onReassignGroup,
   onViewDetails,
   showActions = true,
   isSelectable = false,
@@ -182,19 +186,49 @@ export default function PlayerCard({
             <span className="text-sm font-medium">Group</span>
           </div>
           {player.groupName ? (
-            <p className="text-sm text-white">{player.groupName}</p>
+            <div>
+              <p className="text-sm text-white mb-1">{player.groupName}</p>
+              {showActions && (
+                <div className="flex gap-2 mt-1">
+                  {onReassignGroup && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onReassignGroup(player.id!);
+                      }}
+                      className="text-xs bg-blue-500/20 hover:bg-blue-500/30 px-2 py-1 rounded text-blue-200 transition-colors"
+                      title="Reassign to another group"
+                    >
+                      Reassign
+                    </button>
+                  )}
+                  {onUnassignGroup && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onUnassignGroup(player.id!);
+                      }}
+                      className="text-xs bg-red-500/20 hover:bg-red-500/30 px-2 py-1 rounded text-red-200 transition-colors"
+                      title="Remove from group"
+                    >
+                      Unassign
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           ) : (
             <div className="flex items-center">
               <p className="text-sm text-gray-400 italic mr-2">No group assigned</p>
-              {onAssignGroup && (
+              {showActions && onAssignGroup && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onAssignGroup(player.id!);
                   }}
-                  className="text-xs bg-blue-500/20 hover:bg-blue-500/30 px-2 py-1 rounded text-blue-200"
+                  className="text-xs bg-green-500/20 hover:bg-green-500/30 px-2 py-1 rounded text-green-200 transition-colors"
                 >
-                  Assign
+                  Assign to Group
                 </button>
               )}
             </div>

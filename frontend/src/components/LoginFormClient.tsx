@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/hooks";
 import { loginUser, clearError } from "@/store/authSlice";
@@ -147,9 +146,13 @@ export default function LoginFormClient() {
             <p className="mt-1 text-xs text-red-300">{validationErrors.password}</p>
           )}
           <div className="mt-2 flex justify-end">
-            <Link href="/forgot-password" className="text-xs text-cyan-300 hover:text-cyan-200">
+            <button 
+              type="button"
+              onClick={() => alert('Forgot password functionality coming soon!')}
+              className="text-xs text-cyan-300 hover:text-cyan-200 cursor-pointer"
+            >
               Forgot password?
-            </Link>
+            </button>
           </div>
         </div>
 

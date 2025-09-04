@@ -1,23 +1,45 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/store/hooks";
 
 export default function HomePage() {
   const router = useRouter();
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const { isAuthenticated, user } = useAuth();
 
   const navigateToDashboard = (role: string) => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      // Redirect to login page
+      router.push('/login');
+      return;
+    }
+
+    // If authenticated, check if user has the correct role
+    const userRoles = user?.roles || [];
+    
     switch (role) {
       case 'admin':
-        router.push('/admin');
+        if (userRoles.includes('ADMIN')) {
+          router.push('/admin');
+        } else {
+          router.push('/login');
+        }
         break;
       case 'manager':
-        router.push('/manager');
+        if (userRoles.includes('MANAGER')) {
+          router.push('/manager');
+        } else {
+          router.push('/login');
+        }
         break;
       case 'coach':
-        router.push('/coach');
+        if (userRoles.includes('COACH')) {
+          router.push('/coach');
+        } else {
+          router.push('/login');
+        }
         break;
       default:
         router.push('/login');
@@ -212,27 +234,27 @@ export default function HomePage() {
             Quick Demo Access
           </h3>
           <p className="text-blue-200 mb-6">
-            For testing purposes, you can quickly access any dashboard without authentication
+            Login with demo credentials to test different dashboard roles
           </p>
           <div className="flex justify-center space-x-4">
-            <Link
-              href="/admin"
+            <button
+              onClick={() => navigateToDashboard('admin')}
               className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-lg transition-all duration-200 font-medium"
             >
               Demo Admin
-            </Link>
-            <Link
-              href="/manager"
+            </button>
+            <button
+              onClick={() => navigateToDashboard('manager')}
               className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg transition-all duration-200 font-medium"
             >
               Demo Manager
-            </Link>
-            <Link
-              href="/coach"
+            </button>
+            <button
+              onClick={() => navigateToDashboard('coach')}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all duration-200 font-medium"
             >
               Demo Coach
-            </Link>
+            </button>
           </div>
         </div>
       </section>

@@ -9,8 +9,13 @@ interface GroupListProps {
   loading?: boolean;
   onAssignCoach?: (groupId: number) => void;
   onAssignPlayer?: (groupId: number) => void;
+  onRemoveCoach?: (groupId: number) => void;
+  onRemovePlayer?: (groupId: number, playerId: number) => void;
+  onUnassignPlayer?: (groupId: number, playerId: number) => void;
+  onReassignPlayer?: (playerId: number, fromGroupId: number, toGroupId: number) => void;
   onViewDetails?: (groupId: number) => void;
   onEdit?: (groupId: number) => void;
+  onDelete?: (groupId: number) => void;
   onCreateGroup?: () => void;
   showActions?: boolean;
   isSelectable?: boolean;
@@ -25,8 +30,13 @@ export default function GroupList({
   loading = false,
   onAssignCoach,
   onAssignPlayer,
+  onRemoveCoach,
+  onRemovePlayer,
+  onUnassignPlayer,
+  onReassignPlayer,
   onViewDetails,
   onEdit,
+  onDelete,
   onCreateGroup,
   showActions = true,
   isSelectable = false,
@@ -73,7 +83,7 @@ export default function GroupList({
     });
   }, [groups, searchTerm, selectedLevel, selectedAgeGroup, showInactive, showFullGroups]);
 
-  // Group by level for display
+  // Group by level for display with consistent sorting
   const groupsByLevel = useMemo(() => {
     const grouped: { [key in Level]: GroupResponse[] } = {
       [Level.DEVELOPMENT]: [],
@@ -82,6 +92,20 @@ export default function GroupList({
     
     filteredGroups.forEach(group => {
       grouped[group.level].push(group);
+    });
+    
+    // Sort groups within each level consistently
+    // Primary sort: by name (alphabetical)
+    // Secondary sort: by ID (to ensure completely consistent ordering)
+    Object.keys(grouped).forEach(level => {
+      grouped[level as Level].sort((a, b) => {
+        // First sort by name
+        const nameComparison = a.name.localeCompare(b.name);
+        if (nameComparison !== 0) return nameComparison;
+        
+        // If names are the same, sort by ID for consistency
+        return a.id - b.id;
+      });
     });
     
     return grouped;
@@ -280,8 +304,13 @@ export default function GroupList({
                     group={group}
                     onAssignCoach={onAssignCoach}
                     onAssignPlayer={onAssignPlayer}
+                    onRemoveCoach={onRemoveCoach}
+                    onRemovePlayer={onRemovePlayer}
+                    onUnassignPlayer={onUnassignPlayer}
+                    onReassignPlayer={onReassignPlayer}
                     onViewDetails={onViewDetails}
                     onEdit={onEdit}
+                    onDelete={onDelete}
                     showActions={showActions}
                     isSelectable={isSelectable}
                     isSelected={selectedGroups.includes(group.id)}
@@ -306,8 +335,13 @@ export default function GroupList({
                     group={group}
                     onAssignCoach={onAssignCoach}
                     onAssignPlayer={onAssignPlayer}
+                    onRemoveCoach={onRemoveCoach}
+                    onRemovePlayer={onRemovePlayer}
+                    onUnassignPlayer={onUnassignPlayer}
+                    onReassignPlayer={onReassignPlayer}
                     onViewDetails={onViewDetails}
                     onEdit={onEdit}
+                    onDelete={onDelete}
                     showActions={showActions}
                     isSelectable={isSelectable}
                     isSelected={selectedGroups.includes(group.id)}

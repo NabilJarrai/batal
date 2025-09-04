@@ -1,26 +1,27 @@
 "use client";
 
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition, Listbox } from '@headlessui/react';
 import { PlayerDTO, Level, BasicFoot } from '@/types/players';
-import { AgeGroup } from '@/types/groups';
-import { apiClient } from '@/lib/apiClient';
+import { playersAPI } from '@/lib/api';
 import { AssignmentService } from '@/services/assignmentService';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import '@/styles/datepicker.css';
 
-interface CreatePlayerModalProps {
+interface EditPlayerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: () => void;
+  playerId: number | null;
 }
 
-export default function CreatePlayerModal({ 
+export default function EditPlayerModal({ 
   isOpen, 
   onClose, 
-  onComplete 
-}: CreatePlayerModalProps) {
+  onComplete,
+  playerId 
+}: EditPlayerModalProps) {
   const [formData, setFormData] = useState<Partial<PlayerDTO>>({
     firstName: '',
     lastName: '',
@@ -28,44 +29,83 @@ export default function CreatePlayerModal({
     phone: '',
     parentName: '',
     dateOfBirth: '',
+    joiningDate: '', // Add joiningDate field
+    groupId: undefined, // Add groupId field to preserve group assignment
     basicFoot: BasicFoot.RIGHT,
     level: Level.DEVELOPMENT,
-    isActive: true,
-    joiningDate: new Date().toISOString().split('T')[0]
+    isActive: true
   });
   
   const [birthDate, setBirthDate] = useState<Date | null>(null);
-  const [joiningDate, setJoiningDate] = useState<Date | null>(new Date());
-
-  const [autoAssign, setAutoAssign] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Load player data when modal opens
+  useEffect(() => {
+    if (isOpen && playerId) {
+      loadPlayerData();
+    }
+  }, [isOpen, playerId]);
+
+  const loadPlayerData = async () => {
+    if (!playerId) return;
+    
+    setIsLoading(true);
+    try {
+      const player = await playersAPI.getById(playerId);
+      setFormData({
+        firstName: player.firstName || '',
+        lastName: player.lastName || '',
+        email: player.email || '',
+        phone: player.phone || '',
+        parentName: player.parentName || '',
+        dateOfBirth: player.dateOfBirth || '',
+        joiningDate: player.joiningDate || '', // Preserve existing joining date
+        groupId: player.groupId, // Preserve existing group assignment
+        basicFoot: player.basicFoot || BasicFoot.RIGHT,
+        level: player.level || Level.DEVELOPMENT,
+        isActive: player.isActive,
+        // Preserve additional fields that might not be in the edit form
+        gender: player.gender,
+        address: player.address,
+        emergencyContactName: player.emergencyContactName,
+        emergencyContactPhone: player.emergencyContactPhone,
+        inactiveReason: player.inactiveReason
+      });
+      
+      // Set birth date for DatePicker
+      if (player.dateOfBirth) {
+        setBirthDate(new Date(player.dateOfBirth));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load player data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!playerId) return;
+    
     setIsSubmitting(true);
     setError(null);
-    
-    console.log('Submitting player data:', formData);
 
     try {
-      // Create the player
-      const createdPlayer = await apiClient.post<PlayerDTO>('/players', formData);
-      console.log('Player created successfully:', createdPlayer);
+      // Ensure joiningDate is not null/empty - use current date as fallback
+      const updateData = {
+        ...formData,
+        joiningDate: formData.joiningDate || new Date().toISOString().split('T')[0]
+      };
       
-      // Auto-assign if requested
-      if (autoAssign && formData.dateOfBirth) {
-        const group = await AssignmentService.autoAssignPlayer(createdPlayer);
-        if (group) {
-          console.log(`Player assigned to group: ${group.name}`);
-        }
-      }
-
+      console.log('Updating player with data (preserving groupId):', updateData);
+      await playersAPI.update(playerId, updateData);
       onComplete();
       handleClose();
     } catch (err) {
-      console.error('Error creating player:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create player');
+      console.error('Error updating player:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update player');
     } finally {
       setIsSubmitting(false);
     }
@@ -79,14 +119,13 @@ export default function CreatePlayerModal({
       phone: '',
       parentName: '',
       dateOfBirth: '',
+      joiningDate: '', // Reset joiningDate as well
+      groupId: undefined, // Reset groupId as well
       basicFoot: BasicFoot.RIGHT,
       level: Level.DEVELOPMENT,
-      isActive: true,
-      joiningDate: new Date().toISOString().split('T')[0]
+      isActive: true
     });
     setBirthDate(null);
-    setJoiningDate(new Date());
-    setAutoAssign(true);
     setError(null);
     onClose();
   };
@@ -95,6 +134,46 @@ export default function CreatePlayerModal({
     if (!formData.dateOfBirth) return null;
     return AssignmentService.getAgeGroup(formData.dateOfBirth);
   };
+
+  if (isLoading) {
+    return (
+      <Transition appear show={isOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={handleClose}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-50" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+                  <div className="flex items-center justify-center p-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+    );
+  }
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -124,7 +203,7 @@ export default function CreatePlayerModal({
             >
               <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
                 <Dialog.Title as="h3" className="text-lg font-medium text-white mb-4">
-                  Add New Player
+                  Edit Player
                 </Dialog.Title>
 
                 {error && (
@@ -134,7 +213,7 @@ export default function CreatePlayerModal({
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* Personal Information */}
+                  {/* Name Fields */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -246,78 +325,7 @@ export default function CreatePlayerModal({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-1">
-                        Joining Date
-                      </label>
-                      <DatePicker
-                        selected={joiningDate}
-                        onChange={(date) => {
-                          setJoiningDate(date);
-                          setFormData({...formData, joiningDate: date ? date.toISOString().split('T')[0] : ''});
-                        }}
-                        dateFormat="MM/dd/yyyy"
-                        maxDate={new Date()}
-                        minDate={new Date(new Date().getFullYear() - 5, 0, 1)}
-                        showYearDropdown
-                        showMonthDropdown
-                        dropdownMode="select"
-                        yearDropdownItemNumber={6}
-                        scrollableYearDropdown
-                        placeholderText="Select joining date"
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        wrapperClassName="w-full"
-                        showPopperArrow={false}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Football Details */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
-                        Preferred Foot
-                      </label>
-                      <Listbox 
-                        value={formData.basicFoot} 
-                        onChange={(value) => setFormData({...formData, basicFoot: value})}
-                      >
-                        <div className="relative">
-                          <Listbox.Button className="relative w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-blue-400">
-                            <span className="block truncate">{formData.basicFoot}</span>
-                            <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                              <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                              </svg>
-                            </span>
-                          </Listbox.Button>
-                          <Transition
-                            as={Fragment}
-                            leave="transition ease-in duration-100"
-                            leaveFrom="opacity-100"
-                            leaveTo="opacity-0"
-                          >
-                            <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-700 border border-gray-600 rounded-lg shadow-lg">
-                              {Object.values(BasicFoot).map((foot) => (
-                                <Listbox.Option
-                                  key={foot}
-                                  value={foot}
-                                  className={({ active }) =>
-                                    `cursor-pointer px-3 py-2 ${
-                                      active ? 'bg-gray-600 text-white' : 'text-gray-300'
-                                    }`
-                                  }
-                                >
-                                  {foot}
-                                </Listbox.Option>
-                              ))}
-                            </Listbox.Options>
-                          </Transition>
-                        </div>
-                      </Listbox>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
-                        Level
+                        Level *
                       </label>
                       <Listbox 
                         value={formData.level} 
@@ -325,55 +333,62 @@ export default function CreatePlayerModal({
                       >
                         <div className="relative">
                           <Listbox.Button className="relative w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-blue-400">
-                            <span className="block truncate">{formData.level}</span>
-                            <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                              <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                              </svg>
-                            </span>
+                            {formData.level}
                           </Listbox.Button>
-                          <Transition
-                            as={Fragment}
-                            leave="transition ease-in duration-100"
-                            leaveFrom="opacity-100"
-                            leaveTo="opacity-0"
-                          >
-                            <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-700 border border-gray-600 rounded-lg shadow-lg">
-                              {Object.values(Level).map((level) => (
-                                <Listbox.Option
-                                  key={level}
-                                  value={level}
-                                  className={({ active }) =>
-                                    `cursor-pointer px-3 py-2 ${
-                                      active ? 'bg-gray-600 text-white' : 'text-gray-300'
-                                    }`
-                                  }
-                                >
-                                  {level}
-                                </Listbox.Option>
-                              ))}
-                            </Listbox.Options>
-                          </Transition>
+                          <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
+                            {Object.values(Level).map((level) => (
+                              <Listbox.Option
+                                key={level}
+                                value={level}
+                                className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                              >
+                                {level}
+                              </Listbox.Option>
+                            ))}
+                          </Listbox.Options>
                         </div>
                       </Listbox>
                     </div>
                   </div>
 
-                  {/* Auto-assign Option */}
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                  {/* Football Details */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Preferred Foot
+                    </label>
+                    <Listbox 
+                      value={formData.basicFoot} 
+                      onChange={(value) => setFormData({...formData, basicFoot: value})}
+                    >
+                      <div className="relative">
+                        <Listbox.Button className="relative w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-blue-400">
+                          {formData.basicFoot}
+                        </Listbox.Button>
+                        <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
+                          {Object.values(BasicFoot).map((foot) => (
+                            <Listbox.Option
+                              key={foot}
+                              value={foot}
+                              className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                            >
+                              {foot}
+                            </Listbox.Option>
+                          ))}
+                        </Listbox.Options>
+                      </div>
+                    </Listbox>
+                  </div>
+
+                  {/* Status */}
+                  <div>
                     <label className="flex items-center space-x-3">
                       <input
                         type="checkbox"
-                        checked={autoAssign}
-                        onChange={(e) => setAutoAssign(e.target.checked)}
-                        className="h-4 w-4 rounded text-blue-600"
+                        checked={formData.isActive}
+                        onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+                        className="form-checkbox h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
                       />
-                      <div>
-                        <p className="text-sm font-medium text-white">Auto-assign to group</p>
-                        <p className="text-xs text-gray-400">
-                          Automatically assign player to an appropriate group based on age and level
-                        </p>
-                      </div>
+                      <span className="text-sm font-medium text-gray-300">Active Player</span>
                     </label>
                   </div>
 
@@ -382,16 +397,27 @@ export default function CreatePlayerModal({
                     <button
                       type="button"
                       onClick={handleClose}
-                      className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-white transition-colors"
+                      disabled={isSubmitting}
+                      className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-600/50 text-white rounded-lg font-medium transition-colors duration-200"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="flex-1 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg text-white font-medium transition-all disabled:opacity-50"
+                      className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
                     >
-                      {isSubmitting ? 'Creating...' : 'Create Player'}
+                      {isSubmitting ? (
+                        <div className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Updating...
+                        </div>
+                      ) : (
+                        'Update Player'
+                      )}
                     </button>
                   </div>
                 </form>

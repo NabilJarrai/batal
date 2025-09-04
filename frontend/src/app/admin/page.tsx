@@ -10,9 +10,15 @@ import PromotionModal from '@/components/PromotionModal';
 import CreatePlayerModal from '@/components/CreatePlayerModal';
 import CreateUserModal from '@/components/CreateUserModal';
 import CreateGroupModal from '@/components/CreateGroupModal';
+import EditUserModal from '@/components/EditUserModal';
+import EditPlayerModal from '@/components/EditPlayerModal';
+import EditGroupModal from '@/components/EditGroupModal';
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
+import ReassignPlayerModal from '@/components/ReassignPlayerModal';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
 import { useAuth } from '@/store/hooks';
+import { useNotification } from '@/contexts/NotificationContext';
 import { groupsAPI, usersAPI, playersAPI } from '@/lib/api';
 import {
   GroupResponse,
@@ -24,6 +30,7 @@ import {
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const { showError, showSuccess } = useNotification();
   
   // State
   const [activeTab, setActiveTab] = useState<'overview' | 'groups' | 'users' | 'players'>('overview');
@@ -61,10 +68,31 @@ export default function AdminDashboard() {
     playerId: number | null;
   }>({ isOpen: false, playerId: null });
 
+  const [reassignPlayerModal, setReassignPlayerModal] = useState<{
+    isOpen: boolean;
+    player: PlayerDTO | null;
+    currentGroupId: number | null;
+    currentGroupName: string;
+  }>({ isOpen: false, player: null, currentGroupId: null, currentGroupName: '' });
+
   // Creation modals
   const [createPlayerModal, setCreatePlayerModal] = useState(false);
   const [createUserModal, setCreateUserModal] = useState(false);
   const [createGroupModal, setCreateGroupModal] = useState(false);
+
+  // Edit modals
+  const [editUserModal, setEditUserModal] = useState<{ isOpen: boolean; userId: number | null }>({ isOpen: false, userId: null });
+  const [editPlayerModal, setEditPlayerModal] = useState<{ isOpen: boolean; playerId: number | null }>({ isOpen: false, playerId: null });
+  const [editGroupModal, setEditGroupModal] = useState<{ isOpen: boolean; groupId: number | null }>({ isOpen: false, groupId: null });
+
+  // Delete confirmation modal
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    type: 'user' | 'player' | 'group' | null;
+    id: number | null;
+    name: string;
+    isDeleting: boolean;
+  }>({ isOpen: false, type: null, id: null, name: '', isDeleting: false });
 
   // Load initial data
   useEffect(() => {
@@ -102,19 +130,25 @@ export default function AdminDashboard() {
         unassignedPlayers
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
+      showError(errorMessage, 'Dashboard Error');
+      setError(errorMessage);
     }
     setLoading(false);
   };
 
   // Event handlers
   const handleAssignCoach = (groupId: number) => {
+    console.log('handleAssignCoach called with groupId:', groupId);
     const group = groups.find(g => g.id === groupId);
+    console.log('Found group for coach assignment:', group);
     setCoachAssignmentModal({ isOpen: true, groupId, selectedGroup: group });
   };
 
   const handleAssignPlayer = (groupId: number) => {
+    console.log('handleAssignPlayer called with groupId:', groupId);
     const group = groups.find(g => g.id === groupId);
+    console.log('Found group for player assignment:', group);
     setPlayerAssignmentModal({ isOpen: true, groupId, selectedGroup: group });
   };
 
@@ -130,25 +164,212 @@ export default function AdminDashboard() {
     setCreatePlayerModal(true);
   };
 
-  const handleAssignmentComplete = () => {
-    // Reload data after successful assignment
-    loadDashboardData();
-    setPlayerAssignmentModal({ isOpen: false });
-    setCoachAssignmentModal({ isOpen: false });
+  const handleAssignmentComplete = async () => {
+    console.log('Assignment completed, refreshing dashboard data...');
+    try {
+      // Add extra delay to ensure database transaction is committed
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Reload data after successful assignment
+      await loadDashboardData();
+      console.log('Dashboard data refreshed, closing modals...');
+      setPlayerAssignmentModal({ isOpen: false });
+      setCoachAssignmentModal({ isOpen: false });
+      showSuccess('Assignment completed successfully');
+    } catch (error) {
+      console.error('Error refreshing dashboard data:', error);
+      showError('Assignment succeeded but failed to refresh data. Please refresh the page.');
+    }
   };
 
   const handlePromotePlayer = (playerId: number) => {
     setPromotionModal({ isOpen: true, playerId });
   };
 
-  const handleAutoAssignmentComplete = () => {
-    setAutoAssignmentModal(false);
-    loadDashboardData();
+  const handleRemoveCoach = async (groupId: number) => {
+    try {
+      await groupsAPI.removeCoach(groupId);
+      loadDashboardData(); // Reload data
+      showSuccess('Coach removed successfully');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to remove coach';
+      showError(errorMessage, 'Remove Coach Error');
+    }
   };
 
-  const handlePromotionComplete = () => {
+  const handleRemovePlayer = async (groupId: number, playerId: number) => {
+    try {
+      await groupsAPI.removePlayer(groupId, playerId);
+      loadDashboardData(); // Reload data
+      showSuccess('Player removed successfully');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to remove player';
+      showError(errorMessage, 'Remove Player Error');
+    }
+  };
+
+  const handleReassignPlayer = async (playerId: number, fromGroupId: number, toGroupId: number) => {
+    try {
+      // First remove from current group
+      await groupsAPI.removePlayer(fromGroupId, playerId);
+      
+      // Then assign to new group
+      await groupsAPI.assignPlayer({ playerId, groupId: toGroupId });
+      
+      loadDashboardData(); // Reload data
+      showSuccess('Player reassigned successfully');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to reassign player';
+      showError(errorMessage, 'Reassign Player Error');
+    }
+  };
+
+  const handleOpenReassignModal = (playerId: number) => {
+    const player = players.find(p => p.id === playerId);
+    const currentGroup = groups.find(g => g.id === player?.groupId);
+    
+    if (player && currentGroup) {
+      setReassignPlayerModal({
+        isOpen: true,
+        player,
+        currentGroupId: currentGroup.id,
+        currentGroupName: currentGroup.name
+      });
+    }
+  };
+
+  const handleReassignModalConfirm = async (newGroupId: number) => {
+    if (reassignPlayerModal.player && reassignPlayerModal.currentGroupId) {
+      await handleReassignPlayer(
+        reassignPlayerModal.player.id!,
+        reassignPlayerModal.currentGroupId,
+        newGroupId
+      );
+      setReassignPlayerModal({ isOpen: false, player: null, currentGroupId: null, currentGroupName: '' });
+    }
+  };
+
+  // Edit handlers
+  const handleEditUser = (userId: number) => {
+    setEditUserModal({ isOpen: true, userId });
+  };
+
+  const handleEditPlayer = (playerId: number) => {
+    setEditPlayerModal({ isOpen: true, playerId });
+  };
+
+  const handleEditGroup = (groupId: number) => {
+    setEditGroupModal({ isOpen: true, groupId });
+  };
+
+  // Delete handlers
+  const handleDeleteUser = (userId: number) => {
+    const user = users.find(u => u.id === userId);
+    setDeleteModal({
+      isOpen: true,
+      type: 'user',
+      id: userId,
+      name: user ? `${user.firstName} ${user.lastName}` : 'User',
+      isDeleting: false
+    });
+  };
+
+  const handleDeletePlayer = (playerId: number) => {
+    const player = players.find(p => p.id === playerId);
+    setDeleteModal({
+      isOpen: true,
+      type: 'player',
+      id: playerId,
+      name: player ? `${player.firstName} ${player.lastName}` : 'Player',
+      isDeleting: false
+    });
+  };
+
+  const handleDeleteGroup = (groupId: number) => {
+    const group = groups.find(g => g.id === groupId);
+    setDeleteModal({
+      isOpen: true,
+      type: 'group',
+      id: groupId,
+      name: group ? group.name : 'Group',
+      isDeleting: false
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.id || !deleteModal.type) return;
+    
+    setDeleteModal(prev => ({ ...prev, isDeleting: true }));
+    
+    try {
+      switch (deleteModal.type) {
+        case 'user':
+          await usersAPI.delete(deleteModal.id);
+          break;
+        case 'player':
+          await playersAPI.delete(deleteModal.id);
+          break;
+        case 'group':
+          await groupsAPI.delete(deleteModal.id);
+          break;
+      }
+      
+      loadDashboardData(); // Reload data
+      setDeleteModal({ isOpen: false, type: null, id: null, name: '', isDeleting: false });
+      showSuccess(`${deleteModal.type?.charAt(0).toUpperCase()}${deleteModal.type?.slice(1)} deleted successfully`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : `Failed to delete ${deleteModal.type}`;
+      showError(errorMessage, 'Delete Error');
+      setDeleteModal(prev => ({ ...prev, isDeleting: false }));
+    }
+  };
+
+  // Status update handlers
+  const handleUserStatusUpdate = async (userId: number, isActive: boolean, reason?: string) => {
+    try {
+      await usersAPI.updateStatus(userId, { isActive, reason });
+      loadDashboardData();
+      showSuccess(`User ${isActive ? 'activated' : 'deactivated'} successfully`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update user status';
+      showError(errorMessage, 'Status Update Error');
+    }
+  };
+
+  const handlePlayerDeactivate = async (playerId: number, reason: string) => {
+    try {
+      await playersAPI.deactivate(playerId, reason);
+      loadDashboardData();
+      showSuccess('Player deactivated successfully');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to deactivate player';
+      showError(errorMessage, 'Player Deactivation Error');
+    }
+  };
+
+  const handlePlayerReactivate = async (playerId: number) => {
+    try {
+      await playersAPI.reactivate(playerId);
+      loadDashboardData();
+      showSuccess('Player reactivated successfully');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to reactivate player';
+      showError(errorMessage, 'Player Reactivation Error');
+    }
+  };
+
+  const handleAutoAssignmentComplete = async () => {
+    console.log('Auto-assignment completed, refreshing dashboard data...');
+    setAutoAssignmentModal(false);
+    await loadDashboardData();
+    showSuccess('Auto-assignment completed successfully');
+  };
+
+  const handlePromotionComplete = async () => {
+    console.log('Promotion completed, refreshing dashboard data...');
     setPromotionModal({ isOpen: false, playerId: null });
-    loadDashboardData();
+    await loadDashboardData();
+    showSuccess('Player promotion completed successfully');
   };
 
   if (loading) {
@@ -397,6 +618,12 @@ export default function AdminDashboard() {
               groups={groups}
               onAssignCoach={handleAssignCoach}
               onAssignPlayer={handleAssignPlayer}
+              onRemoveCoach={handleRemoveCoach}
+              onRemovePlayer={handleRemovePlayer}
+              onUnassignPlayer={handleRemovePlayer}
+              onReassignPlayer={handleReassignPlayer}
+              onEdit={handleEditGroup}
+              onDelete={handleDeleteGroup}
               onCreateGroup={handleCreateGroup}
               showActions={true}
             />
@@ -419,6 +646,9 @@ export default function AdminDashboard() {
                   <UserCard
                     key={user.id}
                     user={user}
+                    onEdit={handleEditUser}
+                    onDeactivate={(userId) => handleUserStatusUpdate(userId, false, 'Deactivated by admin')}
+                    onActivate={(userId) => handleUserStatusUpdate(userId, true)}
                     showActions={true}
                   />
                 ))}
@@ -443,9 +673,14 @@ export default function AdminDashboard() {
                   <PlayerCard
                     key={player.id}
                     player={player}
+                    onEdit={handleEditPlayer}
+                    onDeactivate={handlePlayerDeactivate}
+                    onReactivate={handlePlayerReactivate}
                     showActions={true}
                     onAssignGroup={player.groupId ? undefined : () => handleAssignPlayer(0)}
                     onPromote={player.level === Level.DEVELOPMENT ? () => handlePromotePlayer(player.id!) : undefined}
+                    onUnassignGroup={player.groupId ? (playerId) => handleRemovePlayer(player.groupId!, playerId) : undefined}
+                    onReassignGroup={player.groupId ? handleOpenReassignModal : undefined}
                   />
                 ))}
               </div>
@@ -490,6 +725,7 @@ export default function AdminDashboard() {
           onComplete={() => {
             setCreatePlayerModal(false);
             loadDashboardData();
+            showSuccess('Player created successfully');
           }}
         />
 
@@ -499,6 +735,7 @@ export default function AdminDashboard() {
           onComplete={() => {
             setCreateUserModal(false);
             loadDashboardData();
+            showSuccess('User created successfully');
           }}
         />
 
@@ -508,7 +745,60 @@ export default function AdminDashboard() {
           onComplete={() => {
             setCreateGroupModal(false);
             loadDashboardData();
+            showSuccess('Group created successfully');
           }}
+        />
+
+        {/* Edit Modals */}
+        <EditUserModal
+          isOpen={editUserModal.isOpen}
+          userId={editUserModal.userId}
+          onClose={() => setEditUserModal({ isOpen: false, userId: null })}
+          onComplete={() => {
+            loadDashboardData();
+            showSuccess('User updated successfully');
+          }}
+        />
+
+        <EditPlayerModal
+          isOpen={editPlayerModal.isOpen}
+          playerId={editPlayerModal.playerId}
+          onClose={() => setEditPlayerModal({ isOpen: false, playerId: null })}
+          onComplete={() => {
+            loadDashboardData();
+            showSuccess('Player updated successfully');
+          }}
+        />
+
+        <EditGroupModal
+          isOpen={editGroupModal.isOpen}
+          groupId={editGroupModal.groupId}
+          onClose={() => setEditGroupModal({ isOpen: false, groupId: null })}
+          onComplete={() => {
+            loadDashboardData();
+            showSuccess('Group updated successfully');
+          }}
+        />
+
+        {/* Reassign Player Modal */}
+        <ReassignPlayerModal
+          isOpen={reassignPlayerModal.isOpen}
+          onClose={() => setReassignPlayerModal({ isOpen: false, player: null, currentGroupId: null, currentGroupName: '' })}
+          onConfirm={handleReassignModalConfirm}
+          player={reassignPlayerModal.player}
+          currentGroupId={reassignPlayerModal.currentGroupId || 0}
+          currentGroupName={reassignPlayerModal.currentGroupName}
+        />
+
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmationModal
+          isOpen={deleteModal.isOpen}
+          onClose={() => setDeleteModal({ isOpen: false, type: null, id: null, name: '', isDeleting: false })}
+          onConfirm={confirmDelete}
+          title={`Delete ${deleteModal.type ? deleteModal.type.charAt(0).toUpperCase() + deleteModal.type.slice(1) : ''}`}
+          message={`Are you sure you want to delete this ${deleteModal.type}? This action cannot be undone.`}
+          itemName={deleteModal.name}
+          isLoading={deleteModal.isDeleting}
         />
       </div>
     </div>
