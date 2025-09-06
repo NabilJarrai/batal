@@ -267,7 +267,12 @@ export default function GroupCard({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onAssignPlayer(group.id);
+                console.log('Add Player button clicked for group:', group.id, group.name);
+                if (onAssignPlayer) {
+                  onAssignPlayer(group.id);
+                } else {
+                  console.error('onAssignPlayer is not defined');
+                }
               }}
               className="text-xs px-2 py-1 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded text-green-200 transition-colors"
             >

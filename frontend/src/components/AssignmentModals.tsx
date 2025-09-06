@@ -45,9 +45,20 @@ export function PlayerAssignmentModal({
   // Load unassigned players and available groups
   useEffect(() => {
     if (isOpen) {
+      console.log('PlayerAssignmentModal opened with:', { groupId, selectedGroup });
       loadData();
+      // Set initial selected group if provided
+      if (selectedGroup) {
+        setSelectedGroup_(selectedGroup);
+      }
+    } else {
+      // Reset state when modal closes
+      setSelectedPlayer(null);
+      setError(null);
+      setUnassignedPlayers([]);
+      setAvailableGroups([]);
     }
-  }, [isOpen]);
+  }, [isOpen, selectedGroup]);
 
   const loadData = async () => {
     console.log('Loading player assignment data...');
@@ -165,10 +176,8 @@ export function PlayerAssignmentModal({
 
   const handleClose = () => {
     setSelectedPlayer(null);
+    setSelectedGroup_(selectedGroup || null);
     setError(null);
-    if (!groupId && !selectedGroup) {
-      setSelectedGroup_(null);
-    }
     onClose();
   };
 
@@ -360,19 +369,23 @@ export function CoachAssignmentModal({
   const [availableGroups, setAvailableGroups] = useState<GroupResponse[]>([]);
   const [selectedGroup_, setSelectedGroup_] = useState<GroupResponse | null>(selectedGroup || null);
 
-  // Update selected group when props change
-  useEffect(() => {
-    console.log('Coach modal - Selected group prop changed:', { selectedGroup });
-    setSelectedGroup_(selectedGroup || null);
-  }, [selectedGroup]);
-
   // Load available coaches and groups
   useEffect(() => {
     if (isOpen) {
       console.log('Coach assignment modal opened:', { groupId, selectedGroup });
       loadData();
+      // Set initial selected group if provided
+      if (selectedGroup) {
+        setSelectedGroup_(selectedGroup);
+      }
+    } else {
+      // Reset state when modal closes
+      setSelectedCoach(null);
+      setError(null);
+      setAvailableCoaches([]);
+      setAvailableGroups([]);
     }
-  }, [isOpen]);
+  }, [isOpen, selectedGroup]);
 
   // Debug state changes
   useEffect(() => {
@@ -489,10 +502,8 @@ export function CoachAssignmentModal({
 
   const handleClose = () => {
     setSelectedCoach(null);
+    setSelectedGroup_(selectedGroup || null);
     setError(null);
-    if (!groupId && !selectedGroup) {
-      setSelectedGroup_(null);
-    }
     onClose();
   };
 
