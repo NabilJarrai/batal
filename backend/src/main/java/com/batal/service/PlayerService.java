@@ -5,9 +5,17 @@ import com.batal.dto.PlayerDTO;
 import com.batal.entity.Player;
 import com.batal.entity.Group;
 import com.batal.entity.enums.AgeGroup;
+import com.batal.entity.enums.Gender;
 import com.batal.repository.PlayerRepository;
 import com.batal.repository.GroupRepository;
+import com.batal.repository.UserRepository;
+import com.batal.repository.RoleRepository;
+import com.batal.entity.User;
+import com.batal.entity.Role;
+import com.batal.entity.enums.UserType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,23 +30,35 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class PlayerService {
-    
+
     @Autowired
     private PlayerRepository playerRepository;
-    
+
     @Autowired
     private GroupRepository groupRepository;
-    
+
     @Autowired
     private GroupService groupService;
-    
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Value("${batal.player-default-password}")
+    private String playerDefaultPassword;
+
     /**
      * Create a new player with automatic group assignment if no group specified
      */
     public PlayerDTO createPlayer(PlayerDTO playerDTO) {
         return createPlayer(playerDTO, true);
     }
-    
+
     /**
      * Create a new player with option for automatic group assignment
      */
@@ -47,15 +67,24 @@ public class PlayerService {
         if (playerRepository.existsByEmail(playerDTO.getEmail())) {
             throw new RuntimeException("Player with email " + playerDTO.getEmail() + " already exists");
         }
-        
+
+        // Check if user with this email already exists
+        if (userRepository.existsByEmail(playerDTO.getEmail())) {
+            throw new RuntimeException("User with email " + playerDTO.getEmail() + " already exists");
+        }
+
         Player player = convertToEntity(playerDTO);
         player.setCreatedAt(LocalDateTime.now());
         player.setUpdatedAt(LocalDateTime.now());
-        
+
+        // Create user account for the player
+        User user = createUserForPlayer(playerDTO);
+        player.setUser(user);
+
         // Set group if provided, otherwise auto-assign if enabled
         if (playerDTO.getGroupId() != null) {
             Group group = groupRepository.findById(playerDTO.getGroupId())
-                .orElseThrow(() -> new RuntimeException("Group not found with id: " + playerDTO.getGroupId()));
+                    .orElseThrow(() -> new RuntimeException("Group not found with id: " + playerDTO.getGroupId()));
             player.setGroup(group);
         } else if (autoAssignGroup && player.getDateOfBirth() != null && player.getLevel() != null) {
             // Save player first, then auto-assign to group
@@ -67,11 +96,11 @@ public class PlayerService {
                 System.out.println("Warning: Could not auto-assign player to group: " + e.getMessage());
             }
         }
-        
+
         Player savedPlayer = playerRepository.save(player);
         return convertToDTO(savedPlayer);
     }
-    
+
     /**
      * Get all players with pagination
      */
@@ -80,7 +109,7 @@ public class PlayerService {
         Page<Player> players = playerRepository.findAllWithGroup(pageable);
         return players.map(this::convertToDTO);
     }
-    
+
     /**
      * Get all active players
      */
@@ -88,10 +117,10 @@ public class PlayerService {
     public List<PlayerDTO> getActivePlayers() {
         List<Player> players = playerRepository.findByIsActiveTrue();
         return players.stream()
-            .map(this::convertToDTO)
-            .collect(Collectors.toList());
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
-    
+
     /**
      * Get player by ID
      */
@@ -100,7 +129,7 @@ public class PlayerService {
         Optional<Player> player = playerRepository.findByIdWithGroup(id);
         return player.map(this::convertToDTO);
     }
-    
+
     /**
      * Get player by email
      */
@@ -109,67 +138,67 @@ public class PlayerService {
         Optional<Player> player = playerRepository.findByEmailWithGroup(email);
         return player.map(this::convertToDTO);
     }
-    
+
     /**
      * Update player
      */
     public PlayerDTO updatePlayer(Long id, PlayerDTO playerDTO) {
         Player existingPlayer = playerRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Player not found with id: " + id));
-        
+                .orElseThrow(() -> new RuntimeException("Player not found with id: " + id));
+
         // Check if email is being changed and if new email already exists
-        if (!existingPlayer.getEmail().equals(playerDTO.getEmail()) && 
-            playerRepository.existsByEmail(playerDTO.getEmail())) {
+        if (!existingPlayer.getEmail().equals(playerDTO.getEmail()) &&
+                playerRepository.existsByEmail(playerDTO.getEmail())) {
             throw new RuntimeException("Player with email " + playerDTO.getEmail() + " already exists");
         }
-        
+
         // Update fields
         updatePlayerFields(existingPlayer, playerDTO);
         existingPlayer.setUpdatedAt(LocalDateTime.now());
-        
+
         // Update group if provided
         if (playerDTO.getGroupId() != null) {
             Group group = groupRepository.findById(playerDTO.getGroupId())
-                .orElseThrow(() -> new RuntimeException("Group not found with id: " + playerDTO.getGroupId()));
+                    .orElseThrow(() -> new RuntimeException("Group not found with id: " + playerDTO.getGroupId()));
             existingPlayer.setGroup(group);
         } else {
             existingPlayer.setGroup(null);
         }
-        
+
         Player updatedPlayer = playerRepository.save(existingPlayer);
         return convertToDTO(updatedPlayer);
     }
-    
+
     /**
      * Deactivate player (soft delete)
      */
     public PlayerDTO deactivatePlayer(Long id, String reason) {
         Player player = playerRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Player not found with id: " + id));
-        
+                .orElseThrow(() -> new RuntimeException("Player not found with id: " + id));
+
         player.setIsActive(false);
         player.setInactiveReason(reason);
         player.setUpdatedAt(LocalDateTime.now());
-        
+
         Player updatedPlayer = playerRepository.save(player);
         return convertToDTO(updatedPlayer);
     }
-    
+
     /**
      * Reactivate player
      */
     public PlayerDTO reactivatePlayer(Long id) {
         Player player = playerRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Player not found with id: " + id));
-        
+                .orElseThrow(() -> new RuntimeException("Player not found with id: " + id));
+
         player.setIsActive(true);
         player.setInactiveReason(null);
         player.setUpdatedAt(LocalDateTime.now());
-        
+
         Player updatedPlayer = playerRepository.save(player);
         return convertToDTO(updatedPlayer);
     }
-    
+
     /**
      * Delete player (hard delete)
      */
@@ -179,7 +208,7 @@ public class PlayerService {
         }
         playerRepository.deleteById(id);
     }
-    
+
     /**
      * Search players by name
      */
@@ -187,10 +216,10 @@ public class PlayerService {
     public List<PlayerDTO> searchPlayersByName(String searchTerm) {
         List<Player> players = playerRepository.searchByName(searchTerm);
         return players.stream()
-            .map(this::convertToDTO)
-            .collect(Collectors.toList());
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
-    
+
     /**
      * Get players by group
      */
@@ -198,10 +227,10 @@ public class PlayerService {
     public List<PlayerDTO> getPlayersByGroup(Long groupId) {
         List<Player> players = playerRepository.findByGroupIdWithGroup(groupId);
         return players.stream()
-            .map(this::convertToDTO)
-            .collect(Collectors.toList());
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
-    
+
     /**
      * Get players without assigned group
      */
@@ -209,22 +238,22 @@ public class PlayerService {
     public List<PlayerDTO> getUnassignedPlayers() {
         List<Player> players = playerRepository.findByGroupIsNullAndIsActiveTrue();
         return players.stream()
-            .map(this::convertToDTO)
-            .collect(Collectors.toList());
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
-    
+
     /**
      * Auto-assign player to appropriate group based on age and level
      */
     public PlayerDTO autoAssignPlayerToGroup(Long playerId) {
         Player player = playerRepository.findById(playerId)
-            .orElseThrow(() -> new RuntimeException("Player not found with id: " + playerId));
-        
+                .orElseThrow(() -> new RuntimeException("Player not found with id: " + playerId));
+
         autoAssignPlayerToGroup(player);
         Player updatedPlayer = playerRepository.save(player);
         return convertToDTO(updatedPlayer);
     }
-    
+
     /**
      * Internal method to auto-assign player to group
      */
@@ -232,19 +261,19 @@ public class PlayerService {
         if (player.getDateOfBirth() == null || player.getLevel() == null) {
             throw new RuntimeException("Player must have date of birth and level to be auto-assigned");
         }
-        
+
         // Calculate player age
         int playerAge = LocalDate.now().getYear() - player.getDateOfBirth().getYear();
         AgeGroup ageGroup = AgeGroup.getByAge(playerAge);
-        
+
         if (ageGroup == null) {
             throw new RuntimeException("Player age (" + playerAge + ") is not within supported age range (4-16 years)");
         }
-        
+
         // Find available group with matching level and age group
         List<Group> availableGroups = groupRepository.findAvailableGroupsByLevelAndAgeGroup(
-            player.getLevel(), ageGroup);
-        
+                player.getLevel(), ageGroup);
+
         if (availableGroups.isEmpty()) {
             // Create new group if none available
             createNewGroupForPlayer(player, ageGroup);
@@ -254,7 +283,7 @@ public class PlayerService {
             player.setGroup(targetGroup);
         }
     }
-    
+
     /**
      * Create a new group for the player when no available groups exist
      */
@@ -262,7 +291,7 @@ public class PlayerService {
         // Find next group number for this level and age group
         List<Group> existingGroups = groupRepository.findByLevelAndAgeGroup(player.getLevel(), ageGroup);
         int nextGroupNumber = existingGroups.size() + 1;
-        
+
         // Create new group
         Group newGroup = new Group();
         newGroup.setLevel(player.getLevel());
@@ -272,43 +301,43 @@ public class PlayerService {
         newGroup.setMinAge(ageGroup.getMinAge());
         newGroup.setMaxAge(ageGroup.getMaxAge());
         newGroup.setIsActive(true);
-        
+
         // Generate group name
         String suffix = nextGroupNumber > 1 ? " " + nextGroupNumber : "";
-        newGroup.setName(player.getLevel().getDisplayName() + " " + 
-                        ageGroup.getDisplayName() + suffix);
-        
+        newGroup.setName(player.getLevel().getDisplayName() + " " +
+                ageGroup.getDisplayName() + suffix);
+
         Group savedGroup = groupRepository.save(newGroup);
         player.setGroup(savedGroup);
     }
-    
+
     /**
      * Promote player to advanced level and reassign to appropriate group
      */
     public PlayerDTO promotePlayerToAdvanced(Long playerId) {
         Player player = playerRepository.findById(playerId)
-            .orElseThrow(() -> new RuntimeException("Player not found with id: " + playerId));
-        
+                .orElseThrow(() -> new RuntimeException("Player not found with id: " + playerId));
+
         if (player.getLevel() == com.batal.entity.enums.Level.ADVANCED) {
             throw new RuntimeException("Player is already at Advanced level");
         }
-        
+
         // Update level
         player.setLevel(com.batal.entity.enums.Level.ADVANCED);
         player.setUpdatedAt(LocalDateTime.now());
-        
+
         // Remove from current group
         if (player.getGroup() != null) {
             player.setGroup(null);
         }
-        
+
         // Auto-assign to new Advanced group
         autoAssignPlayerToGroup(player);
-        
+
         Player updatedPlayer = playerRepository.save(player);
         return convertToDTO(updatedPlayer);
     }
-    
+
     /**
      * Convert Player entity to PlayerDTO
      */
@@ -332,16 +361,16 @@ public class PlayerService {
         dto.setInactiveReason(player.getInactiveReason());
         dto.setCreatedAt(player.getCreatedAt());
         dto.setUpdatedAt(player.getUpdatedAt());
-        
+
         // Set group information
         if (player.getGroup() != null) {
             dto.setGroupId(player.getGroup().getId());
             dto.setGroupName(player.getGroup().getName());
         }
-        
+
         return dto;
     }
-    
+
     /**
      * Convert PlayerDTO to Player entity
      */
@@ -362,10 +391,10 @@ public class PlayerService {
         player.setEmergencyContactPhone(dto.getEmergencyContactPhone());
         player.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
         player.setInactiveReason(dto.getInactiveReason());
-        
+
         return player;
     }
-    
+
     /**
      * Update player fields from DTO
      */
@@ -383,12 +412,87 @@ public class PlayerService {
         player.setBasicFoot(dto.getBasicFoot());
         player.setEmergencyContactName(dto.getEmergencyContactName());
         player.setEmergencyContactPhone(dto.getEmergencyContactPhone());
-        
+
         if (dto.getIsActive() != null) {
             player.setIsActive(dto.getIsActive());
         }
         if (dto.getInactiveReason() != null) {
             player.setInactiveReason(dto.getInactiveReason());
         }
+
+        // Update user account if it exists
+        if (player.getUser() != null) {
+            User user = player.getUser();
+            user.setFirstName(dto.getFirstName());
+            user.setLastName(dto.getLastName());
+            user.setEmail(dto.getEmail());
+            user.setPhone(dto.getPhone());
+            user.setDateOfBirth(dto.getDateOfBirth());
+            user.setGender(dto.getGender() != null ? User.Gender.valueOf(dto.getGender().toString()) : null);
+            user.setAddress(dto.getAddress());
+            user.setParentName(dto.getParentName());
+            user.setJoiningDate(dto.getJoiningDate());
+            user.setLevel(dto.getLevel());
+            user.setBasicFoot(dto.getBasicFoot());
+            user.setEmergencyContactName(dto.getEmergencyContactName());
+            user.setEmergencyContactPhone(dto.getEmergencyContactPhone());
+            user.setIsActive(dto.getIsActive());
+            user.setInactiveReason(dto.getInactiveReason());
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+        }
+    }
+
+    /**
+     * Create a user account for a player
+     */
+    private User createUserForPlayer(PlayerDTO playerDTO) {
+        User user = new User();
+        user.setEmail(playerDTO.getEmail());
+        // Generate a default password - should be changed on first login
+        user.setPassword(passwordEncoder.encode(playerDefaultPassword));
+        user.setFirstName(playerDTO.getFirstName());
+        user.setLastName(playerDTO.getLastName());
+        user.setPhone(playerDTO.getPhone());
+        user.setDateOfBirth(playerDTO.getDateOfBirth());
+        user.setGender(playerDTO.getGender() != null ? User.Gender.valueOf(playerDTO.getGender().toString()) : null);
+        user.setAddress(playerDTO.getAddress());
+        user.setParentName(playerDTO.getParentName());
+        user.setJoiningDate(playerDTO.getJoiningDate() != null ? playerDTO.getJoiningDate() : LocalDate.now());
+        user.setUserType(UserType.PLAYER);
+        user.setLevel(playerDTO.getLevel());
+        user.setBasicFoot(playerDTO.getBasicFoot());
+        user.setEmergencyContactName(playerDTO.getEmergencyContactName());
+        user.setEmergencyContactPhone(playerDTO.getEmergencyContactPhone());
+        user.setIsActive(true);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+
+        // Save user first
+        User savedUser = userRepository.save(user);
+
+        // Assign PLAYER role
+        Role playerRole = roleRepository.findByName("ROLE_PLAYER")
+                .orElseThrow(() -> new RuntimeException("ROLE_PLAYER not found. Please run database migrations."));
+        savedUser.getRoles().add(playerRole);
+
+        return userRepository.save(savedUser);
+    }
+
+    /**
+     * Change player password
+     */
+    public void changePlayerPassword(Long playerId, String newPassword) {
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new RuntimeException("Player not found with id: " + playerId));
+
+        if (player.getUser() == null) {
+            throw new RuntimeException("Player does not have a user account");
+        }
+
+        User user = player.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 }
