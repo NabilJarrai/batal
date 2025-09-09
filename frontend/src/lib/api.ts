@@ -7,7 +7,7 @@ import {
 } from "@/types/auth";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/api";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
 // Token management
 export const tokenManager = {
