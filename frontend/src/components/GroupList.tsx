@@ -16,6 +16,8 @@ interface GroupListProps {
   onViewDetails?: (groupId: number) => void;
   onEdit?: (groupId: number) => void;
   onDelete?: (groupId: number) => void;
+  onActivateGroup?: (groupId: number) => void;
+  onDeactivateGroup?: (groupId: number) => void;
   onCreateGroup?: () => void;
   showActions?: boolean;
   isSelectable?: boolean;
@@ -37,6 +39,8 @@ export default function GroupList({
   onViewDetails,
   onEdit,
   onDelete,
+  onActivateGroup,
+  onDeactivateGroup,
   onCreateGroup,
   showActions = true,
   isSelectable = false,
@@ -311,6 +315,8 @@ export default function GroupList({
                     onViewDetails={onViewDetails}
                     onEdit={onEdit}
                     onDelete={onDelete}
+                    onActivate={onActivateGroup}
+                    onDeactivate={onDeactivateGroup}
                     showActions={showActions}
                     isSelectable={isSelectable}
                     isSelected={selectedGroups.includes(group.id)}
@@ -342,6 +348,8 @@ export default function GroupList({
                     onViewDetails={onViewDetails}
                     onEdit={onEdit}
                     onDelete={onDelete}
+                    onActivate={onActivateGroup}
+                    onDeactivate={onDeactivateGroup}
                     showActions={showActions}
                     isSelectable={isSelectable}
                     isSelected={selectedGroups.includes(group.id)}

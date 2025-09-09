@@ -6,6 +6,9 @@ import com.batal.dto.RegisterRequest;
 import com.batal.dto.UserResponse;
 import com.batal.entity.Role;
 import com.batal.entity.User;
+import com.batal.exception.AuthenticationException;
+import com.batal.exception.ResourceAlreadyExistsException;
+import com.batal.exception.ResourceNotFoundException;
 import com.batal.repository.RoleRepository;
 import com.batal.repository.UserRepository;
 import com.batal.security.JwtUtil;
@@ -44,7 +47,7 @@ public class AuthService {
     public UserResponse register(RegisterRequest registerRequest) {
         // Check if user already exists
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
-            throw new RuntimeException("Email is already taken!");
+            throw new ResourceAlreadyExistsException("User", "email", registerRequest.getEmail());
         }
         
         // Create new user
@@ -63,7 +66,7 @@ public class AuthService {
         
         // Add role
         Role role = roleRepository.findByName(registerRequest.getRole())
-                .orElseThrow(() -> new RuntimeException("Role not found: " + registerRequest.getRole()));
+                .orElseThrow(() -> new ResourceNotFoundException("Role", "name", registerRequest.getRole()));
         
         user.addRole(role);
         
@@ -96,7 +99,7 @@ public class AuthService {
         
         // Get user details
         User user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
         
         return new LoginResponse(jwt, user.getId(), user.getEmail(), 
                 user.getFirstName(), user.getLastName(), roles);

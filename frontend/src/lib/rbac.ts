@@ -37,6 +37,17 @@ export const rolePermissions = {
     canViewFinances: false,
     canManageRoles: false,
   },
+  [UserRole.PLAYER]: {
+    // Player has minimal permissions
+    canManageUsers: false,
+    canManageCoaches: false,
+    canManagePlayers: false,
+    canViewReports: false,
+    canManageSchedule: false,
+    canManageSystem: false,
+    canViewFinances: false,
+    canManageRoles: false,
+  },
 } as const;
 
 // Type for permission keys
@@ -59,11 +70,16 @@ export const hasPermission = (
 // Helper function to check if user has any of the specified roles
 export const hasRole = (
   userRoles: string[],
-  allowedRoles: UserRole[]
+  allowedRoles: UserRole[] | string[]
 ): boolean => {
   if (!userRoles || userRoles.length === 0) return false;
 
-  return userRoles.some((role) => allowedRoles.includes(role as UserRole));
+  // Convert enum values to strings for comparison
+  const allowedRoleStrings = allowedRoles.map(role => 
+    typeof role === 'string' ? role : String(role)
+  );
+  
+  return userRoles.some((role) => allowedRoleStrings.includes(role));
 };
 
 // Helper function to get the highest role (for display purposes)

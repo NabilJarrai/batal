@@ -27,9 +27,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         List<GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(
-                    role.getName().startsWith("ROLE_") ? role.getName() : "ROLE_" + role.getName()
-                ))
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
                 .collect(Collectors.toList());
 
         return UserPrincipal.create(user, authorities);

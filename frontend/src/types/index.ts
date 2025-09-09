@@ -14,6 +14,9 @@ export * from './groups';
 // Assignment system types
 export * from './assignments';
 
+// Skills management types
+export * from './skills';
+
 // Common API types
 export interface ApiResponse<T> {
   data: T;

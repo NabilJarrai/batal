@@ -4,6 +4,7 @@ import com.batal.entity.SkillScore;
 import com.batal.entity.Assessment;
 import com.batal.entity.Skill;
 import com.batal.entity.User;
+import com.batal.entity.Player;
 import com.batal.entity.enums.SkillCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -51,7 +52,7 @@ public interface SkillScoreRepository extends JpaRepository<SkillScore, Long> {
     List<SkillScore> findByPlayerIdOrderByDateDesc(@Param("playerId") Long playerId);
     
     @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player = :player AND ss.skill = :skill ORDER BY ss.assessment.assessmentDate DESC")
-    List<SkillScore> findByPlayerAndSkillOrderByDateDesc(@Param("player") User player, @Param("skill") Skill skill);
+    List<SkillScore> findByPlayerAndSkillOrderByDateDesc(@Param("player") Player player, @Param("skill") Skill skill);
     
     @Query("SELECT AVG(ss.score) FROM SkillScore ss WHERE ss.assessment.player = :player AND ss.skill.category = :category")
     Double getAverageScoreByPlayerAndCategory(@Param("player") User player, @Param("category") SkillCategory category);
@@ -76,4 +77,6 @@ public interface SkillScoreRepository extends JpaRepository<SkillScore, Long> {
     
     @Query("SELECT COUNT(ss) FROM SkillScore ss WHERE ss.skill = :skill")
     long countBySkill(@Param("skill") Skill skill);
+    
+    void deleteByAssessmentId(Long assessmentId);
 }

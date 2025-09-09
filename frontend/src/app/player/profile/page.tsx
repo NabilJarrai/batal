@@ -40,7 +40,7 @@ export default function PlayerProfile() {
       setLoading(true);
       const response = await fetch("/api/players/me", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("jwt_token")}`,
         },
       });
       
@@ -70,7 +70,7 @@ export default function PlayerProfile() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("jwt_token")}`,
         },
         body: JSON.stringify(formData),
       });

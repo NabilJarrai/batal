@@ -213,6 +213,34 @@ public class GroupController {
         }
     }
 
+    // PATCH /api/groups/{id}/activate - Activate group
+    @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<?> activateGroup(@PathVariable Long id) {
+        try {
+            GroupResponse updatedGroup = groupService.activateGroup(id);
+            return ResponseEntity.ok(updatedGroup);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    // PATCH /api/groups/{id}/deactivate - Deactivate group
+    @PatchMapping("/{id}/deactivate")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<?> deactivateGroup(@PathVariable Long id) {
+        try {
+            GroupResponse updatedGroup = groupService.deactivateGroup(id);
+            return ResponseEntity.ok(updatedGroup);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
     // POST /api/groups/auto-assign-player/{playerId} - Auto-assign player to appropriate group
     @PostMapping("/auto-assign-player/{playerId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")

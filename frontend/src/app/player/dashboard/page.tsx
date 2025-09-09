@@ -45,7 +45,7 @@ export default function PlayerDashboard() {
       // Fetch player profile
       const profileResponse = await fetch("/api/players/me", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("jwt_token")}`,
         },
       });
       
@@ -57,7 +57,7 @@ export default function PlayerDashboard() {
       // Fetch latest assessment
       const assessmentResponse = await fetch("/api/players/me/assessments", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("jwt_token")}`,
         },
       });
       

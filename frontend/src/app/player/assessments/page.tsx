@@ -32,7 +32,7 @@ export default function PlayerAssessments() {
       setLoading(true);
       const response = await fetch("/api/players/me/assessments", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("jwt_token")}`,
         },
       });
       

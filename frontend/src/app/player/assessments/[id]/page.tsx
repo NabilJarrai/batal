@@ -48,7 +48,7 @@ export default function AssessmentDetail() {
       setLoading(true);
       const response = await fetch(`/api/players/me/assessments/${id}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("jwt_token")}`,
         },
       });
       

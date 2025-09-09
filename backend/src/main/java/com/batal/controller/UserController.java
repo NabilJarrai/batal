@@ -34,167 +34,103 @@ public class UserController {
     // GET /api/users - List all users (Admin only)
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-    public ResponseEntity<?> getAllUsers() {
-        try {
-            List<UserResponse> users = userService.getAllUsers();
-            return ResponseEntity.ok(users);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", "Error fetching users: " + e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<UserResponse> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
     }
     
     // GET /api/users/{id} - Get user by ID
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or @userController.isCurrentUser(#id)")
-    public ResponseEntity<?> getUserById(@PathVariable Long id) {
-        try {
-            UserResponse user = userService.getUserById(id);
-            return ResponseEntity.ok(user);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
+        UserResponse user = userService.getUserById(id);
+        return ResponseEntity.ok(user);
     }
     
     // POST /api/users - Create new user (Admin only)
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> createUser(@Valid @RequestBody UserCreateRequest request) {
-        try {
-            UserResponse createdUser = userService.createUser(request);
-            return ResponseEntity.ok(createdUser);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserCreateRequest request) {
+        UserResponse createdUser = userService.createUser(request);
+        return ResponseEntity.ok(createdUser);
     }
     
     // PUT /api/users/{id} - Update user
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or @userController.isCurrentUser(#id)")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest request) {
-        try {
-            UserResponse updatedUser = userService.updateUser(id, request);
-            return ResponseEntity.ok(updatedUser);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest request) {
+        UserResponse updatedUser = userService.updateUser(id, request);
+        return ResponseEntity.ok(updatedUser);
     }
     
     // DELETE /api/users/{id} - Delete user (Admin only)
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        try {
-            userService.deleteUser(id);
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "User deleted successfully");
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "User deleted successfully");
+        return ResponseEntity.ok(response);
     }
     
     // PATCH /api/users/{id}/status - Toggle user active/inactive (Admin only)
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateUserStatus(@PathVariable Long id, @Valid @RequestBody UserStatusUpdateRequest request) {
-        try {
-            UserResponse updatedUser = userService.updateUserStatus(id, request);
-            return ResponseEntity.ok(updatedUser);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+    public ResponseEntity<UserResponse> updateUserStatus(@PathVariable Long id, @Valid @RequestBody UserStatusUpdateRequest request) {
+        UserResponse updatedUser = userService.updateUserStatus(id, request);
+        return ResponseEntity.ok(updatedUser);
     }
     
     // GET /api/users/me - Get current user profile
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> getCurrentUserProfile() {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String email = authentication.getName();
-            
-            Optional<User> userOpt = userRepository.findByEmailWithRoles(email);
-            if (userOpt.isEmpty()) {
-                Map<String, String> error = new HashMap<>();
-                error.put("message", "User not found");
-                return ResponseEntity.badRequest().body(error);
-            }
-            
-            UserResponse userResponse = userService.getUserById(userOpt.get().getId());
-            return ResponseEntity.ok(userResponse);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", "Error fetching profile: " + e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+    public ResponseEntity<UserResponse> getCurrentUserProfile() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        
+        Optional<User> userOpt = userRepository.findByEmailWithRoles(email);
+        if (userOpt.isEmpty()) {
+            throw new com.batal.exception.ResourceNotFoundException("User", "email", email);
         }
+        
+        UserResponse userResponse = userService.getUserById(userOpt.get().getId());
+        return ResponseEntity.ok(userResponse);
     }
     
     // PUT /api/users/me - Update current user profile
     @PutMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> updateCurrentUserProfile(@Valid @RequestBody UserUpdateRequest request) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String email = authentication.getName();
-            
-            Optional<User> userOpt = userRepository.findByEmailWithRoles(email);
-            if (userOpt.isEmpty()) {
-                Map<String, String> error = new HashMap<>();
-                error.put("message", "User not found");
-                return ResponseEntity.badRequest().body(error);
-            }
-            
-            UserResponse updatedUser = userService.updateUser(userOpt.get().getId(), request);
-            return ResponseEntity.ok(updatedUser);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+    public ResponseEntity<UserResponse> updateCurrentUserProfile(@Valid @RequestBody UserUpdateRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        
+        Optional<User> userOpt = userRepository.findByEmailWithRoles(email);
+        if (userOpt.isEmpty()) {
+            throw new com.batal.exception.ResourceNotFoundException("User", "email", email);
         }
+        
+        UserResponse updatedUser = userService.updateUser(userOpt.get().getId(), request);
+        return ResponseEntity.ok(updatedUser);
     }
     
     // GET /api/users/coaches - Get all coaches
     @GetMapping("/coaches")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-    public ResponseEntity<?> getAllCoaches() {
-        try {
-            List<UserResponse> coaches = userService.getUsersByRole("COACH");
-            return ResponseEntity.ok(coaches);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", "Error fetching coaches: " + e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+    public ResponseEntity<List<UserResponse>> getAllCoaches() {
+        List<UserResponse> coaches = userService.getUsersByRole("COACH");
+        return ResponseEntity.ok(coaches);
     }
     
     // GET /api/users/coaches/available - Get available coaches (coaches without full group load)
     @GetMapping("/coaches/available") 
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-    public ResponseEntity<?> getAvailableCoaches() {
-        try {
-            // For now, return all active coaches - could be enhanced with workload logic
-            List<UserResponse> coaches = userService.getUsersByRole("COACH");
-            List<UserResponse> availableCoaches = coaches.stream()
-                .filter(coach -> coach.getIsActive())
-                .toList();
-            return ResponseEntity.ok(availableCoaches);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", "Error fetching available coaches: " + e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
+    public ResponseEntity<List<UserResponse>> getAvailableCoaches() {
+        // For now, return all active coaches - could be enhanced with workload logic
+        List<UserResponse> coaches = userService.getUsersByRole("COACH");
+        List<UserResponse> availableCoaches = coaches.stream()
+            .filter(coach -> coach.getIsActive())
+            .toList();
+        return ResponseEntity.ok(availableCoaches);
     }
 
     // Helper method for security expression

@@ -8,7 +8,7 @@ import { usersAPI } from '@/lib/api';
 interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: () => void;
+  onComplete: (updatedUser: UserResponse) => void;
   userId: number | null;
 }
 
@@ -67,8 +67,8 @@ export default function EditUserModal({
     setError(null);
 
     try {
-      await usersAPI.update(userId, formData);
-      onComplete();
+      const updatedUser = await usersAPI.update(userId, formData);
+      onComplete(updatedUser);
       handleClose();
     } catch (err) {
       console.error('Error updating user:', err);

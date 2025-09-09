@@ -17,7 +17,7 @@ export const usePermission = (permission: Permission): boolean => {
 };
 
 // Hook to check roles
-export const useRole = (allowedRoles: UserRole[]): boolean => {
+export const useRole = (allowedRoles: UserRole[] | string[]): boolean => {
   const { user } = useAuth();
   const userRoles = user?.roles || [];
   return hasRole(userRoles, allowedRoles);

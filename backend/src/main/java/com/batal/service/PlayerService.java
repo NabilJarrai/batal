@@ -472,8 +472,8 @@ public class PlayerService {
         User savedUser = userRepository.save(user);
 
         // Assign PLAYER role
-        Role playerRole = roleRepository.findByName("ROLE_PLAYER")
-                .orElseThrow(() -> new RuntimeException("ROLE_PLAYER not found. Please run database migrations."));
+        Role playerRole = roleRepository.findByName("PLAYER")
+                .orElseThrow(() -> new RuntimeException("PLAYER role not found. Please run database migrations."));
         savedUser.getRoles().add(playerRole);
 
         return userRepository.save(savedUser);

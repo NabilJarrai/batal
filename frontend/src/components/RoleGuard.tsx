@@ -23,7 +23,7 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
 
 // Component that renders children only if user has one of the required roles
 interface RoleGuardProps {
-  allowedRoles: UserRole[];
+  allowedRoles: UserRole[] | string[];
   children: React.ReactNode;
   fallback?: React.ReactNode;
 }
@@ -41,7 +41,7 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
 // Higher-order component for role-based page protection
 export const withRoleGuard = <P extends object>(
   Component: React.ComponentType<P>,
-  allowedRoles: UserRole[],
+  allowedRoles: UserRole[] | string[],
   fallbackComponent?: React.ComponentType
 ) => {
   const WrappedComponent: React.FC<P> = (props) => {
