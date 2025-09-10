@@ -13,7 +13,7 @@ import '@/styles/datepicker.css';
 interface CreatePlayerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: () => void;
+  onComplete: (player: PlayerDTO) => void;
 }
 
 export default function CreatePlayerModal({ 
@@ -58,10 +58,13 @@ export default function CreatePlayerModal({
         const group = await AssignmentService.autoAssignPlayer(createdPlayer);
         if (group) {
           console.log(`Player assigned to group: ${group.name}`);
+          // Update the player with the assigned group
+          createdPlayer.groupId = group.id;
+          createdPlayer.groupName = group.name;
         }
       }
 
-      onComplete();
+      onComplete(createdPlayer);
       handleClose();
     } catch (err) {
       console.error('Error creating player:', err);

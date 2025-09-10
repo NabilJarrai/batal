@@ -8,7 +8,7 @@ import { groupsAPI } from '@/lib/api';
 interface EditGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: () => void;
+  onComplete: (group: GroupResponse) => void;
   groupId: number | null;
 }
 
@@ -69,8 +69,8 @@ export default function EditGroupModal({
     setError(null);
 
     try {
-      await groupsAPI.update(groupId, formData);
-      onComplete();
+      const updatedGroup = await groupsAPI.update(groupId, formData);
+      onComplete(updatedGroup);
       handleClose();
     } catch (err) {
       console.error('Error updating group:', err);

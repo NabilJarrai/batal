@@ -214,7 +214,7 @@ export default function AdminDashboard() {
       
       // Remove player from players state or update their groupId
       setPlayers(prev => prev.map(player => 
-        player.id === playerId ? { ...player, groupId: null } : player
+        player.id === playerId ? { ...player, groupId: undefined } : player
       ));
       
       showSuccess('Player removed successfully');
