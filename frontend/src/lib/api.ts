@@ -79,8 +79,31 @@ export const authAPI = {
 
 // Users API calls  
 export const usersAPI = {
-  getAll: async (): Promise<UserResponse[]> => {
-    return apiRequest<UserResponse[]>("/users");
+  getAll: async (page = 0, size = 10, sortBy = 'firstName', sortDir = 'asc', search?: string): Promise<{
+    content: UserResponse[];
+    totalElements: number;
+    totalPages: number;
+    number: number;
+    size: number;
+  }> => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      size: size.toString(),
+      sortBy,
+      sortDir
+    });
+    
+    if (search) {
+      params.append('search', search);
+    }
+    
+    return apiRequest(`/users?${params.toString()}`);
+  },
+
+  // Legacy method for backward compatibility
+  getAllLegacy: async (): Promise<UserResponse[]> => {
+    const response = await usersAPI.getAll(0, 1000); // Get all users with large page size
+    return response.content;
   },
 
   getById: async (id: number): Promise<UserResponse> => {
@@ -130,7 +153,29 @@ export const usersAPI = {
 
 // Players API calls
 export const playersAPI = {
-  getAll: async (params?: any): Promise<any> => {
+  getAll: async (page = 0, size = 10, sortBy = 'firstName', sortDir = 'asc', search?: string): Promise<{
+    content: any[];
+    totalElements: number;
+    totalPages: number;
+    number: number;
+    size: number;
+  }> => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      size: size.toString(),
+      sortBy,
+      sortDir
+    });
+    
+    if (search) {
+      params.append('search', search);
+    }
+    
+    return apiRequest(`/players?${params.toString()}`);
+  },
+
+  // Legacy method for backward compatibility
+  getAllLegacy: async (params?: any): Promise<any> => {
     const queryParams = params ? `?${new URLSearchParams(params)}` : '';
     const response = await apiRequest<any>(`/players${queryParams}`);
     // Handle paginated response - return just the content array if it's a Page object

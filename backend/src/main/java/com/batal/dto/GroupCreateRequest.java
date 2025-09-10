@@ -3,19 +3,21 @@ package com.batal.dto;
 import com.batal.entity.enums.AgeGroup;
 import com.batal.entity.enums.Level;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public class GroupCreateRequest {
+    
+    @NotBlank(message = "Group name is required")
+    @Size(max = 100, message = "Group name cannot exceed 100 characters")
+    private String name;
     
     @NotNull(message = "Level is required")
     private Level level;
     
     @NotNull(message = "Age group is required")
     private AgeGroup ageGroup;
-    
-    @Min(value = 1, message = "Group number must be at least 1")
-    private Integer groupNumber = 1;
     
     @Min(value = 5, message = "Capacity must be at least 5")
     private Integer capacity = 15;
@@ -30,15 +32,37 @@ public class GroupCreateRequest {
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;
     
+    // Optional: Override default age range from AgeGroup
+    @Min(value = 4, message = "Minimum age must be at least 4")
+    private Integer minAge;
+    
+    @Min(value = 4, message = "Maximum age must be at least 4")
+    private Integer maxAge;
+    
     // Constructors
     public GroupCreateRequest() {}
     
-    public GroupCreateRequest(Level level, AgeGroup ageGroup) {
+    public GroupCreateRequest(String name, Level level, AgeGroup ageGroup) {
+        this.name = name;
         this.level = level;
         this.ageGroup = ageGroup;
     }
     
+    public GroupCreateRequest(Level level, AgeGroup ageGroup) {
+        this.level = level;
+        this.ageGroup = ageGroup;
+        // Name will be set separately for auto-assignment
+    }
+    
     // Getters and Setters
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
     public Level getLevel() {
         return level;
     }
@@ -53,14 +77,6 @@ public class GroupCreateRequest {
     
     public void setAgeGroup(AgeGroup ageGroup) {
         this.ageGroup = ageGroup;
-    }
-    
-    public Integer getGroupNumber() {
-        return groupNumber;
-    }
-    
-    public void setGroupNumber(Integer groupNumber) {
-        this.groupNumber = groupNumber;
     }
     
     public Integer getCapacity() {
@@ -101,5 +117,21 @@ public class GroupCreateRequest {
     
     public void setDescription(String description) {
         this.description = description;
+    }
+    
+    public Integer getMinAge() {
+        return minAge;
+    }
+    
+    public void setMinAge(Integer minAge) {
+        this.minAge = minAge;
+    }
+    
+    public Integer getMaxAge() {
+        return maxAge;
+    }
+    
+    public void setMaxAge(Integer maxAge) {
+        this.maxAge = maxAge;
     }
 }

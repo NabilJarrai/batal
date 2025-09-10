@@ -12,8 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "groups", 
-       uniqueConstraints = @UniqueConstraint(columnNames = {"level", "age_group", "group_number"}))
+@Table(name = "groups")
 public class Group {
     
     @Id
@@ -35,10 +34,6 @@ public class Group {
     @Column(name = "age_group", nullable = false, length = 20)
     private AgeGroup ageGroup;
     
-    @NotNull
-    @Min(1)
-    @Column(name = "group_number", nullable = false)
-    private Integer groupNumber = 1;
     
     @NotNull
     @Min(4)
@@ -87,12 +82,11 @@ public class Group {
         this.updatedAt = LocalDateTime.now();
     }
     
-    public Group(Level level, AgeGroup ageGroup, Integer groupNumber) {
+    public Group(Level level, AgeGroup ageGroup, String name) {
         this();
         this.level = level;
         this.ageGroup = ageGroup;
-        this.groupNumber = groupNumber;
-        this.name = generateGroupName();
+        this.name = name;
         this.minAge = ageGroup.getMinAge();
         this.maxAge = ageGroup.getMaxAge();
     }
@@ -102,10 +96,6 @@ public class Group {
         this.updatedAt = LocalDateTime.now();
     }
     
-    private String generateGroupName() {
-        String suffix = groupNumber > 1 ? " " + groupNumber : "";
-        return level.getDisplayName() + " " + ageGroup.getDisplayName() + suffix;
-    }
     
     // Getters and Setters
     public Long getId() {
@@ -130,9 +120,6 @@ public class Group {
     
     public void setLevel(Level level) {
         this.level = level;
-        if (this.ageGroup != null && this.groupNumber != null) {
-            this.name = generateGroupName();
-        }
     }
     
     public AgeGroup getAgeGroup() {
@@ -143,20 +130,6 @@ public class Group {
         this.ageGroup = ageGroup;
         this.minAge = ageGroup.getMinAge();
         this.maxAge = ageGroup.getMaxAge();
-        if (this.level != null && this.groupNumber != null) {
-            this.name = generateGroupName();
-        }
-    }
-    
-    public Integer getGroupNumber() {
-        return groupNumber;
-    }
-    
-    public void setGroupNumber(Integer groupNumber) {
-        this.groupNumber = groupNumber;
-        if (this.level != null && this.ageGroup != null) {
-            this.name = generateGroupName();
-        }
     }
     
     public Integer getMinAge() {

@@ -7,12 +7,12 @@ import jakarta.validation.constraints.Size;
 
 public class GroupUpdateRequest {
     
+    @Size(max = 100, message = "Group name cannot exceed 100 characters")
+    private String name;
+    
     private Level level;
     
     private AgeGroup ageGroup;
-    
-    @Min(value = 1, message = "Group number must be at least 1")
-    private Integer groupNumber;
     
     @Min(value = 5, message = "Capacity must be at least 5")
     private Integer capacity;
@@ -29,10 +29,25 @@ public class GroupUpdateRequest {
     
     private Boolean isActive;
     
+    // Optional: Override age range
+    @Min(value = 4, message = "Minimum age must be at least 4")
+    private Integer minAge;
+    
+    @Min(value = 4, message = "Maximum age must be at least 4")
+    private Integer maxAge;
+    
     // Constructors
     public GroupUpdateRequest() {}
     
     // Getters and Setters
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
     public Level getLevel() {
         return level;
     }
@@ -47,14 +62,6 @@ public class GroupUpdateRequest {
     
     public void setAgeGroup(AgeGroup ageGroup) {
         this.ageGroup = ageGroup;
-    }
-    
-    public Integer getGroupNumber() {
-        return groupNumber;
-    }
-    
-    public void setGroupNumber(Integer groupNumber) {
-        this.groupNumber = groupNumber;
     }
     
     public Integer getCapacity() {
@@ -103,5 +110,21 @@ public class GroupUpdateRequest {
     
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+    }
+    
+    public Integer getMinAge() {
+        return minAge;
+    }
+    
+    public void setMinAge(Integer minAge) {
+        this.minAge = minAge;
+    }
+    
+    public Integer getMaxAge() {
+        return maxAge;
+    }
+    
+    public void setMaxAge(Integer maxAge) {
+        this.maxAge = maxAge;
     }
 }

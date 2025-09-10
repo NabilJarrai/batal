@@ -12,6 +12,8 @@ import com.batal.exception.ResourceNotFoundException;
 import com.batal.repository.UserRepository;
 import com.batal.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,10 +39,25 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     
-    // Get all users
+    // Get all staff users (excluding PLAYERs) with pagination and search
+    public Page<UserResponse> getAllStaffUsers(Pageable pageable, String search) {
+        Page<User> users;
+        if (search != null && !search.trim().isEmpty()) {
+            users = userRepository.findStaffUsersWithSearch(search.trim(), pageable);
+        } else {
+            users = userRepository.findStaffUsers(pageable);
+        }
+        
+        return users.map(user -> new UserResponse(user, user.getRoles().stream()
+                .map(role -> role.getName())
+                .collect(Collectors.toList())));
+    }
+    
+    // Get all users (legacy method - kept for backward compatibility)
     public List<UserResponse> getAllUsers() {
         List<User> users = userRepository.findAllWithRoles();
         return users.stream()
+                .filter(user -> user.getUserType() != UserType.PLAYER) // Exclude players
                 .map(user -> new UserResponse(user, user.getRoles().stream()
                         .map(role -> role.getName())
                         .collect(Collectors.toList())))

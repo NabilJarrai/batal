@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import GroupList from '@/components/GroupList';
 import UserCard from '@/components/UserCard';
 import PlayerCard from '@/components/PlayerCard';
@@ -36,7 +36,6 @@ export default function AdminDashboard() {
   // State
   const [activeTab, setActiveTab] = useState<'overview' | 'groups' | 'users' | 'players' | 'skills'>('overview');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Data
   const [groups, setGroups] = useState<GroupResponse[]>([]);
@@ -48,6 +47,27 @@ export default function AdminDashboard() {
     totalPlayers: 0,
     activeGroups: 0,
     unassignedPlayers: 0
+  });
+
+  // Pagination and search state
+  const [usersPagination, setUsersPagination] = useState({
+    page: 0,
+    size: 12,
+    totalElements: 0,
+    totalPages: 0,
+    sortBy: 'firstName',
+    sortDir: 'asc',
+    search: ''
+  });
+
+  const [playersPagination, setPlayersPagination] = useState({
+    page: 0,
+    size: 12,
+    totalElements: 0,
+    totalPages: 0,
+    sortBy: 'firstName',
+    sortDir: 'asc',
+    search: ''
   });
 
   // Modals
@@ -64,6 +84,7 @@ export default function AdminDashboard() {
   }>({ isOpen: false });
 
   const [autoAssignmentModal, setAutoAssignmentModal] = useState(false);
+  const [autoAssignRefreshTrigger, setAutoAssignRefreshTrigger] = useState(0);
   const [promotionModal, setPromotionModal] = useState<{
     isOpen: boolean;
     playerId: number | null;
@@ -103,40 +124,124 @@ export default function AdminDashboard() {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
+      // Load groups and basic data
       const [groupsResponse, usersResponse, playersResponse, playerStatsResponse] = await Promise.all([
         groupsAPI.getAll(),
-        usersAPI.getAll(),
-        playersAPI.getAll(),
+        usersAPI.getAll(0, 12), // Initial page
+        playersAPI.getAll(0, 12), // Initial page  
         playersAPI.getStats()
       ]);
 
       setGroups(groupsResponse);
-      setUsers(usersResponse);
-      setPlayers(playersResponse.content || playersResponse); // Handle both paginated and non-paginated responses
+      setUsers(usersResponse.content);
+      setPlayers(playersResponse.content);
+      
+      // Update pagination state
+      setUsersPagination(prev => ({
+        ...prev,
+        totalElements: usersResponse.totalElements,
+        totalPages: usersResponse.totalPages
+      }));
+      
+      setPlayersPagination(prev => ({
+        ...prev,
+        totalElements: playersResponse.totalElements,
+        totalPages: playersResponse.totalPages
+      }));
       
       // Calculate stats
-      const coaches = usersResponse.filter(user => 
+      const activeGroups = groupsResponse.filter((group: GroupResponse) => group.isActive);
+      const coaches = usersResponse.content.filter(user => 
         user.userType === UserType.COACH || user.roles.includes('COACH')
       );
-      const activeGroups = groupsResponse.filter((group: GroupResponse) => group.isActive);
-      const unassignedPlayers = playersResponse.content ? 
-        playersResponse.content.filter((player: PlayerDTO) => !player.groupId).length :
-        playersResponse.filter((player: PlayerDTO) => !player.groupId).length;
+      const unassignedPlayers = playersResponse.content.filter((player: PlayerDTO) => !player.groupId).length;
 
       setStats({
         totalGroups: groupsResponse.length,
         totalCoaches: coaches.length,
-        totalPlayers: playerStatsResponse.totalActivePlayers || (playersResponse.content?.length || playersResponse.length),
+        totalPlayers: playerStatsResponse.totalActivePlayers || playersResponse.totalElements,
         activeGroups: activeGroups.length,
         unassignedPlayers
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
       showError(errorMessage, 'Dashboard Error');
-      setError(errorMessage);
     }
     setLoading(false);
   };
+
+  const loadUsersData = useCallback(async () => {
+    try {
+      const response = await usersAPI.getAll(
+        usersPagination.page,
+        usersPagination.size,
+        usersPagination.sortBy,
+        usersPagination.sortDir,
+        usersPagination.search || undefined
+      );
+      
+      setUsers(response.content);
+      setUsersPagination(prev => ({
+        ...prev,
+        totalElements: response.totalElements,
+        totalPages: response.totalPages
+      }));
+      
+      // Update coaches count in stats
+      const coaches = response.content.filter(user => 
+        user.userType === UserType.COACH || user.roles.includes('COACH')
+      );
+      
+      setStats(prev => ({
+        ...prev,
+        totalCoaches: coaches.length
+      }));
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load users data';
+      showError(errorMessage, 'Users Data Error');
+    }
+  }, [usersPagination.page, usersPagination.size, usersPagination.sortBy, usersPagination.sortDir, usersPagination.search, showError]);
+
+  const loadPlayersData = useCallback(async () => {
+    try {
+      const response = await playersAPI.getAll(
+        playersPagination.page,
+        playersPagination.size,
+        playersPagination.sortBy,
+        playersPagination.sortDir,
+        playersPagination.search || undefined
+      );
+      
+      setPlayers(response.content);
+      setPlayersPagination(prev => ({
+        ...prev,
+        totalElements: response.totalElements,
+        totalPages: response.totalPages
+      }));
+      
+      // Update unassigned players count
+      const unassignedPlayers = response.content.filter((player: PlayerDTO) => !player.groupId).length;
+      setStats(prev => ({
+        ...prev,
+        unassignedPlayers
+      }));
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load players data';
+      showError(errorMessage, 'Players Data Error');
+    }
+  }, [playersPagination.page, playersPagination.size, playersPagination.sortBy, playersPagination.sortDir, playersPagination.search, showError]);
+
+  // Reload users when pagination/search changes
+  useEffect(() => {
+    if (loading) return; // Don't load during initial load
+    loadUsersData();
+  }, [loading, loadUsersData]);
+
+  // Reload players when pagination/search changes
+  useEffect(() => {
+    if (loading) return; // Don't load during initial load
+    loadPlayersData();
+  }, [loading, loadPlayersData]);
 
   // Event handlers
   const handleAssignCoach = (groupId: number) => {
@@ -165,21 +270,61 @@ export default function AdminDashboard() {
     setCreatePlayerModal(true);
   };
 
-  const handleAssignmentComplete = async () => {
-    console.log('Assignment completed, refreshing dashboard data...');
+  const handleAssignmentComplete = async (assignedId: number, groupId: number) => {
+    console.log('Assignment completed, updating specific group...', { assignedId, groupId });
     try {
-      // Add extra delay to ensure database transaction is committed
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Add small delay to ensure database transaction is committed
+      await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Reload data after successful assignment
-      await loadDashboardData();
-      console.log('Dashboard data refreshed, closing modals...');
+      // Determine if this is a player assignment by checking which modal is open
+      const isPlayerAssignment = playerAssignmentModal.isOpen;
+      const isCoachAssignment = coachAssignmentModal.isOpen;
+      
+      // Handle auto-assignment case (groupId = -1) by refreshing all groups and players
+      if (groupId === -1) {
+        console.log('Auto-assignment detected, refreshing all groups and players...');
+        const updatedGroups = await groupsAPI.getAll();
+        setGroups(updatedGroups);
+        
+        // Also refresh players data for auto-assignment since it could affect multiple players
+        if (isPlayerAssignment) {
+          loadPlayersData();
+        }
+      } else {
+        // Fetch only the updated group data instead of reloading everything
+        const updatedGroup = await groupsAPI.getById(groupId);
+        
+        // Update only the specific group in the state to preserve sorting and avoid full page refresh
+        setGroups(prevGroups => 
+          prevGroups.map(group => 
+            group.id === groupId ? updatedGroup : group
+          )
+        );
+        
+        // If this is a player assignment, also update the player's groupId in players state
+        if (isPlayerAssignment) {
+          console.log('Updating player groupId in players state...', { playerId: assignedId, groupId });
+          setPlayers(prevPlayers =>
+            prevPlayers.map(player =>
+              player.id === assignedId
+                ? { ...player, groupId: groupId, groupName: updatedGroup.name }
+                : player
+            )
+          );
+          
+          // Trigger refresh of auto-assignment modal data since unassigned players changed
+          setAutoAssignRefreshTrigger(prev => prev + 1);
+        }
+        
+        console.log(`${isPlayerAssignment ? 'Player' : 'Coach'} assignment data updated successfully:`, updatedGroup.name);
+      }
+      
       setPlayerAssignmentModal({ isOpen: false });
       setCoachAssignmentModal({ isOpen: false });
       showSuccess('Assignment completed successfully');
     } catch (error) {
-      console.error('Error refreshing dashboard data:', error);
-      showError('Assignment succeeded but failed to refresh data. Please refresh the page.');
+      console.error('Error updating group data:', error);
+      showError('Assignment succeeded but failed to refresh group data. Please refresh the page.');
     }
   };
 
@@ -214,8 +359,11 @@ export default function AdminDashboard() {
       
       // Remove player from players state or update their groupId
       setPlayers(prev => prev.map(player => 
-        player.id === playerId ? { ...player, groupId: undefined } : player
+        player.id === playerId ? { ...player, groupId: undefined, groupName: undefined } : player
       ));
+      
+      // Trigger refresh of auto-assignment modal data
+      setAutoAssignRefreshTrigger(prev => prev + 1);
       
       showSuccess('Player removed successfully');
     } catch (err) {
@@ -292,28 +440,28 @@ export default function AdminDashboard() {
     setEditGroupModal({ isOpen: true, groupId });
   };
 
-  // Delete handlers
-  const handleDeleteUser = (userId: number) => {
-    const user = users.find(u => u.id === userId);
-    setDeleteModal({
-      isOpen: true,
-      type: 'user',
-      id: userId,
-      name: user ? `${user.firstName} ${user.lastName}` : 'User',
-      isDeleting: false
-    });
-  };
+  // Delete handlers (currently unused but kept for future functionality)
+  // const handleDeleteUser = (userId: number) => {
+  //   const user = users.find(u => u.id === userId);
+  //   setDeleteModal({
+  //     isOpen: true,
+  //     type: 'user',
+  //     id: userId,
+  //     name: user ? `${user.firstName} ${user.lastName}` : 'User',
+  //     isDeleting: false
+  //   });
+  // };
 
-  const handleDeletePlayer = (playerId: number) => {
-    const player = players.find(p => p.id === playerId);
-    setDeleteModal({
-      isOpen: true,
-      type: 'player',
-      id: playerId,
-      name: player ? `${player.firstName} ${player.lastName}` : 'Player',
-      isDeleting: false
-    });
-  };
+  // const handleDeletePlayer = (playerId: number) => {
+  //   const player = players.find(p => p.id === playerId);
+  //   setDeleteModal({
+  //     isOpen: true,
+  //     type: 'player',
+  //     id: playerId,
+  //     name: player ? `${player.firstName} ${player.lastName}` : 'Player',
+  //     isDeleting: false
+  //   });
+  // };
 
   const handleDeleteGroup = (groupId: number) => {
     const group = groups.find(g => g.id === groupId);
@@ -432,6 +580,9 @@ export default function AdminDashboard() {
       // Reload data to ensure consistency after complex multi-player assignments
       await loadDashboardData();
       
+      // Trigger refresh of auto-assignment modal data for next time
+      setAutoAssignRefreshTrigger(prev => prev + 1);
+      
       // Show final success message
       showSuccess('Auto-assignment completed successfully! Players have been assigned to groups.');
     } catch (error) {
@@ -512,22 +663,6 @@ export default function AdminDashboard() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 flex items-center justify-center p-6">
-        <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-6 max-w-md w-full">
-          <h2 className="text-xl font-semibold text-white mb-2">Error Loading Dashboard</h2>
-          <p className="text-red-200 mb-4">{error}</p>
-          <button
-            onClick={loadDashboardData}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white transition-colors duration-200"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <ProtectedRoute allowedRoles={['ADMIN']}>
@@ -757,11 +892,34 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-white">Staff Management</h2>
                 <button
+                  type="button"
                   onClick={handleCreateUser}
                   className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 rounded-lg text-white font-medium transition-all duration-200"
                 >
                   Add Staff Member
                 </button>
+              </div>
+
+              {/* Search Bar */}
+              <div className="mb-6">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search staff members by name or email..."
+                    value={usersPagination.search}
+                    onChange={(e) => {
+                      setUsersPagination(prev => ({
+                        ...prev,
+                        search: e.target.value,
+                        page: 0 // Reset to first page when searching
+                      }));
+                    }}
+                    className="w-full px-4 py-2 pl-10 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <svg className="absolute left-3 top-2.5 h-5 w-5 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -776,6 +934,41 @@ export default function AdminDashboard() {
                   />
                 ))}
               </div>
+
+              {/* Pagination Controls */}
+              {usersPagination.totalElements > 0 && (
+                <div className="flex items-center justify-between mt-6 p-4 bg-white/5 rounded-lg">
+                  <div className="text-sm text-blue-200">
+                    Showing {usersPagination.page * usersPagination.size + 1} to {Math.min((usersPagination.page + 1) * usersPagination.size, usersPagination.totalElements)} of {usersPagination.totalElements} staff members
+                  </div>
+                  
+                  {usersPagination.totalPages > 1 && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setUsersPagination(prev => ({ ...prev, page: Math.max(0, prev.page - 1) }))}
+                        disabled={usersPagination.page === 0}
+                        className="px-3 py-1 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed rounded text-white text-sm transition-colors"
+                      >
+                        Previous
+                      </button>
+                      
+                      <span className="text-sm text-blue-200">
+                        Page {usersPagination.page + 1} of {usersPagination.totalPages}
+                      </span>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setUsersPagination(prev => ({ ...prev, page: Math.min(prev.totalPages - 1, prev.page + 1) }))}
+                        disabled={usersPagination.page >= usersPagination.totalPages - 1}
+                        className="px-3 py-1 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed rounded text-white text-sm transition-colors"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -784,11 +977,34 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-white">Player Management</h2>
                 <button
+                  type="button"
                   onClick={handleCreatePlayer}
                   className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg text-white font-medium transition-all duration-200"
                 >
                   Add Player
                 </button>
+              </div>
+
+              {/* Search Bar */}
+              <div className="mb-6">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search players by name or email..."
+                    value={playersPagination.search}
+                    onChange={(e) => {
+                      setPlayersPagination(prev => ({
+                        ...prev,
+                        search: e.target.value,
+                        page: 0 // Reset to first page when searching
+                      }));
+                    }}
+                    className="w-full px-4 py-2 pl-10 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <svg className="absolute left-3 top-2.5 h-5 w-5 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0z" />
+                  </svg>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -807,6 +1023,41 @@ export default function AdminDashboard() {
                   />
                 ))}
               </div>
+
+              {/* Pagination Controls */}
+              {playersPagination.totalElements > 0 && (
+                <div className="flex items-center justify-between mt-6 p-4 bg-white/5 rounded-lg">
+                  <div className="text-sm text-blue-200">
+                    Showing {playersPagination.page * playersPagination.size + 1} to {Math.min((playersPagination.page + 1) * playersPagination.size, playersPagination.totalElements)} of {playersPagination.totalElements} players
+                  </div>
+                  
+                  {playersPagination.totalPages > 1 && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPlayersPagination(prev => ({ ...prev, page: Math.max(0, prev.page - 1) }))}
+                        disabled={playersPagination.page === 0}
+                        className="px-3 py-1 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed rounded text-white text-sm transition-colors"
+                      >
+                        Previous
+                      </button>
+                      
+                      <span className="text-sm text-blue-200">
+                        Page {playersPagination.page + 1} of {playersPagination.totalPages}
+                      </span>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setPlayersPagination(prev => ({ ...prev, page: Math.min(prev.totalPages - 1, prev.page + 1) }))}
+                        disabled={playersPagination.page >= playersPagination.totalPages - 1}
+                        className="px-3 py-1 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed rounded text-white text-sm transition-colors"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -836,6 +1087,7 @@ export default function AdminDashboard() {
           isOpen={autoAssignmentModal}
           onClose={() => setAutoAssignmentModal(false)}
           onComplete={handleAutoAssignmentComplete}
+          refreshTrigger={autoAssignRefreshTrigger}
         />
 
         <PromotionModal

@@ -68,14 +68,15 @@ export default function ManagerDashboard() {
       ]);
 
       setGroups(groupsResponse);
-      setUsers(usersResponse);
+      setUsers(usersResponse.content || usersResponse);
       setPlayers(playersResponse.content || playersResponse);
 
       // Calculate comprehensive stats
-      const coaches = usersResponse.filter(user => 
+      const allUsers = usersResponse.content || usersResponse;
+      const coaches = allUsers.filter(user => 
         user.userType === UserType.COACH || user.roles.includes('COACH')
       );
-      const admins = usersResponse.filter(user => 
+      const admins = allUsers.filter(user => 
         user.userType === UserType.ADMIN || user.roles.includes('ADMIN')
       );
       const activeGroups = groupsResponse.filter((group: GroupResponse) => group.isActive);

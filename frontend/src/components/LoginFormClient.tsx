@@ -40,7 +40,7 @@ export default function LoginFormClient() {
       dispatch(clearError());
     }
     setValidationErrors({});
-  }, [formData.email, formData.password]);
+  }, [formData.email, formData.password, error, dispatch]);
 
   const validateForm = () => {
     const errors: typeof validationErrors = {};
