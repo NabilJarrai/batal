@@ -83,6 +83,11 @@ public class Player {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
+    // User relationship for authentication
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", unique = true)
+    private User user;
+    
     // Group relationship
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id")
@@ -269,6 +274,14 @@ public class Player {
     
     public void setMemberships(Set<Membership> memberships) {
         this.memberships = memberships;
+    }
+    
+    public User getUser() {
+        return user;
+    }
+    
+    public void setUser(User user) {
+        this.user = user;
     }
     
     // Utility methods

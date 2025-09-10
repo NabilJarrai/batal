@@ -18,6 +18,8 @@ interface GroupCardProps {
   onViewDetails?: (groupId: number) => void;
   onEdit?: (groupId: number) => void;
   onDelete?: (groupId: number) => void;
+  onActivate?: (groupId: number) => void;
+  onDeactivate?: (groupId: number) => void;
   showActions?: boolean;
   isSelectable?: boolean;
   isSelected?: boolean;
@@ -35,6 +37,8 @@ export default function GroupCard({
   onViewDetails, 
   onEdit,
   onDelete,
+  onActivate,
+  onDeactivate,
   showActions = true,
   isSelectable = false,
   isSelected = false,
@@ -336,6 +340,28 @@ export default function GroupCard({
           flex gap-2 mt-6 transition-opacity duration-200
           ${isHovered ? 'opacity-100' : 'opacity-70'}
         `}>
+          {/* Status toggle */}
+          {(onActivate || onDeactivate) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (group.isActive && onDeactivate) {
+                  onDeactivate(group.id);
+                } else if (!group.isActive && onActivate) {
+                  onActivate(group.id);
+                }
+              }}
+              className={`px-3 py-2 border rounded-lg text-sm font-medium transition-colors duration-200 ${
+                group.isActive 
+                  ? 'bg-red-500/20 hover:bg-red-500/30 border-red-500/30 text-red-200'
+                  : 'bg-green-500/20 hover:bg-green-500/30 border-green-500/30 text-green-200'
+              }`}
+              title={group.isActive ? "Deactivate Group" : "Activate Group"}
+            >
+              {group.isActive ? 'Deactivate' : 'Activate'}
+            </button>
+          )}
+          
           {onViewDetails && (
             <button
               onClick={(e) => {

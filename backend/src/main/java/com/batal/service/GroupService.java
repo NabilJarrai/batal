@@ -313,6 +313,30 @@ public class GroupService {
             .collect(Collectors.toList());
     }
 
+    // Activate group
+    public GroupResponse activateGroup(Long id) {
+        Group group = groupRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Group not found"));
+        
+        group.setIsActive(true);
+        group.setUpdatedAt(LocalDateTime.now());
+        
+        Group savedGroup = groupRepository.save(group);
+        return new GroupResponse(savedGroup);
+    }
+
+    // Deactivate group
+    public GroupResponse deactivateGroup(Long id) {
+        Group group = groupRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Group not found"));
+        
+        group.setIsActive(false);
+        group.setUpdatedAt(LocalDateTime.now());
+        
+        Group savedGroup = groupRepository.save(group);
+        return new GroupResponse(savedGroup);
+    }
+
     // Auto-assign player to appropriate group
     public GroupResponse autoAssignPlayerToGroup(Long playerId) {
         Player player = playerRepository.findById(playerId)

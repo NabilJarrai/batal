@@ -37,6 +37,7 @@ export enum UserRole {
   ADMIN = "ADMIN",
   MANAGER = "MANAGER",
   COACH = "COACH",
+  PLAYER = "PLAYER",
 }
 
 // Legacy types for backward compatibility

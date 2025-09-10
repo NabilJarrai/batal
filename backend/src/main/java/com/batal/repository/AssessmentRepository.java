@@ -69,4 +69,47 @@ public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
     
     @Query("SELECT COUNT(a) FROM Assessment a WHERE a.assessor = :assessor")
     long countByAssessor(@Param("assessor") User assessor);
+    
+    // Duplicate prevention methods
+    @Query("SELECT a FROM Assessment a WHERE a.player = :player AND " +
+           "YEAR(a.assessmentDate) = :year AND MONTH(a.assessmentDate) = :month")
+    List<Assessment> findByPlayerAndYearAndMonth(@Param("player") User player, 
+                                               @Param("year") int year, 
+                                               @Param("month") int month);
+    
+    @Query("SELECT a FROM Assessment a WHERE a.player.id = :playerId AND " +
+           "YEAR(a.assessmentDate) = :year AND MONTH(a.assessmentDate) = :month")
+    List<Assessment> findByPlayerIdAndYearAndMonth(@Param("playerId") Long playerId, 
+                                                 @Param("year") int year, 
+                                                 @Param("month") int month);
+    
+    @Query("SELECT COUNT(a) > 0 FROM Assessment a WHERE a.player = :player AND " +
+           "YEAR(a.assessmentDate) = :year AND MONTH(a.assessmentDate) = :month")
+    boolean existsByPlayerAndYearAndMonth(@Param("player") User player, 
+                                        @Param("year") int year, 
+                                        @Param("month") int month);
+    
+    @Query("SELECT COUNT(a) > 0 FROM Assessment a WHERE a.player.id = :playerId AND " +
+           "YEAR(a.assessmentDate) = :year AND MONTH(a.assessmentDate) = :month")
+    boolean existsByPlayerIdAndYearAndMonth(@Param("playerId") Long playerId, 
+                                          @Param("year") int year, 
+                                          @Param("month") int month);
+    
+    @Query("SELECT COUNT(a) > 0 FROM Assessment a WHERE a.player = :player AND " +
+           "YEAR(a.assessmentDate) = :year AND MONTH(a.assessmentDate) = :month AND a.id != :assessmentId")
+    boolean existsByPlayerAndYearAndMonthAndIdNot(@Param("player") User player, 
+                                                @Param("year") int year, 
+                                                @Param("month") int month, 
+                                                @Param("assessmentId") Long assessmentId);
+    
+    @Query("SELECT COUNT(a) > 0 FROM Assessment a WHERE a.player.id = :playerId AND " +
+           "YEAR(a.assessmentDate) = :year AND MONTH(a.assessmentDate) = :month AND a.id != :assessmentId")
+    boolean existsByPlayerIdAndYearAndMonthAndIdNot(@Param("playerId") Long playerId, 
+                                                  @Param("year") int year, 
+                                                  @Param("month") int month, 
+                                                  @Param("assessmentId") Long assessmentId);
+    
+    List<Assessment> findByAssessorIdOrderByAssessmentDateDesc(Long assessorId);
+    
+    List<Assessment> findAllByOrderByAssessmentDateDesc();
 }

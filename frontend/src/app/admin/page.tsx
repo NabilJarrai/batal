@@ -15,6 +15,7 @@ import EditPlayerModal from '@/components/EditPlayerModal';
 import EditGroupModal from '@/components/EditGroupModal';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import ReassignPlayerModal from '@/components/ReassignPlayerModal';
+import SkillsManagement from '@/components/skills/SkillsManagement';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
 import { useAuth } from '@/store/hooks';
@@ -33,7 +34,7 @@ export default function AdminDashboard() {
   const { showError, showSuccess } = useNotification();
   
   // State
-  const [activeTab, setActiveTab] = useState<'overview' | 'groups' | 'users' | 'players'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'groups' | 'users' | 'players' | 'skills'>('overview');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -188,8 +189,13 @@ export default function AdminDashboard() {
 
   const handleRemoveCoach = async (groupId: number) => {
     try {
-      await groupsAPI.removeCoach(groupId);
-      loadDashboardData(); // Reload data
+      const updatedGroup = await groupsAPI.removeCoach(groupId);
+      
+      // Update only the specific group in the state instead of reloading all data
+      setGroups(prev => prev.map(group => 
+        group.id === groupId ? { ...group, ...updatedGroup } : group
+      ));
+      
       showSuccess('Coach removed successfully');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to remove coach';
@@ -199,8 +205,18 @@ export default function AdminDashboard() {
 
   const handleRemovePlayer = async (groupId: number, playerId: number) => {
     try {
-      await groupsAPI.removePlayer(groupId, playerId);
-      loadDashboardData(); // Reload data
+      const updatedGroup = await groupsAPI.removePlayer(groupId, playerId);
+      
+      // Update both groups state and players state
+      setGroups(prev => prev.map(group => 
+        group.id === groupId ? { ...group, ...updatedGroup } : group
+      ));
+      
+      // Remove player from players state or update their groupId
+      setPlayers(prev => prev.map(player => 
+        player.id === playerId ? { ...player, groupId: null } : player
+      ));
+      
       showSuccess('Player removed successfully');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to remove player';
@@ -211,12 +227,26 @@ export default function AdminDashboard() {
   const handleReassignPlayer = async (playerId: number, fromGroupId: number, toGroupId: number) => {
     try {
       // First remove from current group
-      await groupsAPI.removePlayer(fromGroupId, playerId);
+      const updatedFromGroup = await groupsAPI.removePlayer(fromGroupId, playerId);
       
       // Then assign to new group
-      await groupsAPI.assignPlayer({ playerId, groupId: toGroupId });
+      const updatedToGroup = await groupsAPI.assignPlayer({ playerId, groupId: toGroupId });
       
-      loadDashboardData(); // Reload data
+      // Update both groups in state
+      setGroups(prev => prev.map(group => {
+        if (group.id === fromGroupId) {
+          return { ...group, ...updatedFromGroup };
+        } else if (group.id === toGroupId) {
+          return { ...group, ...updatedToGroup };
+        }
+        return group;
+      }));
+      
+      // Update player's groupId in players state
+      setPlayers(prev => prev.map(player => 
+        player.id === playerId ? { ...player, groupId: toGroupId } : player
+      ));
+      
       showSuccess('Player reassigned successfully');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to reassign player';
@@ -305,16 +335,31 @@ export default function AdminDashboard() {
       switch (deleteModal.type) {
         case 'user':
           await usersAPI.delete(deleteModal.id);
+          // Remove user from state
+          setUsers(prev => prev.filter(user => user.id !== deleteModal.id));
           break;
         case 'player':
           await playersAPI.delete(deleteModal.id);
+          // Remove player from state
+          setPlayers(prev => prev.filter(player => player.id !== deleteModal.id));
           break;
         case 'group':
           await groupsAPI.delete(deleteModal.id);
+          // Remove group from state
+          setGroups(prev => prev.filter(group => group.id !== deleteModal.id));
           break;
       }
       
-      loadDashboardData(); // Reload data
+      // Update stats
+      const updatedStats = { ...stats };
+      if (deleteModal.type === 'user') updatedStats.totalCoaches = Math.max(0, updatedStats.totalCoaches - 1);
+      if (deleteModal.type === 'player') updatedStats.totalPlayers = Math.max(0, updatedStats.totalPlayers - 1);
+      if (deleteModal.type === 'group') {
+        updatedStats.totalGroups = Math.max(0, updatedStats.totalGroups - 1);
+        updatedStats.activeGroups = Math.max(0, updatedStats.activeGroups - 1);
+      }
+      setStats(updatedStats);
+      
       setDeleteModal({ isOpen: false, type: null, id: null, name: '', isDeleting: false });
       showSuccess(`${deleteModal.type?.charAt(0).toUpperCase()}${deleteModal.type?.slice(1)} deleted successfully`);
     } catch (err) {
@@ -327,8 +372,16 @@ export default function AdminDashboard() {
   // Status update handlers
   const handleUserStatusUpdate = async (userId: number, isActive: boolean, reason?: string) => {
     try {
-      await usersAPI.updateStatus(userId, { isActive, reason });
-      loadDashboardData();
+      const updatedUser = await usersAPI.updateStatus(userId, { 
+        isActive, 
+        inactiveReason: reason 
+      });
+      
+      // Update only the specific user in the state instead of reloading all data
+      setUsers(prev => prev.map(user => 
+        user.id === userId ? { ...user, ...updatedUser } : user
+      ));
+      
       showSuccess(`User ${isActive ? 'activated' : 'deactivated'} successfully`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update user status';
@@ -338,8 +391,13 @@ export default function AdminDashboard() {
 
   const handlePlayerDeactivate = async (playerId: number, reason: string) => {
     try {
-      await playersAPI.deactivate(playerId, reason);
-      loadDashboardData();
+      const updatedPlayer = await playersAPI.deactivate(playerId, reason);
+      
+      // Update only the specific player in the state
+      setPlayers(prev => prev.map(player => 
+        player.id === playerId ? { ...player, ...updatedPlayer } : player
+      ));
+      
       showSuccess('Player deactivated successfully');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to deactivate player';
@@ -349,8 +407,13 @@ export default function AdminDashboard() {
 
   const handlePlayerReactivate = async (playerId: number) => {
     try {
-      await playersAPI.reactivate(playerId);
-      loadDashboardData();
+      const updatedPlayer = await playersAPI.reactivate(playerId);
+      
+      // Update only the specific player in the state
+      setPlayers(prev => prev.map(player => 
+        player.id === playerId ? { ...player, ...updatedPlayer } : player
+      ));
+      
       showSuccess('Player reactivated successfully');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to reactivate player';
@@ -361,15 +424,71 @@ export default function AdminDashboard() {
   const handleAutoAssignmentComplete = async () => {
     console.log('Auto-assignment completed, refreshing dashboard data...');
     setAutoAssignmentModal(false);
-    await loadDashboardData();
-    showSuccess('Auto-assignment completed successfully');
+    
+    try {
+      // Show immediate feedback
+      showSuccess('Auto-assignment completed! Refreshing data...');
+      
+      // Reload data to ensure consistency after complex multi-player assignments
+      await loadDashboardData();
+      
+      // Show final success message
+      showSuccess('Auto-assignment completed successfully! Players have been assigned to groups.');
+    } catch (error) {
+      showError('Auto-assignment completed but failed to refresh data. Please refresh the page.');
+    }
   };
 
   const handlePromotionComplete = async () => {
     console.log('Promotion completed, refreshing dashboard data...');
     setPromotionModal({ isOpen: false, playerId: null });
-    await loadDashboardData();
+    await loadDashboardData(); // Keep full reload for complex promotion
     showSuccess('Player promotion completed successfully');
+  };
+
+  // Group status handlers
+  const handleGroupActivate = async (groupId: number) => {
+    try {
+      const updatedGroup = await groupsAPI.activate(groupId);
+      
+      // Update only the specific group in the state
+      setGroups(prev => prev.map(group => 
+        group.id === groupId ? { ...group, ...updatedGroup } : group
+      ));
+      
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        activeGroups: prev.activeGroups + 1
+      }));
+      
+      showSuccess('Group activated successfully');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to activate group';
+      showError(errorMessage, 'Group Activation Error');
+    }
+  };
+
+  const handleGroupDeactivate = async (groupId: number) => {
+    try {
+      const updatedGroup = await groupsAPI.deactivate(groupId);
+      
+      // Update only the specific group in the state
+      setGroups(prev => prev.map(group => 
+        group.id === groupId ? { ...group, ...updatedGroup } : group
+      ));
+      
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        activeGroups: Math.max(0, prev.activeGroups - 1)
+      }));
+      
+      showSuccess('Group deactivated successfully');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to deactivate group';
+      showError(errorMessage, 'Group Deactivation Error');
+    }
   };
 
   if (loading) {
@@ -512,7 +631,8 @@ export default function AdminDashboard() {
               {stats.unassignedPlayers > 0 && (
                 <button
                   onClick={() => setAutoAssignmentModal(true)}
-                  className="w-full px-2 py-1 bg-cyan-500/20 hover:bg-cyan-500/30 rounded text-xs text-cyan-200 flex items-center justify-center gap-1"
+                  className="w-full px-2 py-1 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 rounded text-xs text-cyan-200 flex items-center justify-center gap-1 transition-all duration-200 hover:shadow-md"
+                  title={`Automatically assign ${stats.unassignedPlayers} unassigned player${stats.unassignedPlayers !== 1 ? 's' : ''} to appropriate groups`}
                 >
                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
@@ -531,11 +651,12 @@ export default function AdminDashboard() {
               { key: 'overview', label: 'Overview', icon: '📊' },
               { key: 'groups', label: 'Groups', icon: '👥' },
               { key: 'users', label: 'Users', icon: '🧑‍💼' },
-              { key: 'players', label: 'Players', icon: '⚽' }
+              { key: 'players', label: 'Players', icon: '⚽' },
+              { key: 'skills', label: 'Skills', icon: '🎯' }
             ].map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key as 'overview' | 'groups' | 'users' | 'players')}
+                onClick={() => setActiveTab(tab.key as 'overview' | 'groups' | 'users' | 'players' | 'skills')}
                 className={`
                   flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200
                   ${activeTab === tab.key
@@ -625,6 +746,8 @@ export default function AdminDashboard() {
               onEdit={handleEditGroup}
               onDelete={handleDeleteGroup}
               onCreateGroup={handleCreateGroup}
+              onActivateGroup={handleGroupActivate}
+              onDeactivateGroup={handleGroupDeactivate}
               showActions={true}
             />
           )}
@@ -686,6 +809,10 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
+
+          {activeTab === 'skills' && (
+            <SkillsManagement />
+          )}
         </div>
 
         {/* Assignment Modals */}
@@ -722,9 +849,11 @@ export default function AdminDashboard() {
         <CreatePlayerModal
           isOpen={createPlayerModal}
           onClose={() => setCreatePlayerModal(false)}
-          onComplete={() => {
+          onComplete={(newPlayer) => {
+            // Add new player to state
+            setPlayers(prev => [...prev, newPlayer]);
+            setStats(prev => ({ ...prev, totalPlayers: prev.totalPlayers + 1 }));
             setCreatePlayerModal(false);
-            loadDashboardData();
             showSuccess('Player created successfully');
           }}
         />
@@ -732,9 +861,13 @@ export default function AdminDashboard() {
         <CreateUserModal
           isOpen={createUserModal}
           onClose={() => setCreateUserModal(false)}
-          onComplete={() => {
+          onComplete={(newUser) => {
+            // Add new user to state
+            setUsers(prev => [...prev, newUser]);
+            if (newUser.userType === 'COACH' || newUser.roles?.includes('COACH')) {
+              setStats(prev => ({ ...prev, totalCoaches: prev.totalCoaches + 1 }));
+            }
             setCreateUserModal(false);
-            loadDashboardData();
             showSuccess('User created successfully');
           }}
         />
@@ -742,9 +875,15 @@ export default function AdminDashboard() {
         <CreateGroupModal
           isOpen={createGroupModal}
           onClose={() => setCreateGroupModal(false)}
-          onComplete={() => {
+          onComplete={(newGroup) => {
+            // Add new group to state
+            setGroups(prev => [...prev, newGroup]);
+            setStats(prev => ({
+              ...prev,
+              totalGroups: prev.totalGroups + 1,
+              activeGroups: newGroup.isActive ? prev.activeGroups + 1 : prev.activeGroups
+            }));
             setCreateGroupModal(false);
-            loadDashboardData();
             showSuccess('Group created successfully');
           }}
         />
@@ -754,8 +893,12 @@ export default function AdminDashboard() {
           isOpen={editUserModal.isOpen}
           userId={editUserModal.userId}
           onClose={() => setEditUserModal({ isOpen: false, userId: null })}
-          onComplete={() => {
-            loadDashboardData();
+          onComplete={(updatedUser) => {
+            // Update only the specific user in the state
+            setUsers(prev => prev.map(user => 
+              user.id === updatedUser.id ? updatedUser : user
+            ));
+            setEditUserModal({ isOpen: false, userId: null });
             showSuccess('User updated successfully');
           }}
         />
@@ -764,8 +907,12 @@ export default function AdminDashboard() {
           isOpen={editPlayerModal.isOpen}
           playerId={editPlayerModal.playerId}
           onClose={() => setEditPlayerModal({ isOpen: false, playerId: null })}
-          onComplete={() => {
-            loadDashboardData();
+          onComplete={(updatedPlayer) => {
+            // Update only the specific player in the state
+            setPlayers(prev => prev.map(player => 
+              player.id === updatedPlayer.id ? updatedPlayer : player
+            ));
+            setEditPlayerModal({ isOpen: false, playerId: null });
             showSuccess('Player updated successfully');
           }}
         />
@@ -774,8 +921,12 @@ export default function AdminDashboard() {
           isOpen={editGroupModal.isOpen}
           groupId={editGroupModal.groupId}
           onClose={() => setEditGroupModal({ isOpen: false, groupId: null })}
-          onComplete={() => {
-            loadDashboardData();
+          onComplete={(updatedGroup) => {
+            // Update only the specific group in the state
+            setGroups(prev => prev.map(group => 
+              group.id === updatedGroup.id ? updatedGroup : group
+            ));
+            setEditGroupModal({ isOpen: false, groupId: null });
             showSuccess('Group updated successfully');
           }}
         />

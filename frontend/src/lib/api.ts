@@ -307,4 +307,21 @@ export const groupsAPI = {
       method: "POST",
     });
   },
+
+  // Group status operations
+  activate: async (id: number): Promise<any> => {
+    return apiRequest<any>(`/groups/${id}/activate`, {
+      method: "PATCH",
+    });
+  },
+
+  deactivate: async (id: number): Promise<any> => {
+    return apiRequest<any>(`/groups/${id}/deactivate`, {
+      method: "PATCH",
+    });
+  },
 };
+
+// Export other API modules
+export { skillsAPI } from './api/skills';
+export { assessmentsAPI } from './api/assessments';

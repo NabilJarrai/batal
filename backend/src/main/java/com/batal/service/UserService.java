@@ -7,6 +7,8 @@ import com.batal.dto.UserStatusUpdateRequest;
 import com.batal.entity.User;
 import com.batal.entity.Role;
 import com.batal.entity.enums.UserType;
+import com.batal.exception.ResourceAlreadyExistsException;
+import com.batal.exception.ResourceNotFoundException;
 import com.batal.repository.UserRepository;
 import com.batal.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +58,7 @@ public class UserService {
 
     public UserResponse getUserById(Long id) {
         User user = userRepository.findByIdWithRoles(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", id));
         List<String> roles = user.getRoles().stream()
                 .map(role -> role.getName())
                 .collect(Collectors.toList());
@@ -67,7 +69,7 @@ public class UserService {
     public UserResponse createUser(UserCreateRequest request) {
         // Check if email already exists
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new ResourceAlreadyExistsException("User", "email", request.getEmail());
         }
         
         User user = new User();
@@ -126,12 +128,12 @@ public class UserService {
     // Update user
     public UserResponse updateUser(Long id, UserUpdateRequest request) {
         User user = userRepository.findByIdWithRoles(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", id));
         
         // Update user fields only if they're provided
         if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
             if (userRepository.existsByEmail(request.getEmail())) {
-                throw new RuntimeException("Email already exists");
+                throw new ResourceAlreadyExistsException("User", "email", request.getEmail());
             }
             user.setEmail(request.getEmail());
         }
@@ -180,14 +182,14 @@ public class UserService {
 
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", id));
         userRepository.delete(user);
     }
     
     // Update user status
     public UserResponse updateUserStatus(Long id, UserStatusUpdateRequest request) {
         User user = userRepository.findByIdWithRoles(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", id));
         
         user.setIsActive(request.getIsActive());
         if (request.getInactiveReason() != null) {
@@ -204,7 +206,7 @@ public class UserService {
 
     public void activateUser(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", id));
         user.setIsActive(true);
         user.setInactiveReason(null);
         user.setUpdatedAt(LocalDateTime.now());
@@ -213,7 +215,7 @@ public class UserService {
 
     public void deactivateUser(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", id));
         user.setIsActive(false);
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
