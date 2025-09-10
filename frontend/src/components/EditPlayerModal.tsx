@@ -12,7 +12,7 @@ import '@/styles/datepicker.css';
 interface EditPlayerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: () => void;
+  onComplete: (player: PlayerDTO) => void;
   playerId: number | null;
 }
 
@@ -100,8 +100,8 @@ export default function EditPlayerModal({
       };
       
       console.log('Updating player with data (preserving groupId):', updateData);
-      await playersAPI.update(playerId, updateData);
-      onComplete();
+      const updatedPlayer = await playersAPI.update(playerId, updateData);
+      onComplete(updatedPlayer);
       handleClose();
     } catch (err) {
       console.error('Error updating player:', err);

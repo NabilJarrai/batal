@@ -2,14 +2,14 @@
 
 import { Fragment, useState } from 'react';
 import { Dialog, Transition, Listbox } from '@headlessui/react';
-import { UserCreateRequest, UserType, Gender } from '@/types/users';
+import { UserResponse, UserCreateRequest, UserType, Gender } from '@/types/users';
 import { apiClient } from '@/lib/apiClient';
 import { usersAPI } from '@/lib/api';
 
 interface CreateUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: () => void;
+  onComplete: (user: UserResponse) => void;
 }
 
 export default function CreateUserModal({ 
@@ -56,9 +56,9 @@ export default function CreateUserModal({
 
     try {
       console.log('Creating user with data:', formData);
-      await usersAPI.create(formData);
-      console.log('User created successfully');
-      onComplete();
+      const createdUser = await usersAPI.create(formData);
+      console.log('User created successfully:', createdUser);
+      onComplete(createdUser);
       handleClose();
     } catch (err) {
       console.error('Error creating user:', err);

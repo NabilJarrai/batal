@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition, Listbox } from '@headlessui/react';
-import { GroupCreateRequest, AgeGroup, AGE_GROUP_METADATA } from '@/types/groups';
+import { GroupResponse, GroupCreateRequest, AgeGroup, AGE_GROUP_METADATA } from '@/types/groups';
 import { Level } from '@/types/players';
 import { UserResponse, UserType } from '@/types/users';
 import { apiClient } from '@/lib/apiClient';
@@ -11,7 +11,7 @@ import { groupsAPI, usersAPI } from '@/lib/api';
 interface CreateGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: () => void;
+  onComplete: (group: GroupResponse) => void;
 }
 
 export default function CreateGroupModal({ 
@@ -57,9 +57,9 @@ export default function CreateGroupModal({
 
     try {
       console.log('Creating group with data:', formData);
-      await groupsAPI.create(formData);
-      console.log('Group created successfully');
-      onComplete();
+      const createdGroup = await groupsAPI.create(formData);
+      console.log('Group created successfully:', createdGroup);
+      onComplete(createdGroup);
       handleClose();
     } catch (err) {
       console.error('Error creating group:', err);
