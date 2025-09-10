@@ -20,6 +20,7 @@ export default function CreateGroupModal({
   onComplete 
 }: CreateGroupModalProps) {
   const [formData, setFormData] = useState<GroupCreateRequest>({
+    name: '',
     level: Level.DEVELOPMENT,
     ageGroup: AgeGroup.COOKIES,
     capacity: 20,
@@ -40,7 +41,8 @@ export default function CreateGroupModal({
 
   const loadAvailableCoaches = async () => {
     try {
-      const users = await usersAPI.getAll();
+      const usersResponse = await usersAPI.getAll();
+      const users = usersResponse.content || usersResponse;
       const coaches = users.filter(u => 
         u.userType === UserType.COACH && u.isActive
       );
@@ -71,6 +73,7 @@ export default function CreateGroupModal({
 
   const handleClose = () => {
     setFormData({
+      name: '',
       level: Level.DEVELOPMENT,
       ageGroup: AgeGroup.COOKIES,
       capacity: 20,
@@ -195,14 +198,32 @@ export default function CreateGroupModal({
                     </div>
                   </div>
 
+                  {/* Group Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Group Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      placeholder="e.g., Development Lions Elite, Advanced Tigers 2, etc."
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      Choose a unique name for this group
+                    </p>
+                  </div>
+
                   {/* Group Details */}
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                    <p className="text-sm text-blue-200 mb-2">Group will be named:</p>
+                    <p className="text-sm text-blue-200 mb-2">Group Details:</p>
                     <p className="text-lg font-medium text-white">
-                      {metadata.displayName} {formData.level === Level.ADVANCED ? 'Advanced' : 'Development'}
+                      {metadata.displayName} • {formData.level === Level.ADVANCED ? 'Advanced' : 'Development'} Level
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
-                      For ages {metadata.minAge}-{metadata.maxAge} • {formData.level} level
+                      For ages {metadata.minAge}-{metadata.maxAge} • Capacity: {formData.capacity} players
                     </p>
                   </div>
 

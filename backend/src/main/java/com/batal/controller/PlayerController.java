@@ -42,7 +42,7 @@ public class PlayerController {
     }
     
     /**
-     * Get all players with pagination
+     * Get all players with pagination and search
      * All authenticated users can view players
      */
     @GetMapping
@@ -51,14 +51,15 @@ public class PlayerController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "firstName") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String search) {
         
         Sort sort = sortDir.equalsIgnoreCase("desc") ? 
             Sort.by(sortBy).descending() : 
             Sort.by(sortBy).ascending();
         
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<PlayerDTO> players = playerService.getAllPlayers(pageable);
+        Page<PlayerDTO> players = playerService.getAllPlayers(pageable, search);
         
         return ResponseEntity.ok(players);
     }

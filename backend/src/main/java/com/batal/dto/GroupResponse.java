@@ -1,8 +1,6 @@
 package com.batal.dto;
 
 import com.batal.entity.Group;
-import com.batal.entity.Player;
-import com.batal.entity.User;
 import com.batal.entity.enums.AgeGroup;
 import com.batal.entity.enums.Level;
 
@@ -16,7 +14,6 @@ public class GroupResponse {
     private String name;
     private Level level;
     private AgeGroup ageGroup;
-    private Integer groupNumber;
     private Integer minAge;
     private Integer maxAge;
     private Integer capacity;
@@ -47,7 +44,6 @@ public class GroupResponse {
         this.name = group.getName();
         this.level = group.getLevel();
         this.ageGroup = group.getAgeGroup();
-        this.groupNumber = group.getGroupNumber();
         this.minAge = group.getMinAge();
         this.maxAge = group.getMaxAge();
         this.capacity = group.getCapacity();
@@ -112,13 +108,6 @@ public class GroupResponse {
         this.ageGroup = ageGroup;
     }
     
-    public Integer getGroupNumber() {
-        return groupNumber;
-    }
-    
-    public void setGroupNumber(Integer groupNumber) {
-        this.groupNumber = groupNumber;
-    }
     
     public Integer getMinAge() {
         return minAge;

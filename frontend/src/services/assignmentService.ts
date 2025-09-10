@@ -94,20 +94,70 @@ export class AssignmentService {
 
       await apiClient.put(`/players/${playerId}`, updatedPlayer);
 
-      // If player is assigned to a group, reassign to advanced group
+      // If player is assigned to a group, reassign to advanced group with forceAssignment
       if (player.groupId) {
         // Remove from current group
         await apiClient.delete(`/groups/${player.groupId}/remove-player/${playerId}`);
         
-        // Auto-assign to advanced group
-        updatedPlayer.groupId = undefined;
-        await this.autoAssignPlayer(updatedPlayer);
+        // Force assign to advanced group (allowing young players to upgrade)
+        await this.forceAssignToAdvancedGroup(updatedPlayer);
       }
 
       return true;
     } catch (error) {
       console.error('Promotion failed:', error);
       return false;
+    }
+  }
+
+  /**
+   * Force assign player to advanced group (for promotions)
+   */
+  static async forceAssignToAdvancedGroup(player: PlayerDTO): Promise<GroupResponse | null> {
+    try {
+      // Determine age group
+      const ageGroup = player.dateOfBirth ? this.getAgeGroup(player.dateOfBirth) : null;
+      
+      if (!ageGroup) {
+        throw new Error('Player age is outside supported range (4-16 years)');
+      }
+
+      // Fetch all advanced groups for the age group
+      const groups = await apiClient.get<GroupResponse[]>('/groups');
+      
+      // Filter advanced groups by age group
+      const eligibleGroups = groups.filter(group => 
+        group.ageGroup === ageGroup && 
+        group.level === Level.ADVANCED &&
+        group.isActive &&
+        !group.isFull
+      );
+
+      if (eligibleGroups.length === 0) {
+        throw new Error(`No available Advanced group for ${ageGroup} age group`);
+      }
+
+      // Sort by available capacity (groups with more space first)
+      eligibleGroups.sort((a, b) => {
+        return b.availableSpots - a.availableSpots;
+      });
+
+      // Assign to group with most space using forceAssignment flag
+      const targetGroup = eligibleGroups[0];
+      
+      const request: PlayerAssignmentRequest = {
+        playerId: player.id!,
+        groupId: targetGroup.id,
+        forceAssignment: true,
+        reason: 'Player promoted from Development to Advanced level'
+      };
+
+      await apiClient.post('/groups/assign-player', request);
+      
+      return targetGroup;
+    } catch (error) {
+      console.error('Force assignment failed:', error);
+      return null;
     }
   }
 

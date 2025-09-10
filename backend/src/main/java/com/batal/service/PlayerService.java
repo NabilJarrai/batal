@@ -102,12 +102,25 @@ public class PlayerService {
     }
 
     /**
-     * Get all players with pagination
+     * Get all players with pagination and search
+     */
+    @Transactional(readOnly = true)
+    public Page<PlayerDTO> getAllPlayers(Pageable pageable, String search) {
+        Page<Player> players;
+        if (search != null && !search.trim().isEmpty()) {
+            players = playerRepository.findAllWithGroupAndSearch(search.trim(), pageable);
+        } else {
+            players = playerRepository.findAllWithGroup(pageable);
+        }
+        return players.map(this::convertToDTO);
+    }
+    
+    /**
+     * Get all players with pagination (legacy method for backward compatibility)
      */
     @Transactional(readOnly = true)
     public Page<PlayerDTO> getAllPlayers(Pageable pageable) {
-        Page<Player> players = playerRepository.findAllWithGroup(pageable);
-        return players.map(this::convertToDTO);
+        return getAllPlayers(pageable, null);
     }
 
     /**
@@ -296,7 +309,6 @@ public class PlayerService {
         Group newGroup = new Group();
         newGroup.setLevel(player.getLevel());
         newGroup.setAgeGroup(ageGroup);
-        newGroup.setGroupNumber(nextGroupNumber);
         newGroup.setCapacity(15); // Default capacity
         newGroup.setMinAge(ageGroup.getMinAge());
         newGroup.setMaxAge(ageGroup.getMaxAge());

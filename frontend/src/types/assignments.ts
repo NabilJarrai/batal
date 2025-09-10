@@ -65,6 +65,8 @@ export interface PlayerAssignmentRequest {
   playerId: number;
   groupId: number;
   notes?: string;
+  forceAssignment?: boolean;
+  reason?: string;
 }
 
 export interface CoachAssignmentRequest {

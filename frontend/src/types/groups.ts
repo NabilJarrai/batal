@@ -27,7 +27,6 @@ export interface GroupResponse {
   name: string;
   level: Level;
   ageGroup: AgeGroup;
-  groupNumber?: number;
   minAge: number;
   maxAge: number;
   capacity: number;
@@ -53,6 +52,7 @@ export interface GroupResponse {
 
 // Group Create Request (matches backend GroupCreateRequest.java)
 export interface GroupCreateRequest {
+  name: string;
   level: Level;
   ageGroup: AgeGroup;
   capacity: number;
@@ -64,6 +64,7 @@ export interface GroupCreateRequest {
 
 // Group Update Request (matches backend GroupUpdateRequest.java)
 export interface GroupUpdateRequest {
+  name?: string;
   capacity?: number;
   zone?: string;
   description?: string;

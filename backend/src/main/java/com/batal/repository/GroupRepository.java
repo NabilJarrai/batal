@@ -50,7 +50,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
     @Query("SELECT g FROM Group g WHERE g.coach IS NULL AND g.isActive = true")
     List<Group> findGroupsWithoutCoach();
     
-    Optional<Group> findByLevelAndAgeGroupAndGroupNumber(Level level, AgeGroup ageGroup, Integer groupNumber);
     
     @Query("SELECT COUNT(g) FROM Group g WHERE g.level = :level AND g.ageGroup = :ageGroup")
     long countByLevelAndAgeGroup(@Param("level") Level level, @Param("ageGroup") AgeGroup ageGroup);

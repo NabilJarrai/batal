@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,31 +41,18 @@ public class GroupService {
 
     // Create new group
     public GroupResponse createGroup(GroupCreateRequest request) {
-        // Check if group with same level, ageGroup, and groupNumber already exists
-        Optional<Group> existingGroup = groupRepository.findByLevelAndAgeGroupAndGroupNumber(
-            request.getLevel(), request.getAgeGroup(), request.getGroupNumber());
-        
-        if (existingGroup.isPresent()) {
-            throw new RuntimeException("Group with same level, age group, and number already exists");
-        }
-        
         Group group = new Group();
+        group.setName(request.getName());
         group.setLevel(request.getLevel());
         group.setAgeGroup(request.getAgeGroup());
-        group.setGroupNumber(request.getGroupNumber());
         group.setCapacity(request.getCapacity());
         group.setZone(request.getZone());
         group.setDescription(request.getDescription());
         group.setIsActive(true);
         
-        // Set min and max age based on age group
-        group.setMinAge(request.getAgeGroup().getMinAge());
-        group.setMaxAge(request.getAgeGroup().getMaxAge());
-        
-        // Generate group name
-        String suffix = request.getGroupNumber() > 1 ? " " + request.getGroupNumber() : "";
-        group.setName(request.getLevel().getDisplayName() + " " + 
-                     request.getAgeGroup().getDisplayName() + suffix);
+        // Set min and max age - use custom values if provided, otherwise use defaults from age group
+        group.setMinAge(request.getMinAge() != null ? request.getMinAge() : request.getAgeGroup().getMinAge());
+        group.setMaxAge(request.getMaxAge() != null ? request.getMaxAge() : request.getAgeGroup().getMaxAge());
         
         // Assign coach if provided
         if (request.getCoachId() != null) {
@@ -115,17 +101,31 @@ public class GroupService {
         Group group = groupRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Group not found"));
         
+        // No more unique constraint checking - allow flexible naming
+        
         // Update fields only if provided
+        if (request.getName() != null) {
+            group.setName(request.getName());
+        }
         if (request.getLevel() != null) {
             group.setLevel(request.getLevel());
         }
         if (request.getAgeGroup() != null) {
             group.setAgeGroup(request.getAgeGroup());
-            group.setMinAge(request.getAgeGroup().getMinAge());
-            group.setMaxAge(request.getAgeGroup().getMaxAge());
+            // Only update age range from AgeGroup if custom values not provided
+            if (request.getMinAge() == null) {
+                group.setMinAge(request.getAgeGroup().getMinAge());
+            }
+            if (request.getMaxAge() == null) {
+                group.setMaxAge(request.getAgeGroup().getMaxAge());
+            }
         }
-        if (request.getGroupNumber() != null) {
-            group.setGroupNumber(request.getGroupNumber());
+        // Allow custom age range overrides
+        if (request.getMinAge() != null) {
+            group.setMinAge(request.getMinAge());
+        }
+        if (request.getMaxAge() != null) {
+            group.setMaxAge(request.getMaxAge());
         }
         if (request.getCapacity() != null) {
             group.setCapacity(request.getCapacity());
@@ -158,12 +158,6 @@ public class GroupService {
             group.setPitch(pitch);
         }
         
-        // Regenerate name if level, ageGroup, or groupNumber changed
-        if (request.getLevel() != null || request.getAgeGroup() != null || request.getGroupNumber() != null) {
-            String suffix = group.getGroupNumber() > 1 ? " " + group.getGroupNumber() : "";
-            group.setName(group.getLevel().getDisplayName() + " " + 
-                         group.getAgeGroup().getDisplayName() + suffix);
-        }
         
         group.setUpdatedAt(LocalDateTime.now());
         Group savedGroup = groupRepository.save(group);
@@ -195,13 +189,6 @@ public class GroupService {
             // Check if group has capacity
             if (group.isFull()) {
                 throw new RuntimeException("Group is at full capacity (" + group.getCapacity() + " players)");
-            }
-            
-            // Check age compatibility
-            int playerAge = LocalDate.now().getYear() - player.getDateOfBirth().getYear();
-            if (playerAge < group.getMinAge() || playerAge > group.getMaxAge()) {
-                throw new RuntimeException("Player age (" + playerAge + ") is not compatible with group age range (" + 
-                                         group.getMinAge() + "-" + group.getMaxAge() + ")");
             }
         }
         
@@ -350,30 +337,36 @@ public class GroupService {
             throw new RuntimeException("Player age (" + playerAge + ") is not within supported age range");
         }
         
+        // Use the player's actual level, not hardcoded level
+        Level playerLevel = player.getLevel();
+        
         // Find available group with matching level and age group
         List<Group> availableGroups = groupRepository.findAvailableGroupsByLevelAndAgeGroup(
-            player.getLevel(), ageGroup);
+            playerLevel, ageGroup);
         
         if (availableGroups.isEmpty()) {
-            // Create new group if none available
-            GroupCreateRequest groupRequest = new GroupCreateRequest(player.getLevel(), ageGroup);
-            
-            // Find next group number
-            List<Group> existingGroups = groupRepository.findByLevelAndAgeGroup(player.getLevel(), ageGroup);
+            // Create new group if none available  
+            List<Group> existingGroups = groupRepository.findByLevelAndAgeGroup(playerLevel, ageGroup);
             int nextGroupNumber = existingGroups.size() + 1;
-            groupRequest.setGroupNumber(nextGroupNumber);
+            String groupName = playerLevel.getDisplayName() + " " + ageGroup.getDisplayName();
+            if (nextGroupNumber > 1) {
+                groupName += " " + nextGroupNumber;
+            }
             
+            GroupCreateRequest groupRequest = new GroupCreateRequest(groupName, playerLevel, ageGroup);
             GroupResponse newGroup = createGroup(groupRequest);
             
-            // Assign player to the new group
+            // Assign player to the new group with force assignment for flexibility
             GroupAssignmentRequest assignmentRequest = new GroupAssignmentRequest(
-                playerId, newGroup.getId(), "Auto-assigned to new group");
+                playerId, newGroup.getId(), "Auto-assigned to new " + playerLevel + " group");
+            assignmentRequest.setForceAssignment(true);
             return assignPlayerToGroup(assignmentRequest);
         } else {
             // Assign to first available group
             Group targetGroup = availableGroups.get(0);
             GroupAssignmentRequest assignmentRequest = new GroupAssignmentRequest(
-                playerId, targetGroup.getId(), "Auto-assigned to existing group");
+                playerId, targetGroup.getId(), "Auto-assigned to existing " + playerLevel + " group");
+            assignmentRequest.setForceAssignment(true);
             return assignPlayerToGroup(assignmentRequest);
         }
     }

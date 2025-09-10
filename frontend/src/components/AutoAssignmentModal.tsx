@@ -6,17 +6,20 @@ import { AssignmentService } from '@/services/assignmentService';
 import { PlayerDTO } from '@/types/players';
 import { GroupResponse } from '@/types/groups';
 import { apiClient } from '@/lib/apiClient';
+import { playersAPI } from '@/lib/api';
 
 interface AutoAssignmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: () => void;
+  refreshTrigger?: number; // Optional prop to trigger refresh when data changes
 }
 
 export default function AutoAssignmentModal({ 
   isOpen, 
   onClose, 
-  onComplete 
+  onComplete,
+  refreshTrigger 
 }: AutoAssignmentModalProps) {
   const [unassignedPlayers, setUnassignedPlayers] = useState<PlayerDTO[]>([]);
   const [selectedPlayers, setSelectedPlayers] = useState<Set<number>>(new Set());
@@ -32,7 +35,7 @@ export default function AutoAssignmentModal({
     if (isOpen) {
       loadUnassignedPlayers();
     }
-  }, [isOpen]);
+  }, [isOpen, refreshTrigger]);
 
   useEffect(() => {
     if (assignAll) {
@@ -44,19 +47,27 @@ export default function AutoAssignmentModal({
 
   const loadUnassignedPlayers = async () => {
     try {
-      const players = await apiClient.get<PlayerDTO[]>('/players');
-      const unassigned = players.filter(p => !p.groupId && p.isActive);
-      setUnassignedPlayers(unassigned);
+      console.log('Loading unassigned players for auto-assignment...');
+      const unassignedPlayers = await playersAPI.getUnassigned();
+      console.log('Unassigned players loaded:', unassignedPlayers.length);
+      setUnassignedPlayers(unassignedPlayers);
 
       // Load recommendations for each player
       const recMap = new Map<number, GroupResponse[]>();
-      for (const player of unassigned) {
-        const recs = await AssignmentService.getRecommendations(player);
-        recMap.set(player.id!, recs);
+      for (const player of unassignedPlayers) {
+        try {
+          const recs = await AssignmentService.getRecommendations(player);
+          recMap.set(player.id!, recs);
+        } catch (recError) {
+          console.warn(`Failed to get recommendations for player ${player.firstName} ${player.lastName}:`, recError);
+          recMap.set(player.id!, []); // Set empty recommendations on error
+        }
       }
       setRecommendations(recMap);
+      console.log('Recommendations loaded for', recMap.size, 'players');
     } catch (error) {
       console.error('Failed to load unassigned players:', error);
+      setUnassignedPlayers([]); // Set empty array on error to prevent infinite loading
     }
   };
 
@@ -68,11 +79,32 @@ export default function AutoAssignmentModal({
     const playersToAssign = unassignedPlayers.filter(p => selectedPlayers.has(p.id!));
 
     for (const player of playersToAssign) {
-      const result = await AssignmentService.autoAssignPlayer(player);
-      if (result) {
-        success.push(`${player.firstName} ${player.lastName} → ${result.name}`);
-      } else {
-        failed.push(`${player.firstName} ${player.lastName}`);
+      try {
+        console.log(`Auto-assigning player ${player.firstName} ${player.lastName} (ID: ${player.id})`);
+        const result = await playersAPI.autoAssignGroup(player.id!);
+        console.log(`Auto-assignment result for ${player.firstName}:`, result);
+        
+        if (result && result.groupName) {
+          success.push(`${player.firstName} ${player.lastName} → ${result.groupName}`);
+        } else {
+          console.warn(`Auto-assignment returned unexpected result for ${player.firstName}:`, result);
+          failed.push(`${player.firstName} ${player.lastName}`);
+        }
+      } catch (error) {
+        console.error(`Failed to auto-assign ${player.firstName} ${player.lastName}:`, error);
+        let errorMessage = 'Unknown error';
+        
+        // Handle different error types
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (typeof error === 'object' && error !== null && 'message' in error) {
+          errorMessage = (error as any).message;
+        } else if (typeof error === 'object' && error !== null && 'error' in error) {
+          // Handle backend error response format
+          errorMessage = (error as any).error + ': ' + ((error as any).message || '');
+        }
+        
+        failed.push(`${player.firstName} ${player.lastName} (${errorMessage})`);
       }
     }
 
