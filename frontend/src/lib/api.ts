@@ -261,12 +261,6 @@ export const playersAPI = {
       method: "POST",
     });
   },
-
-  delete: async (id: number): Promise<any> => {
-    return apiRequest<any>(`/players/${id}`, {
-      method: "DELETE",
-    });
-  },
 };
 
 // Groups API calls
