@@ -484,7 +484,7 @@ public class AssessmentService {
         }
 
         for (Skill skill : skills) {
-            if (!skill.getApplicableLevel().equals(playerLevel)) {
+            if (!skill.isApplicableForLevel(playerLevel)) {
                 throw new ValidationException(
                     "Skill '" + skill.getName() + "' is not applicable for " + playerLevel + " level");
             }
@@ -497,7 +497,7 @@ public class AssessmentService {
 
     private boolean isAssessmentComplete(Assessment assessment) {
         Level playerLevel = assessment.getPlayer().getLevel();
-        List<Skill> requiredSkills = skillRepository.findByApplicableLevelAndIsActiveTrue(playerLevel);
+        List<Skill> requiredSkills = skillRepository.findByApplicableLevelsContainingAndIsActiveTrue(playerLevel);
         
         Set<Long> assessedSkillIds = assessment.getSkillScores().stream()
                 .map(ss -> ss.getSkill().getId())
@@ -514,7 +514,7 @@ public class AssessmentService {
     private void validateAssessmentComplete(Assessment assessment) {
         if (!isAssessmentComplete(assessment)) {
             Level playerLevel = assessment.getPlayer().getLevel();
-            List<Skill> requiredSkills = skillRepository.findByApplicableLevelAndIsActiveTrue(playerLevel);
+            List<Skill> requiredSkills = skillRepository.findByApplicableLevelsContainingAndIsActiveTrue(playerLevel);
             
             Set<Long> assessedSkillIds = assessment.getSkillScores().stream()
                     .map(ss -> ss.getSkill().getId())

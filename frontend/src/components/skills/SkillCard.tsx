@@ -1,6 +1,6 @@
 'use client';
 
-import { Skill, getCategoryInfo, getLevelInfo } from '@/types/skills';
+import { Skill, getCategoryInfo, getLevelsDisplayText, SKILL_LEVELS } from '@/types/skills';
 import { useState } from 'react';
 
 interface SkillCardProps {
@@ -23,7 +23,7 @@ export default function SkillCard({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const categoryInfo = getCategoryInfo(skill.category);
-  const levelInfo = getLevelInfo(skill.applicableLevel);
+  const levelsDisplayText = getLevelsDisplayText(skill.applicableLevels);
 
   const handleDeleteClick = () => {
     if (skill.canDelete) {
@@ -67,12 +67,23 @@ export default function SkillCard({
               `}>
                 {categoryInfo?.label || skill.category}
               </span>
-              <span className={`
-                text-xs px-2 py-1 rounded-full font-medium
-                ${levelInfo?.color || 'bg-gray-500'} text-white
-              `}>
-                {levelInfo?.label || skill.applicableLevel}
-              </span>
+              <div className="flex gap-1">
+                {skill.applicableLevels?.map((level, index) => {
+                  const levelInfo = SKILL_LEVELS.find(l => l.key === level);
+                  return (
+                    <span key={level} className={`
+                      text-xs px-2 py-1 rounded-full font-medium
+                      ${levelInfo?.color || 'bg-gray-500'} text-white
+                    `}>
+                      {levelInfo?.label || level}
+                    </span>
+                  );
+                }) || (
+                  <span className="text-xs px-2 py-1 rounded-full font-medium bg-gray-500 text-white">
+                    {levelsDisplayText}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>

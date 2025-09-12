@@ -3,13 +3,15 @@ package com.batal.dto;
 import com.batal.entity.enums.Level;
 import com.batal.entity.enums.SkillCategory;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SkillResponse {
     
     private Long id;
     private String name;
     private SkillCategory category;
-    private Level applicableLevel;
+    private Set<Level> applicableLevels = new HashSet<>();
     private String description;
     private Integer displayOrder;
     private Boolean isActive;
@@ -21,11 +23,11 @@ public class SkillResponse {
     // Constructors
     public SkillResponse() {}
     
-    public SkillResponse(Long id, String name, SkillCategory category, Level applicableLevel) {
+    public SkillResponse(Long id, String name, SkillCategory category, Set<Level> applicableLevels) {
         this.id = id;
         this.name = name;
         this.category = category;
-        this.applicableLevel = applicableLevel;
+        this.applicableLevels = applicableLevels != null ? applicableLevels : new HashSet<>();
     }
     
     // Getters and Setters
@@ -53,12 +55,12 @@ public class SkillResponse {
         this.category = category;
     }
     
-    public Level getApplicableLevel() {
-        return applicableLevel;
+    public Set<Level> getApplicableLevels() {
+        return applicableLevels;
     }
     
-    public void setApplicableLevel(Level applicableLevel) {
-        this.applicableLevel = applicableLevel;
+    public void setApplicableLevels(Set<Level> applicableLevels) {
+        this.applicableLevels = applicableLevels;
     }
     
     public String getDescription() {
@@ -124,8 +126,10 @@ public class SkillResponse {
     }
     
     public String getLevelDisplayName() {
-        if (applicableLevel == null) return null;
-        return applicableLevel.name().substring(0, 1) + applicableLevel.name().substring(1).toLowerCase();
+        if (applicableLevels == null || applicableLevels.isEmpty()) return null;
+        if (applicableLevels.size() == 2) return "Both";
+        Level level = applicableLevels.iterator().next();
+        return level.name().substring(0, 1) + level.name().substring(1).toLowerCase();
     }
     
     @Override
@@ -134,7 +138,7 @@ public class SkillResponse {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", category=" + category +
-                ", applicableLevel=" + applicableLevel +
+                ", applicableLevels=" + applicableLevels +
                 ", isActive=" + isActive +
                 ", canDelete=" + canDelete +
                 ", usageCount=" + usageCount +

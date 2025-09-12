@@ -14,7 +14,7 @@ export interface Skill {
   id: number;
   name: string;
   category: SkillCategory;
-  applicableLevel: SkillLevel;
+  applicableLevels: SkillLevel[];
   description?: string;
   displayOrder: number;
   isActive: boolean;
@@ -27,7 +27,7 @@ export interface Skill {
 export interface SkillCreateRequest {
   name: string;
   category: SkillCategory;
-  applicableLevel: SkillLevel;
+  applicableLevels: SkillLevel[];
   description?: string;
   displayOrder?: number;
   isActive?: boolean;
@@ -55,7 +55,7 @@ export interface SkillFilters {
 export interface SkillFormData {
   name: string;
   category: SkillCategory;
-  applicableLevel: SkillLevel;
+  applicableLevels: SkillLevel[];
   description: string;
   isActive: boolean;
 }
@@ -63,7 +63,7 @@ export interface SkillFormData {
 export interface BulkSkillData {
   skills: SkillCreateRequest[];
   category: SkillCategory;
-  applicableLevel: SkillLevel;
+  applicableLevels: SkillLevel[];
 }
 
 // Category display helpers
@@ -94,4 +94,14 @@ export const getCategoryColor = (category: SkillCategory): string => {
 
 export const getLevelColor = (level: SkillLevel): string => {
   return getLevelInfo(level)?.color || 'bg-gray-500';
+};
+
+export const getLevelsDisplayText = (levels: SkillLevel[]): string => {
+  if (!levels || levels.length === 0) return 'None';
+  if (levels.length === 2) return 'Both';
+  return levels.map(level => getLevelInfo(level)?.label || level).join(', ');
+};
+
+export const isApplicableForLevel = (skill: Skill, level: SkillLevel): boolean => {
+  return skill.applicableLevels?.includes(level) || false;
 };

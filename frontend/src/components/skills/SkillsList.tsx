@@ -184,11 +184,15 @@ export default function SkillsList({ category, level, onSkillSelect }: SkillsLis
             )}
             
             <div className="flex justify-between items-center text-sm">
-              <span className={`px-2 py-1 rounded ${
-                skill.applicableLevel === 'ADVANCED' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'
-              }`}>
-                {skill.applicableLevel}
-              </span>
+              <div className="flex gap-1">
+                {skill.applicableLevels?.map((level) => (
+                  <span key={level} className={`px-2 py-1 rounded text-xs ${
+                    level === 'ADVANCED' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {level}
+                  </span>
+                )) || <span className="px-2 py-1 rounded bg-gray-100 text-gray-800">N/A</span>}
+              </div>
               <span className="text-gray-500">Order: {skill.displayOrder}</span>
             </div>
           </div>

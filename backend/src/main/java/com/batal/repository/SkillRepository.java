@@ -47,24 +47,22 @@ public interface SkillRepository extends JpaRepository<Skill, Long>, JpaSpecific
     List<SkillCategory> findDistinctActiveCategories();
     
     // Level-based queries
-    List<Skill> findByApplicableLevel(Level level);
+    List<Skill> findByApplicableLevelsContaining(Level level);
     
-    List<Skill> findByApplicableLevelOrderByDisplayOrderAsc(Level level);
+    List<Skill> findByApplicableLevelsContainingOrderByDisplayOrderAsc(Level level);
     
-    List<Skill> findByCategoryAndApplicableLevel(SkillCategory category, Level level);
+    List<Skill> findByCategoryAndApplicableLevelsContaining(SkillCategory category, Level level);
     
-    List<Skill> findByCategoryAndApplicableLevelOrderByDisplayOrderAsc(SkillCategory category, Level level);
+    List<Skill> findByCategoryAndApplicableLevelsContainingOrderByDisplayOrderAsc(SkillCategory category, Level level);
     
-    List<Skill> findByApplicableLevelAndIsActiveTrue(Level level);
+    List<Skill> findByApplicableLevelsContainingAndIsActiveTrue(Level level);
     
-    List<Skill> findByCategoryAndApplicableLevelAndIsActiveTrue(SkillCategory category, Level level);
+    List<Skill> findByCategoryAndApplicableLevelsContainingAndIsActiveTrue(SkillCategory category, Level level);
     
     // Duplicate checking
-    Optional<Skill> findByNameAndCategory(String name, SkillCategory category);
+    boolean existsByName(String name);
     
-    boolean existsByNameAndCategory(String name, SkillCategory category);
-    
-    boolean existsByNameAndCategoryAndIdNot(String name, SkillCategory category, Long id);
+    boolean existsByNameAndIdNot(String name, Long id);
     
     // Usage tracking queries
     @Query("SELECT s FROM Skill s WHERE s.id IN (SELECT DISTINCT ss.skill.id FROM SkillScore ss)")

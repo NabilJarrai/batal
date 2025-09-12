@@ -19,7 +19,7 @@ interface BulkSkillRow {
   name: string;
   description: string;
   category: SkillCategory;
-  applicableLevel: SkillLevel;
+  applicableLevels: SkillLevel[];
   displayOrder: number;
 }
 
@@ -29,12 +29,12 @@ export default function BulkSkillCreator({
   isLoading = false 
 }: BulkSkillCreatorProps) {
   const [skills, setSkills] = useState<BulkSkillRow[]>([
-    { name: '', description: '', category: SkillCategory.ATHLETIC, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 1 }
+    { name: '', description: '', category: SkillCategory.ATHLETIC, applicableLevels: [SkillLevel.DEVELOPMENT], displayOrder: 1 }
   ]);
   
   const [globalSettings, setGlobalSettings] = useState({
     category: SkillCategory.ATHLETIC,
-    applicableLevel: SkillLevel.DEVELOPMENT,
+    applicableLevels: [SkillLevel.DEVELOPMENT],
     applyToAll: false
   });
 
@@ -46,7 +46,7 @@ export default function BulkSkillCreator({
       name: '',
       description: '',
       category: globalSettings.applyToAll ? globalSettings.category : SkillCategory.ATHLETIC,
-      applicableLevel: globalSettings.applyToAll ? globalSettings.applicableLevel : SkillLevel.DEVELOPMENT,
+      applicableLevels: globalSettings.applyToAll ? globalSettings.applicableLevels : [SkillLevel.DEVELOPMENT],
       displayOrder: prev.length + 1
     }]);
   };
@@ -70,7 +70,7 @@ export default function BulkSkillCreator({
       setSkills(prev => prev.map(skill => ({
         ...skill,
         category: globalSettings.category,
-        applicableLevel: globalSettings.applicableLevel
+        applicableLevels: globalSettings.applicableLevels
       })));
     }
   };
@@ -110,7 +110,7 @@ export default function BulkSkillCreator({
         name: skill.name.trim(),
         description: skill.description.trim() || undefined,
         category: skill.category,
-        applicableLevel: skill.applicableLevel,
+        applicableLevels: skill.applicableLevels,
         displayOrder: index + 1,
         isActive: true
       }));
@@ -126,28 +126,28 @@ export default function BulkSkillCreator({
   const loadDefaultSkills = () => {
     const defaultSkills: BulkSkillRow[] = [
       // Athletic Skills
-      { name: 'General Motor Skills', description: 'Basic movement and coordination abilities', category: SkillCategory.ATHLETIC, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 1 },
-      { name: 'Strength', description: 'Physical strength and power', category: SkillCategory.ATHLETIC, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 2 },
-      { name: 'Running', description: 'Running technique and endurance', category: SkillCategory.ATHLETIC, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 3 },
-      { name: 'Speed', description: 'Sprint speed and acceleration', category: SkillCategory.ATHLETIC, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 4 },
+      { name: 'General Motor Skills', description: 'Basic movement and coordination abilities', category: SkillCategory.ATHLETIC, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 1 },
+      { name: 'Strength', description: 'Physical strength and power', category: SkillCategory.ATHLETIC, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 2 },
+      { name: 'Running', description: 'Running technique and endurance', category: SkillCategory.ATHLETIC, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 3 },
+      { name: 'Speed', description: 'Sprint speed and acceleration', category: SkillCategory.ATHLETIC, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 4 },
       
       // Technical Skills
-      { name: 'Receiving/Control', description: 'Ball control and first touch', category: SkillCategory.TECHNICAL, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 5 },
-      { name: 'Passing', description: 'Short and long passing accuracy', category: SkillCategory.TECHNICAL, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 6 },
-      { name: 'Dribbling', description: 'Ball control while moving', category: SkillCategory.TECHNICAL, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 7 },
-      { name: 'Shooting', description: 'Finishing and shot accuracy', category: SkillCategory.TECHNICAL, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 8 },
-      { name: 'Defending', description: 'Tackling and defensive positioning', category: SkillCategory.TECHNICAL, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 9 },
+      { name: 'Receiving/Control', description: 'Ball control and first touch', category: SkillCategory.TECHNICAL, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 5 },
+      { name: 'Passing', description: 'Short and long passing accuracy', category: SkillCategory.TECHNICAL, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 6 },
+      { name: 'Dribbling', description: 'Ball control while moving', category: SkillCategory.TECHNICAL, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 7 },
+      { name: 'Shooting', description: 'Finishing and shot accuracy', category: SkillCategory.TECHNICAL, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 8 },
+      { name: 'Defending', description: 'Tackling and defensive positioning', category: SkillCategory.TECHNICAL, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 9 },
       
       // Mentality Skills
-      { name: 'Technical Player', description: 'Technical decision making', category: SkillCategory.MENTALITY, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 10 },
-      { name: 'Team Player', description: 'Teamwork and collaboration', category: SkillCategory.MENTALITY, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 11 },
-      { name: 'Game IQ', description: 'Game understanding and intelligence', category: SkillCategory.MENTALITY, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 12 },
+      { name: 'Technical Player', description: 'Technical decision making', category: SkillCategory.MENTALITY, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 10 },
+      { name: 'Team Player', description: 'Teamwork and collaboration', category: SkillCategory.MENTALITY, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 11 },
+      { name: 'Game IQ', description: 'Game understanding and intelligence', category: SkillCategory.MENTALITY, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 12 },
       
       // Personality Skills
-      { name: 'Discipline', description: 'Self-control and following instructions', category: SkillCategory.PERSONALITY, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 13 },
-      { name: 'Coachable', description: 'Receptiveness to feedback and instruction', category: SkillCategory.PERSONALITY, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 14 },
-      { name: 'Flair', description: 'Creativity and flair in play', category: SkillCategory.PERSONALITY, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 15 },
-      { name: 'Creativity', description: 'Creative thinking and problem solving', category: SkillCategory.PERSONALITY, applicableLevel: SkillLevel.DEVELOPMENT, displayOrder: 16 }
+      { name: 'Discipline', description: 'Self-control and following instructions', category: SkillCategory.PERSONALITY, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 13 },
+      { name: 'Coachable', description: 'Receptiveness to feedback and instruction', category: SkillCategory.PERSONALITY, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 14 },
+      { name: 'Flair', description: 'Creativity and flair in play', category: SkillCategory.PERSONALITY, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 15 },
+      { name: 'Creativity', description: 'Creative thinking and problem solving', category: SkillCategory.PERSONALITY, applicableLevels: [SkillLevel.DEVELOPMENT, SkillLevel.ADVANCED], displayOrder: 16 }
     ];
 
     setSkills(defaultSkills);
@@ -195,8 +195,8 @@ export default function BulkSkillCreator({
               Default Level
             </label>
             <select
-              value={globalSettings.applicableLevel}
-              onChange={(e) => setGlobalSettings(prev => ({ ...prev, applicableLevel: e.target.value as SkillLevel }))}
+              value={globalSettings.applicableLevels[0] || SkillLevel.DEVELOPMENT}
+              onChange={(e) => setGlobalSettings(prev => ({ ...prev, applicableLevels: [e.target.value as SkillLevel] }))}
               className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
             >
               {SKILL_LEVELS.map(level => (
@@ -308,8 +308,8 @@ export default function BulkSkillCreator({
                 
                 <td className="py-2 px-2">
                   <select
-                    value={skill.applicableLevel}
-                    onChange={(e) => updateSkill(index, 'applicableLevel', e.target.value as SkillLevel)}
+                    value={skill.applicableLevels[0] || SkillLevel.DEVELOPMENT}
+                    onChange={(e) => updateSkill(index, 'applicableLevels', [e.target.value as SkillLevel])}
                     className="w-full px-2 py-1 bg-white/10 border border-white/20 text-white text-sm rounded focus:outline-none focus:ring-1 focus:ring-cyan-400"
                   >
                     {SKILL_LEVELS.map(level => (

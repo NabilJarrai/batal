@@ -36,6 +36,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT COUNT(u) FROM User u WHERE u.isActive = true")
     long countActiveUsers();
     
+    @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r.name = 'ADMIN' AND u.isActive = true")
+    long countActiveAdminUsers();
+    
     // Get staff users (excluding PLAYER type) with pagination
     @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.roles WHERE (u.userType IS NULL OR u.userType != 'PLAYER') " +
            "AND NOT EXISTS (SELECT r FROM u.roles r WHERE r.name = 'PLAYER')")
