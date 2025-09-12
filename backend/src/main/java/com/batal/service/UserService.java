@@ -9,11 +9,15 @@ import com.batal.entity.Role;
 import com.batal.entity.enums.UserType;
 import com.batal.exception.ResourceAlreadyExistsException;
 import com.batal.exception.ResourceNotFoundException;
+import com.batal.exception.SelfDeletionException;
+import com.batal.exception.BusinessRuleException;
 import com.batal.repository.UserRepository;
 import com.batal.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -198,9 +202,33 @@ public class UserService {
     }
 
     public void deleteUser(Long id) {
-        User user = userRepository.findById(id)
+        // Get current authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserEmail = authentication.getName();
+        
+        // Fetch the user to be deleted
+        User userToDelete = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", id));
-        userRepository.delete(user);
+        
+        // Check if admin is trying to delete themselves
+        if (currentUserEmail.equals(userToDelete.getEmail())) {
+            throw new SelfDeletionException("Administrators cannot delete their own account");
+        }
+        
+        // Check if user has ADMIN role and prevent deletion if they're the last admin
+        boolean isAdmin = userToDelete.getRoles().stream()
+                .anyMatch(role -> "ADMIN".equals(role.getName()));
+        
+        if (isAdmin) {
+            // Count remaining active admins
+            long activeAdminCount = userRepository.countActiveAdminUsers();
+            if (activeAdminCount <= 1) {
+                throw new BusinessRuleException("Cannot delete the last administrator account");
+            }
+        }
+        
+        // Proceed with deletion
+        userRepository.delete(userToDelete);
     }
     
     // Update user status

@@ -214,12 +214,27 @@ public class PlayerService {
 
     /**
      * Delete player (hard delete)
+     * This will also delete the associated user account and remove from groups
      */
     public void deletePlayer(Long id) {
-        if (!playerRepository.existsById(id)) {
-            throw new RuntimeException("Player not found with id: " + id);
+        Player player = playerRepository.findByIdWithGroup(id)
+                .orElseThrow(() -> new RuntimeException("Player not found with id: " + id));
+        
+        // Remove player from their group if assigned
+        if (player.getGroup() != null) {
+            Group group = player.getGroup();
+            group.getPlayers().remove(player);
+            groupRepository.save(group);
         }
-        playerRepository.deleteById(id);
+        
+        // Delete the associated user account if exists
+        if (player.getUser() != null) {
+            User userToDelete = player.getUser();
+            playerRepository.delete(player); // Delete player first
+            userRepository.delete(userToDelete); // Then delete user
+        } else {
+            playerRepository.delete(player);
+        }
     }
 
     /**

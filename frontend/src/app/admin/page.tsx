@@ -452,16 +452,16 @@ export default function AdminDashboard() {
   //   });
   // };
 
-  // const handleDeletePlayer = (playerId: number) => {
-  //   const player = players.find(p => p.id === playerId);
-  //   setDeleteModal({
-  //     isOpen: true,
-  //     type: 'player',
-  //     id: playerId,
-  //     name: player ? `${player.firstName} ${player.lastName}` : 'Player',
-  //     isDeleting: false
-  //   });
-  // };
+  const handleDeletePlayer = (playerId: number) => {
+    const player = players.find(p => p.id === playerId);
+    setDeleteModal({
+      isOpen: true,
+      type: 'player',
+      id: playerId,
+      name: player ? `${player.firstName} ${player.lastName}` : 'Player',
+      isDeleting: false
+    });
+  };
 
   const handleDeleteGroup = (groupId: number) => {
     const group = groups.find(g => g.id === groupId);
@@ -1013,6 +1013,7 @@ export default function AdminDashboard() {
                     key={player.id}
                     player={player}
                     onEdit={handleEditPlayer}
+                    onDelete={handleDeletePlayer}
                     onDeactivate={handlePlayerDeactivate}
                     onReactivate={handlePlayerReactivate}
                     showActions={true}

@@ -4,6 +4,7 @@ import com.batal.entity.enums.Level;
 import com.batal.entity.enums.SkillCategory;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
@@ -12,7 +13,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "skills", 
-       uniqueConstraints = @UniqueConstraint(columnNames = {"name", "category"}))
+       uniqueConstraints = @UniqueConstraint(columnNames = {"name"}))
 public class Skill {
     
     @Id
@@ -29,10 +30,13 @@ public class Skill {
     @Column(nullable = false, length = 20)
     private SkillCategory category;
     
-    @NotNull
+    @NotEmpty
+    @ElementCollection(targetClass = Level.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "skill_applicable_levels", 
+                     joinColumns = @JoinColumn(name = "skill_id"))
+    @Column(name = "level", nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(name = "applicable_level", nullable = false, length = 20)
-    private Level applicableLevel;
+    private Set<Level> applicableLevels = new HashSet<>();
     
     @Size(max = 500)
     @Column(length = 500)
@@ -58,11 +62,11 @@ public class Skill {
         this.updatedAt = LocalDateTime.now();
     }
     
-    public Skill(String name, SkillCategory category, Level applicableLevel) {
+    public Skill(String name, SkillCategory category, Set<Level> applicableLevels) {
         this();
         this.name = name;
         this.category = category;
-        this.applicableLevel = applicableLevel;
+        this.applicableLevels = applicableLevels != null ? applicableLevels : new HashSet<>();
     }
     
     @PreUpdate
@@ -95,12 +99,12 @@ public class Skill {
         this.category = category;
     }
     
-    public Level getApplicableLevel() {
-        return applicableLevel;
+    public Set<Level> getApplicableLevels() {
+        return applicableLevels;
     }
     
-    public void setApplicableLevel(Level applicableLevel) {
-        this.applicableLevel = applicableLevel;
+    public void setApplicableLevels(Set<Level> applicableLevels) {
+        this.applicableLevels = applicableLevels;
     }
     
     public String getDescription() {
@@ -153,7 +157,7 @@ public class Skill {
     
     // Utility methods
     public boolean isApplicableForLevel(Level level) {
-        return this.applicableLevel == level;
+        return this.applicableLevels != null && this.applicableLevels.contains(level);
     }
     
     @Override
@@ -175,7 +179,7 @@ public class Skill {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", category=" + category +
-                ", applicableLevel=" + applicableLevel +
+                ", applicableLevels=" + applicableLevels +
                 ", isActive=" + isActive +
                 '}';
     }

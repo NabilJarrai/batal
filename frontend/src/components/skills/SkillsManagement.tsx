@@ -75,7 +75,7 @@ export default function SkillsManagement() {
       const request: SkillCreateRequest = {
         name: data.name,
         category: data.category,
-        applicableLevel: data.applicableLevel,
+        applicableLevels: data.applicableLevels,
         description: data.description || undefined,
         isActive: data.isActive
       };

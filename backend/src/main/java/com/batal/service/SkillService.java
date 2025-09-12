@@ -40,12 +40,12 @@ public class SkillService {
     public SkillResponse createSkill(SkillCreateRequest request, Long adminId) {
         validateAdminPermission(adminId);
         validateSkillData(request);
-        checkDuplicateSkill(request.getName(), request.getCategory());
+        checkDuplicateSkill(request.getName());
 
         Skill skill = new Skill();
         skill.setName(request.getName());
         skill.setCategory(request.getCategory());
-        skill.setApplicableLevel(request.getApplicableLevel());
+        skill.setApplicableLevels(request.getApplicableLevels());
         skill.setDescription(request.getDescription());
         skill.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
         
@@ -73,9 +73,9 @@ public class SkillService {
         
         // Update allowed fields
         if (request.getName() != null && !request.getName().equals(skill.getName())) {
-            // Check for duplicates in the same category
-            if (skillRepository.existsByNameAndCategoryAndIdNot(request.getName(), skill.getCategory(), skillId)) {
-                throw new ResourceAlreadyExistsException("Skill with name '" + request.getName() + "' already exists in category " + skill.getCategory());
+            // Check for duplicates by name only
+            if (skillRepository.existsByNameAndIdNot(request.getName(), skillId)) {
+                throw new ResourceAlreadyExistsException("Skill with name '" + request.getName() + "' already exists");
             }
             skill.setName(request.getName());
         }
@@ -146,7 +146,7 @@ public class SkillService {
 
     @Transactional(readOnly = true)
     public List<SkillResponse> getSkillsByLevel(Level level) {
-        return skillRepository.findByApplicableLevelOrderByDisplayOrderAsc(level)
+        return skillRepository.findByApplicableLevelsContainingOrderByDisplayOrderAsc(level)
                 .stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
@@ -162,7 +162,7 @@ public class SkillService {
 
     @Transactional(readOnly = true)
     public List<SkillResponse> getSkillsByCategoryAndLevel(SkillCategory category, Level level) {
-        return skillRepository.findByCategoryAndApplicableLevelAndIsActiveTrue(category, level)
+        return skillRepository.findByCategoryAndApplicableLevelsContainingAndIsActiveTrue(category, level)
                 .stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
@@ -178,7 +178,7 @@ public class SkillService {
         }
         
         if (level != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("applicableLevel"), level));
+            spec = spec.and((root, query, cb) -> cb.isMember(level, root.get("applicableLevels")));
         }
         
         if (activeOnly) {
@@ -255,14 +255,14 @@ public class SkillService {
         if (request.getCategory() == null) {
             throw new ValidationException("category", "Skill category is required");
         }
-        if (request.getApplicableLevel() == null) {
-            throw new ValidationException("applicableLevel", "Applicable level is required");
+        if (request.getApplicableLevels() == null || request.getApplicableLevels().isEmpty()) {
+            throw new ValidationException("applicableLevels", "At least one applicable level is required");
         }
     }
 
-    private void checkDuplicateSkill(String name, SkillCategory category) {
-        if (skillRepository.existsByNameAndCategory(name, category)) {
-            throw new ResourceAlreadyExistsException("Skill with name '" + name + "' already exists in category " + category);
+    private void checkDuplicateSkill(String name) {
+        if (skillRepository.existsByName(name)) {
+            throw new ResourceAlreadyExistsException("Skill with name '" + name + "' already exists");
         }
     }
 
@@ -272,7 +272,7 @@ public class SkillService {
         response.setId(skill.getId());
         response.setName(skill.getName());
         response.setCategory(skill.getCategory());
-        response.setApplicableLevel(skill.getApplicableLevel());
+        response.setApplicableLevels(skill.getApplicableLevels());
         response.setDescription(skill.getDescription());
         response.setDisplayOrder(skill.getDisplayOrder());
         response.setIsActive(skill.getIsActive());
@@ -293,7 +293,7 @@ public class SkillService {
         response.setId(skill.getId());
         response.setName(skill.getName());
         response.setCategory(skill.getCategory());
-        response.setApplicableLevel(skill.getApplicableLevel());
+        response.setApplicableLevels(skill.getApplicableLevels());
         response.setDescription(skill.getDescription());
         response.setDisplayOrder(skill.getDisplayOrder());
         response.setIsActive(skill.getIsActive());
@@ -312,28 +312,28 @@ public class SkillService {
         List<SkillCreateRequest> skills = new ArrayList<>();
         
         // Athletic Skills (4 skills)
-        skills.add(new SkillCreateRequest("General Motor Skills", SkillCategory.ATHLETIC, Level.DEVELOPMENT, "Basic movement and coordination abilities"));
-        skills.add(new SkillCreateRequest("Strength", SkillCategory.ATHLETIC, Level.DEVELOPMENT, "Physical strength and power"));
-        skills.add(new SkillCreateRequest("Running", SkillCategory.ATHLETIC, Level.DEVELOPMENT, "Running technique and endurance"));
-        skills.add(new SkillCreateRequest("Speed", SkillCategory.ATHLETIC, Level.DEVELOPMENT, "Sprint speed and acceleration"));
+        skills.add(new SkillCreateRequest("General Motor Skills", SkillCategory.ATHLETIC, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Basic movement and coordination abilities"));
+        skills.add(new SkillCreateRequest("Strength", SkillCategory.ATHLETIC, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Physical strength and power"));
+        skills.add(new SkillCreateRequest("Running", SkillCategory.ATHLETIC, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Running technique and endurance"));
+        skills.add(new SkillCreateRequest("Speed", SkillCategory.ATHLETIC, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Sprint speed and acceleration"));
         
         // Technical Skills (5 skills)
-        skills.add(new SkillCreateRequest("Receiving/Control", SkillCategory.TECHNICAL, Level.DEVELOPMENT, "Ball control and first touch"));
-        skills.add(new SkillCreateRequest("Passing", SkillCategory.TECHNICAL, Level.DEVELOPMENT, "Short and long passing accuracy"));
-        skills.add(new SkillCreateRequest("Dribbling", SkillCategory.TECHNICAL, Level.DEVELOPMENT, "Ball control while moving"));
-        skills.add(new SkillCreateRequest("Shooting", SkillCategory.TECHNICAL, Level.DEVELOPMENT, "Finishing and shot accuracy"));
-        skills.add(new SkillCreateRequest("Defending", SkillCategory.TECHNICAL, Level.DEVELOPMENT, "Tackling and defensive positioning"));
+        skills.add(new SkillCreateRequest("Receiving/Control", SkillCategory.TECHNICAL, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Ball control and first touch"));
+        skills.add(new SkillCreateRequest("Passing", SkillCategory.TECHNICAL, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Short and long passing accuracy"));
+        skills.add(new SkillCreateRequest("Dribbling", SkillCategory.TECHNICAL, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Ball control while moving"));
+        skills.add(new SkillCreateRequest("Shooting", SkillCategory.TECHNICAL, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Finishing and shot accuracy"));
+        skills.add(new SkillCreateRequest("Defending", SkillCategory.TECHNICAL, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Tackling and defensive positioning"));
         
         // Mentality Skills (3 skills)
-        skills.add(new SkillCreateRequest("Technical Player", SkillCategory.MENTALITY, Level.DEVELOPMENT, "Technical decision making"));
-        skills.add(new SkillCreateRequest("Team Player", SkillCategory.MENTALITY, Level.DEVELOPMENT, "Teamwork and collaboration"));
-        skills.add(new SkillCreateRequest("Game IQ", SkillCategory.MENTALITY, Level.DEVELOPMENT, "Game understanding and intelligence"));
+        skills.add(new SkillCreateRequest("Technical Player", SkillCategory.MENTALITY, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Technical decision making"));
+        skills.add(new SkillCreateRequest("Team Player", SkillCategory.MENTALITY, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Teamwork and collaboration"));
+        skills.add(new SkillCreateRequest("Game IQ", SkillCategory.MENTALITY, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Game understanding and intelligence"));
         
         // Personality Skills (4 skills)
-        skills.add(new SkillCreateRequest("Discipline", SkillCategory.PERSONALITY, Level.DEVELOPMENT, "Self-control and following instructions"));
-        skills.add(new SkillCreateRequest("Coachable", SkillCategory.PERSONALITY, Level.DEVELOPMENT, "Receptiveness to feedback and instruction"));
-        skills.add(new SkillCreateRequest("Flair", SkillCategory.PERSONALITY, Level.DEVELOPMENT, "Creativity and flair in play"));
-        skills.add(new SkillCreateRequest("Creativity", SkillCategory.PERSONALITY, Level.DEVELOPMENT, "Creative thinking and problem solving"));
+        skills.add(new SkillCreateRequest("Discipline", SkillCategory.PERSONALITY, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Self-control and following instructions"));
+        skills.add(new SkillCreateRequest("Coachable", SkillCategory.PERSONALITY, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Receptiveness to feedback and instruction"));
+        skills.add(new SkillCreateRequest("Flair", SkillCategory.PERSONALITY, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Creativity and flair in play"));
+        skills.add(new SkillCreateRequest("Creativity", SkillCategory.PERSONALITY, Set.of(Level.DEVELOPMENT, Level.ADVANCED), "Creative thinking and problem solving"));
         
         // Set display orders
         for (int i = 0; i < skills.size(); i++) {

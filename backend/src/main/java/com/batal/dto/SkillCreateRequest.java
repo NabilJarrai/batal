@@ -3,8 +3,11 @@ package com.batal.dto;
 import com.batal.entity.enums.Level;
 import com.batal.entity.enums.SkillCategory;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SkillCreateRequest {
     
@@ -15,8 +18,8 @@ public class SkillCreateRequest {
     @NotNull(message = "Skill category is required")
     private SkillCategory category;
     
-    @NotNull(message = "Applicable level is required")
-    private Level applicableLevel;
+    @NotEmpty(message = "At least one applicable level is required")
+    private Set<Level> applicableLevels = new HashSet<>();
     
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
@@ -28,14 +31,14 @@ public class SkillCreateRequest {
     // Constructors
     public SkillCreateRequest() {}
     
-    public SkillCreateRequest(String name, SkillCategory category, Level applicableLevel) {
+    public SkillCreateRequest(String name, SkillCategory category, Set<Level> applicableLevels) {
         this.name = name;
         this.category = category;
-        this.applicableLevel = applicableLevel;
+        this.applicableLevels = applicableLevels != null ? applicableLevels : new HashSet<>();
     }
     
-    public SkillCreateRequest(String name, SkillCategory category, Level applicableLevel, String description) {
-        this(name, category, applicableLevel);
+    public SkillCreateRequest(String name, SkillCategory category, Set<Level> applicableLevels, String description) {
+        this(name, category, applicableLevels);
         this.description = description;
     }
     
@@ -56,12 +59,12 @@ public class SkillCreateRequest {
         this.category = category;
     }
     
-    public Level getApplicableLevel() {
-        return applicableLevel;
+    public Set<Level> getApplicableLevels() {
+        return applicableLevels;
     }
     
-    public void setApplicableLevel(Level applicableLevel) {
-        this.applicableLevel = applicableLevel;
+    public void setApplicableLevels(Set<Level> applicableLevels) {
+        this.applicableLevels = applicableLevels;
     }
     
     public String getDescription() {
@@ -93,7 +96,7 @@ public class SkillCreateRequest {
         return "SkillCreateRequest{" +
                 "name='" + name + '\'' +
                 ", category=" + category +
-                ", applicableLevel=" + applicableLevel +
+                ", applicableLevels=" + applicableLevels +
                 ", description='" + description + '\'' +
                 ", displayOrder=" + displayOrder +
                 ", isActive=" + isActive +
