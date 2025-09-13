@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
 import { SkillRadarChart } from "@/components/player/SkillRadarChart";
 import { 
   ArrowLeftIcon, 
@@ -9,83 +10,64 @@ import {
   CalendarIcon,
   UserIcon 
 } from "@heroicons/react/24/outline";
-
-interface SkillScore {
-  skillId: number;
-  skillName: string;
-  category: string;
-  score: number;
-  notes?: string;
-}
-
-interface Assessment {
-  id: number;
-  assessmentDate: string;
-  period: string;
-  assessorName: string;
-  isFinalized: boolean;
-  comments?: string;
-  coachNotes?: string;
-  skillScores?: SkillScore[];
-  createdAt: string;
-  updatedAt: string;
-}
+import { AppDispatch, RootState } from "@/store";
+import { fetchAssessmentById, selectCurrentAssessment, selectAssessmentLoading, selectAssessmentError } from "@/store/assessmentSlice";
+import { Assessment } from "@/types/assessments";
 
 export default function AssessmentDetail() {
   const params = useParams();
   const router = useRouter();
-  const [assessment, setAssessment] = useState<Assessment | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch<AppDispatch>();
+  
+  const assessment = useSelector((state: RootState) => selectCurrentAssessment(state));
+  const loading = useSelector((state: RootState) => selectAssessmentLoading(state));
+  const error = useSelector((state: RootState) => selectAssessmentError(state));
 
   useEffect(() => {
     if (params.id) {
-      fetchAssessment(params.id as string);
+      dispatch(fetchAssessmentById(Number(params.id)));
     }
-  }, [params.id]);
+  }, [params.id, dispatch]);
 
-  const fetchAssessment = async (id: string) => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/players/me/assessments/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("jwt_token")}`,
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setAssessment(data);
-      } else if (response.status === 404) {
-        router.push("/player/assessments");
+  const groupSkillsByCategory = (assessment: Assessment) => {
+    if (!assessment.skillScores) return {};
+    
+    const grouped: Record<string, typeof assessment.skillScores> = {};
+    assessment.skillScores.forEach((skill) => {
+      if (!grouped[skill.skillCategory]) {
+        grouped[skill.skillCategory] = [];
       }
-    } catch (error) {
-      console.error("Error fetching assessment:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const groupSkillsByCategory = (skills: SkillScore[]) => {
-    const grouped: Record<string, SkillScore[]> = {};
-    skills.forEach((skill) => {
-      if (!grouped[skill.category]) {
-        grouped[skill.category] = [];
-      }
-      grouped[skill.category].push(skill);
+      grouped[skill.skillCategory].push(skill);
     });
     return grouped;
   };
 
-  const getCategoryAverage = (skills: SkillScore[]) => {
-    const sum = skills.reduce((acc, skill) => acc + skill.score, 0);
-    return (sum / skills.length).toFixed(1);
-  };
-
-  const getOverallAverage = (skills: SkillScore[]) => {
+  const getCategoryAverage = (skills: Assessment['skillScores']) => {
     if (!skills || skills.length === 0) return "0.0";
     const sum = skills.reduce((acc, skill) => acc + skill.score, 0);
     return (sum / skills.length).toFixed(1);
   };
+
+  const getOverallAverage = (assessment: Assessment) => {
+    if (!assessment.skillScores || assessment.skillScores.length === 0) return "0.0";
+    const sum = assessment.skillScores.reduce((acc, skill) => acc + skill.score, 0);
+    return (sum / assessment.skillScores.length).toFixed(1);
+  };
+
+  if (error) {
+    return (
+      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6">
+        <h3 className="text-lg font-bold text-red-300 mb-2">Error Loading Assessment</h3>
+        <p className="text-red-200">{error}</p>
+        <button 
+          onClick={() => router.push("/player/assessments")}
+          className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+        >
+          Back to Assessments
+        </button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -103,7 +85,7 @@ export default function AssessmentDetail() {
     );
   }
 
-  const groupedSkills = assessment.skillScores ? groupSkillsByCategory(assessment.skillScores) : {};
+  const groupedSkills = assessment ? groupSkillsByCategory(assessment) : {};
 
   return (
     <div className="space-y-6">
@@ -146,7 +128,7 @@ export default function AssessmentDetail() {
               <div className="mt-3">
                 <p className="text-sm text-blue-200">Overall Score</p>
                 <p className="text-3xl font-bold text-white">
-                  {getOverallAverage(assessment.skillScores)}/10
+                  {getOverallAverage(assessment)}/10
                 </p>
               </div>
             )}

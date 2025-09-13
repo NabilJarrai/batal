@@ -29,7 +29,8 @@ export default function LoginFormClient() {
       } else if (user.roles?.includes('COACH')) {
         router.push('/coach');
       } else {
-        router.push('/');
+        // Default to player dashboard for players or users without specific roles
+        router.push('/player/dashboard');
       }
     }
   }, [isAuthenticated, user, router]);

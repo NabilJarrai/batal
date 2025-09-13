@@ -101,11 +101,48 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
     });
     ctx.stroke();
 
-    // Draw data points
+    // Calculate label positions below points to avoid overlaps
+    const labelPositions: { x: number; y: number; text: string; originalY: number }[] = [];
+
     sortedData.forEach((data, index) => {
       const x = padding + index * xStep;
       const y = padding + (maxScore - data.score) * yScale;
-      
+      const labelText = data.score.toFixed(1);
+
+      labelPositions.push({
+        x,
+        y: y + 25, // Position below the point
+        text: labelText,
+        originalY: y
+      });
+    });
+
+    // Adjust label positions to avoid overlaps
+    const minDistance = 20; // Minimum distance between labels
+    for (let i = 1; i < labelPositions.length; i++) {
+      const current = labelPositions[i];
+      const previous = labelPositions[i - 1];
+
+      // Check if labels are too close horizontally and vertically
+      const xDistance = Math.abs(current.x - previous.x);
+      const yDistance = Math.abs(current.y - previous.y);
+
+      if (xDistance < 50 && yDistance < minDistance) {
+        // Alternate positions below the point: closer and further
+        if (i % 2 === 0) {
+          current.y = current.originalY + 40; // Further below
+        } else {
+          current.y = current.originalY + 15; // Closer below
+        }
+      }
+    }
+
+    // Draw data points and labels
+    sortedData.forEach((data, index) => {
+      const x = padding + index * xStep;
+      const y = padding + (maxScore - data.score) * yScale;
+      const labelPos = labelPositions[index];
+
       // Draw point
       ctx.beginPath();
       ctx.arc(x, y, 5, 0, Math.PI * 2);
@@ -114,6 +151,17 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
       ctx.strokeStyle = "white";
       ctx.lineWidth = 2;
       ctx.stroke();
+
+      // Draw connection line from point to label if they're far apart
+      const labelDistance = Math.abs(labelPos.y - (y + 25));
+      if (labelDistance > 10) {
+        ctx.beginPath();
+        ctx.moveTo(x, y + 8); // Start from bottom of point
+        ctx.lineTo(x, labelPos.y - 8); // Connect to top of label
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
 
       // Draw x-axis labels (dates)
       ctx.save();
@@ -126,12 +174,40 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
       ctx.fillText(new Date(data.date).toLocaleDateString(), 0, 0);
       ctx.restore();
 
-      // Draw score labels on points
-      ctx.fillStyle = "white";
+      // Draw score labels with background at adjusted position
+      const labelText = labelPos.text;
+      const labelY = labelPos.y;
+
+      // Measure text for background
       ctx.font = "12px sans-serif";
+      const textMetrics = ctx.measureText(labelText);
+      const textWidth = textMetrics.width;
+      const textHeight = 12;
+
+      // Draw background for the score label
+      ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+      ctx.fillRect(
+        x - textWidth/2 - 4,
+        labelY - textHeight/2 - 2,
+        textWidth + 8,
+        textHeight + 4
+      );
+
+      // Draw white border for the background
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(
+        x - textWidth/2 - 4,
+        labelY - textHeight/2 - 2,
+        textWidth + 8,
+        textHeight + 4
+      );
+
+      // Draw the score text
+      ctx.fillStyle = "white";
       ctx.textAlign = "center";
-      ctx.textBaseline = "bottom";
-      ctx.fillText(data.score.toFixed(1), x, y - 10);
+      ctx.textBaseline = "middle";
+      ctx.fillText(labelText, x, labelY);
     });
 
     // Draw title

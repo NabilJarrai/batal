@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 interface SkillScore {
   skillName: string;
-  category: string;
+  skillCategory: string;
   score: number;
 }
 
@@ -34,11 +34,11 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
     // Group skills by category and calculate averages
     const categoryAverages: Record<string, { sum: number; count: number }> = {};
     skills.forEach((skill) => {
-      if (!categoryAverages[skill.category]) {
-        categoryAverages[skill.category] = { sum: 0, count: 0 };
+      if (!categoryAverages[skill.skillCategory]) {
+        categoryAverages[skill.skillCategory] = { sum: 0, count: 0 };
       }
-      categoryAverages[skill.category].sum += skill.score;
-      categoryAverages[skill.category].count++;
+      categoryAverages[skill.skillCategory].sum += skill.score;
+      categoryAverages[skill.skillCategory].count++;
     });
 
     const categories = Object.keys(categoryAverages);
@@ -153,11 +153,11 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
       <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
         {Object.entries(
           skills.reduce((acc, skill) => {
-            if (!acc[skill.category]) {
-              acc[skill.category] = { sum: 0, count: 0 };
+            if (!acc[skill.skillCategory]) {
+              acc[skill.skillCategory] = { sum: 0, count: 0 };
             }
-            acc[skill.category].sum += skill.score;
-            acc[skill.category].count++;
+            acc[skill.skillCategory].sum += skill.score;
+            acc[skill.skillCategory].count++;
             return acc;
           }, {} as Record<string, { sum: number; count: number }>)
         ).map(([category, data]) => (

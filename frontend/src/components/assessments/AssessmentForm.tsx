@@ -78,48 +78,41 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
           const groupPlayers = await playersAPI.getByGroup(group.id);
           allPlayers.push(...groupPlayers);
         }
-        
-        // For now, load all active skills - we'll filter them dynamically based on selected player
-        const skillsData = await skillsAPI.getActive();
-        
-        setSkills(skillsData);
+
         setPlayers(allPlayers);
 
-        // Initialize skill scores if creating new assessment
-        if (isCreating) {
-          const initialScores: { [skillId: number]: SkillScoreFormData } = {};
-          skillsData.forEach(skill => {
-            initialScores[skill.id] = {
-              skillId: skill.id,
-              score: 0,
-              notes: ''
-            };
-          });
-          setFormData(prev => ({ ...prev, skillScores: initialScores }));
-        } else if (assessment) {
-          // Load existing skill scores
-          const existingScores: { [skillId: number]: SkillScoreFormData } = {};
-          assessment.skillScores.forEach(score => {
-            existingScores[score.skillId] = {
-              skillId: score.skillId,
-              score: score.score,
-              notes: score.notes || ''
-            };
-          });
-          
-          // Add any missing skills with zero scores
-          skillsData.forEach(skill => {
-            if (!existingScores[skill.id]) {
-              existingScores[skill.id] = {
-                skillId: skill.id,
-                score: 0,
-                notes: ''
+        // For existing assessments, load the skills and scores
+        if (assessment) {
+          // Load skills for the assessment's player level
+          const assessmentPlayer = allPlayers.find(p => p.id === assessment.playerId);
+          if (assessmentPlayer?.level) {
+            const skillsData = await skillsAPI.getSkillsForAssessment(assessmentPlayer.level as any);
+            setSkills(skillsData);
+
+            // Load existing skill scores
+            const existingScores: { [skillId: number]: SkillScoreFormData } = {};
+            assessment.skillScores.forEach(score => {
+              existingScores[score.skillId] = {
+                skillId: score.skillId,
+                score: score.score,
+                notes: score.notes || ''
               };
-            }
-          });
-          
-          setFormData(prev => ({ ...prev, skillScores: existingScores }));
-          setIsDraft(!assessment.isFinalized);
+            });
+
+            // Add any missing skills with zero scores
+            skillsData.forEach(skill => {
+              if (!existingScores[skill.id]) {
+                existingScores[skill.id] = {
+                  skillId: skill.id,
+                  score: 0,
+                  notes: ''
+                };
+              }
+            });
+
+            setFormData(prev => ({ ...prev, skillScores: existingScores }));
+            setIsDraft(!assessment.isFinalized);
+          }
         }
 
       } catch (err) {
@@ -132,21 +125,21 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
     loadData();
   }, [isCreating, assessment]);
 
-  // Find selected player when playerId changes and filter skills by player level
+  // Find selected player when playerId changes and load skills by player level
   useEffect(() => {
     const updatePlayerAndSkills = async () => {
       if (formData.playerId && players.length > 0) {
         const player = players.find(p => p.id === formData.playerId);
         setSelectedPlayer(player || null);
-        
-        // Filter skills based on player's level
+
+        // Load skills based on player's level
         if (player?.level) {
           try {
             const skillsForLevel = await skillsAPI.getSkillsForAssessment(player.level as any);
             setSkills(skillsForLevel);
-            
-            // Update skill scores to only include relevant skills
-            if (isCreating) {
+
+            // Initialize skill scores for new assessments or when player changes
+            if (isCreating || !assessment) {
               const initialScores: { [skillId: number]: SkillScoreFormData } = {};
               skillsForLevel.forEach(skill => {
                 initialScores[skill.id] = {
@@ -159,13 +152,21 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
             }
           } catch (err) {
             console.error('Failed to load skills for player level:', err);
+            setError('Failed to load skills for selected player');
           }
+        }
+      } else if (!formData.playerId) {
+        // Clear skills and selected player when no player is selected
+        setSelectedPlayer(null);
+        setSkills([]);
+        if (isCreating) {
+          setFormData(prev => ({ ...prev, skillScores: {} }));
         }
       }
     };
-    
+
     updatePlayerAndSkills();
-  }, [formData.playerId, players, isCreating]);
+  }, [formData.playerId, players, isCreating, assessment]);
 
   const handleInputChange = (field: keyof AssessmentFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -402,38 +403,51 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
         {/* Skill Ratings by Category */}
         <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-white mb-6">Skill Ratings</h3>
-          
-          <div className="space-y-6">
-            {SKILL_CATEGORIES.map(category => {
-              const categorySkills = skillsByCategory[category.key] || [];
-              if (categorySkills.length === 0) return null;
 
-              return (
-                <div key={category.key} className="bg-white/5 border border-white/10 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className={`w-8 h-8 rounded-lg ${category.color} flex items-center justify-center text-white text-lg`}>
-                      {category.icon}
+          {!formData.playerId ? (
+            <div className="text-center py-12">
+              <User className="mx-auto h-12 w-12 text-blue-300 mb-4" />
+              <p className="text-blue-200 text-lg mb-2">Select a player to load skills</p>
+              <p className="text-blue-300 text-sm">Skills will be loaded based on the player's level</p>
+            </div>
+          ) : skills.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-300 mx-auto mb-4"></div>
+              <p className="text-blue-200">Loading skills...</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {SKILL_CATEGORIES.map(category => {
+                const categorySkills = skillsByCategory[category.key] || [];
+                if (categorySkills.length === 0) return null;
+
+                return (
+                  <div key={category.key} className="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className={`w-8 h-8 rounded-lg ${category.color} flex items-center justify-center text-white text-lg`}>
+                        {category.icon}
+                      </div>
+                      <h4 className="text-lg font-medium text-white">{category.label}</h4>
+                      <span className="text-sm text-blue-300">({categorySkills.length} skills)</span>
                     </div>
-                    <h4 className="text-lg font-medium text-white">{category.label}</h4>
-                    <span className="text-sm text-blue-300">({categorySkills.length} skills)</span>
+
+                    <div className="grid gap-4">
+                      {categorySkills.map(skill => (
+                        <SkillRatingInput
+                          key={skill.id}
+                          skill={skill}
+                          value={formData.skillScores[skill.id] || { skillId: skill.id, score: 0, notes: '' }}
+                          onChange={handleSkillScoreChange}
+                          disabled={isReadOnly}
+                          compact={categorySkills.length > 4}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  
-                  <div className="grid gap-4">
-                    {categorySkills.map(skill => (
-                      <SkillRatingInput
-                        key={skill.id}
-                        skill={skill}
-                        value={formData.skillScores[skill.id] || { skillId: skill.id, score: 0, notes: '' }}
-                        onChange={handleSkillScoreChange}
-                        disabled={isReadOnly}
-                        compact={categorySkills.length > 4}
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Comments Section */}

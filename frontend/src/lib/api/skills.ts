@@ -8,7 +8,7 @@ import {
   SkillLevel 
 } from '@/types/skills';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 class SkillsAPI {
   private async getAuthHeaders() {

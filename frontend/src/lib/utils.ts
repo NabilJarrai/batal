@@ -2,7 +2,7 @@
 // This file is a placeholder for utility functions
 
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/api";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Batal Academy";
 

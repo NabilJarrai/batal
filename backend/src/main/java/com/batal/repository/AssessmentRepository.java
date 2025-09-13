@@ -112,4 +112,23 @@ public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
     List<Assessment> findByAssessorIdOrderByAssessmentDateDesc(Long assessorId);
     
     List<Assessment> findAllByOrderByAssessmentDateDesc();
+
+    // Fetch assessments with all related entities for player self-service
+    @Query("SELECT DISTINCT a FROM Assessment a " +
+           "LEFT JOIN FETCH a.player p " +
+           "LEFT JOIN FETCH a.assessor assessor " +
+           "LEFT JOIN FETCH a.skillScores ss " +
+           "LEFT JOIN FETCH ss.skill " +
+           "WHERE a.player.id = :playerId " +
+           "ORDER BY a.assessmentDate DESC")
+    List<Assessment> findByPlayerIdWithAllRelationsOrderByAssessmentDateDesc(@Param("playerId") Long playerId);
+
+    // Fetch single assessment with all related entities
+    @Query("SELECT a FROM Assessment a " +
+           "LEFT JOIN FETCH a.player p " +
+           "LEFT JOIN FETCH a.assessor assessor " +
+           "LEFT JOIN FETCH a.skillScores ss " +
+           "LEFT JOIN FETCH ss.skill " +
+           "WHERE a.id = :assessmentId")
+    Optional<Assessment> findByIdWithAllRelations(@Param("assessmentId") Long assessmentId);
 }

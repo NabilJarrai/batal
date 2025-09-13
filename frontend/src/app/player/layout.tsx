@@ -11,6 +11,7 @@ import {
   DocumentChartBarIcon,
   HomeIcon,
   ArrowRightOnRectangleIcon,
+  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 
 interface PlayerLayoutProps {
@@ -35,14 +36,19 @@ export default function PlayerLayout({ children }: PlayerLayoutProps) {
       icon: HomeIcon,
     },
     {
-      name: "My Profile",
-      href: "/player/profile",
-      icon: UserCircleIcon,
-    },
-    {
       name: "My Assessments",
       href: "/player/assessments",
       icon: DocumentChartBarIcon,
+    },
+    {
+      name: "Progress Analytics",
+      href: "/player/progress",
+      icon: ChartBarIcon,
+    },
+    {
+      name: "My Profile",
+      href: "/player/profile",
+      icon: UserCircleIcon,
     },
   ];
 

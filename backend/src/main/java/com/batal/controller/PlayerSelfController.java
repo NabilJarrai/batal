@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/players/me")
+@RequestMapping("/players/me")
 @CrossOrigin(origins = "*", maxAge = 3600)
 @PreAuthorize("hasRole('PLAYER')")
 public class PlayerSelfController {
@@ -47,6 +48,7 @@ public class PlayerSelfController {
      * Get current player's own profile
      */
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getMyProfile() {
         try {
             Player player = getCurrentPlayer();
@@ -126,14 +128,15 @@ public class PlayerSelfController {
      * Get all assessments for current player
      */
     @GetMapping("/assessments")
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getMyAssessments() {
         try {
             Player player = getCurrentPlayer();
-            List<Assessment> assessments = assessmentRepository.findByPlayerIdOrderByAssessmentDateDesc(player.getId());
+            List<Assessment> assessments = assessmentRepository.findByPlayerIdWithAllRelationsOrderByAssessmentDateDesc(player.getId());
             List<AssessmentDTO> assessmentDTOs = assessments.stream()
                 .map(this::convertToAssessmentDTO)
                 .collect(Collectors.toList());
-            
+
             return ResponseEntity.ok(assessmentDTOs);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -145,21 +148,22 @@ public class PlayerSelfController {
      * Get specific assessment details for current player
      */
     @GetMapping("/assessments/{id}")
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getMyAssessmentById(@PathVariable Long id) {
         try {
             Player player = getCurrentPlayer();
-            Optional<Assessment> assessment = assessmentRepository.findById(id);
-            
+            Optional<Assessment> assessment = assessmentRepository.findByIdWithAllRelations(id);
+
             if (assessment.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            
+
             // Verify the assessment belongs to the current player
             if (!assessment.get().getPlayer().getId().equals(player.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Access denied to this assessment"));
             }
-            
+
             AssessmentDTO assessmentDTO = convertToAssessmentDTO(assessment.get());
             return ResponseEntity.ok(assessmentDTO);
         } catch (Exception e) {
@@ -233,7 +237,7 @@ public class PlayerSelfController {
                     Map<String, Object> skillMap = new HashMap<>();
                     skillMap.put("skillId", score.getSkill().getId());
                     skillMap.put("skillName", score.getSkill().getName());
-                    skillMap.put("category", score.getSkill().getCategory().toString());
+                    skillMap.put("skillCategory", score.getSkill().getCategory().toString());
                     skillMap.put("score", score.getScore());
                     skillMap.put("notes", score.getNotes() != null ? score.getNotes() : "");
                     return skillMap;
