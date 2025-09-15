@@ -1,27 +1,39 @@
 package com.batal.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.time.LocalDateTime;
-import java.util.Set;
-import java.util.HashSet;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDateTime;
+
+/**
+ * Normalized Player entity containing only player-specific data.
+ * Player personal information is stored in User entity with user_type = 'PLAYER'.
+ */
 @Entity
-@Table(name = "players")
-public class Player {
+@Table(name = "players",
+       indexes = {
+           @Index(name = "idx_players_user_id", columnList = "user_id"),
+           @Index(name = "idx_players_position", columnList = "position"),
+           @Index(name = "idx_players_jersey_size", columnList = "jersey_size")
+       },
+       uniqueConstraints = {
+           @UniqueConstraint(name = "uk_players_user_id", columnNames = "user_id"),
+           @UniqueConstraint(name = "uk_players_player_number", columnNames = "player_number")
+       })
+public class PlayerNormalized {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @NotNull
-    @Column(name = "user_id", nullable = false, unique = true)
-    private Long userId;
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private User user;
     
-    // Player-specific fields only (personal data is in users table)
     @Size(max = 10)
-    @Column(name = "player_number", unique = true, length = 10)
+    @Column(name = "player_number", length = 10, unique = true)
     private String playerNumber;
     
     @Size(max = 50)
@@ -54,33 +66,19 @@ public class Player {
     @Column(name = "development_goals", columnDefinition = "TEXT")
     private String developmentGoals;
     
-    @Column(name = "created_at")
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
+    @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    // User relationship (contains all personal data)
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    private User user;
+    // Constructors
+    public PlayerNormalized() {}
     
-    // Assessments relationship
-    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Assessment> assessments = new HashSet<>();
-    
-    // Memberships relationship
-    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Membership> memberships = new HashSet<>();
-    
-    public Player() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-    
-    public Player(Long userId) {
-        this();
-        this.userId = userId;
+    public PlayerNormalized(User user) {
+        this.user = user;
     }
     
     // Getters and Setters
@@ -92,12 +90,12 @@ public class Player {
         this.id = id;
     }
     
-    public Long getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
     
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
     
     public String getPlayerNumber() {
@@ -196,64 +194,28 @@ public class Player {
         this.updatedAt = updatedAt;
     }
     
-    public User getUser() {
-        return user;
-    }
-    
-    public void setUser(User user) {
-        this.user = user;
-    }
-    
-    public Set<Assessment> getAssessments() {
-        return assessments;
-    }
-    
-    public void setAssessments(Set<Assessment> assessments) {
-        this.assessments = assessments;
-    }
-    
-    public Set<Membership> getMemberships() {
-        return memberships;
-    }
-    
-    public void setMemberships(Set<Membership> memberships) {
-        this.memberships = memberships;
-    }
-    
-    // Utility methods - delegate to user for personal data
-    public String getFirstName() {
-        return user != null ? user.getFirstName() : null;
-    }
-    
-    public String getLastName() {
-        return user != null ? user.getLastName() : null;
-    }
-    
+    // Utility methods
     public String getFullName() {
         return user != null ? user.getFullName() : null;
     }
     
-    public String getEmail() {
-        return user != null ? user.getEmail() : null;
-    }
-    
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-    
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+    public String getDisplayName() {
+        if (user != null) {
+            String name = user.getFullName();
+            if (playerNumber != null && !playerNumber.isEmpty()) {
+                return name + " (#" + playerNumber + ")";
+            }
+            return name;
+        }
+        return playerNumber != null ? "#" + playerNumber : "Unknown Player";
     }
     
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Player)) return false;
-        Player player = (Player) o;
-        return id != null && id.equals(player.id);
+        if (!(o instanceof PlayerNormalized)) return false;
+        PlayerNormalized that = (PlayerNormalized) o;
+        return id != null && id.equals(that.id);
     }
     
     @Override
@@ -263,11 +225,11 @@ public class Player {
     
     @Override
     public String toString() {
-        return "Player{" +
+        return "PlayerNormalized{" +
                 "id=" + id +
-                ", userId=" + userId +
                 ", playerNumber='" + playerNumber + '\'' +
                 ", position='" + position + '\'' +
+                ", user=" + (user != null ? user.getFullName() : null) +
                 '}';
     }
 }

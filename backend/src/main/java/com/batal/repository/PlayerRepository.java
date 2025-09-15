@@ -14,15 +14,15 @@ import java.util.Optional;
 @Repository
 public interface PlayerRepository extends JpaRepository<Player, Long> {
     
-    // Email-based queries
-    boolean existsByEmail(String email);
-    Optional<Player> findByEmail(String email);
+    // User-based queries
+    Optional<Player> findByUserId(Long userId);
+    boolean existsByUserId(Long userId);
     
-    @Query("SELECT p FROM Player p LEFT JOIN FETCH p.group WHERE p.email = :email")
+    @Query("SELECT p FROM Player p JOIN FETCH p.user u LEFT JOIN FETCH u.group WHERE u.email = :email")
     Optional<Player> findByEmailWithGroup(@Param("email") String email);
     
     // ID-based queries with relationships
-    @Query("SELECT p FROM Player p LEFT JOIN FETCH p.group WHERE p.id = :id")
+    @Query("SELECT p FROM Player p JOIN FETCH p.user u LEFT JOIN FETCH u.group WHERE p.id = :id")
     Optional<Player> findByIdWithGroup(@Param("id") Long id);
     
     @Query("SELECT p FROM Player p LEFT JOIN FETCH p.assessments WHERE p.id = :id")
@@ -35,36 +35,40 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     Optional<Player> findByIdWithAll(Long id);
     
     // Active status queries
-    @Query("SELECT p FROM Player p WHERE p.isActive = true")
+    @Query("SELECT p FROM Player p JOIN p.user u WHERE u.isActive = true")
     List<Player> findAllActive();
     
-    List<Player> findByIsActiveTrue();
-    
     // Unassigned players query
-    List<Player> findByGroupIsNullAndIsActiveTrue();
+    @Query("SELECT p FROM Player p JOIN p.user u WHERE u.group IS NULL AND u.isActive = true")
+    List<Player> findUnassignedActivePlayers();
     
     // Group-based queries
-    @Query("SELECT p FROM Player p WHERE p.group.id = :groupId")
+    @Query("SELECT p FROM Player p JOIN p.user u WHERE u.group.id = :groupId")
     List<Player> findByGroupId(Long groupId);
     
-    @Query("SELECT p FROM Player p LEFT JOIN FETCH p.group WHERE p.group.id = :groupId")
+    @Query("SELECT p FROM Player p JOIN FETCH p.user u JOIN FETCH u.group WHERE u.group.id = :groupId")
     List<Player> findByGroupIdWithGroup(@Param("groupId") Long groupId);
     
     // Pagination with relationships
-    @Query("SELECT p FROM Player p LEFT JOIN FETCH p.group")
+    @Query("SELECT p FROM Player p JOIN FETCH p.user u LEFT JOIN FETCH u.group")
     Page<Player> findAllWithGroup(Pageable pageable);
     
     // Pagination with search
-    @Query("SELECT p FROM Player p LEFT JOIN FETCH p.group WHERE " +
-           "LOWER(p.firstName) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(p.lastName) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(p.email) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(CONCAT(p.firstName, ' ', p.lastName)) LIKE LOWER(CONCAT('%', :search, '%'))")
+    @Query("SELECT p FROM Player p JOIN FETCH p.user u LEFT JOIN FETCH u.group WHERE " +
+           "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<Player> findAllWithGroupAndSearch(@Param("search") String search, Pageable pageable);
     
-    // Search functionality (legacy)
-    @Query("SELECT p FROM Player p WHERE LOWER(p.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR LOWER(p.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
+    // Search functionality
+    @Query("SELECT p FROM Player p JOIN p.user u WHERE LOWER(u.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     List<Player> searchByName(@Param("searchTerm") String searchTerm);
     
-    List<Player> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(String firstName, String lastName);
+    // Email-based queries
+    @Query("SELECT p FROM Player p JOIN p.user u WHERE u.email = :email")
+    Optional<Player> findByEmail(@Param("email") String email);
+    
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Player p JOIN p.user u WHERE u.email = :email")
+    boolean existsByEmail(@Param("email") String email);
 }

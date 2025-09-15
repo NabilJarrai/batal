@@ -7,6 +7,7 @@ import {
   UserResponse,
 } from "@/types/auth";
 import { authAPI, tokenManager, usersAPI } from "@/lib/api";
+import { logError } from "@/lib/utils";
 
 // Helper function to decode JWT token
 function parseJwt(token: string) {
@@ -60,6 +61,9 @@ export const loginUser = createAsyncThunk(
         token: response.token
       };
     } catch (error) {
+      // Log error for debugging
+      logError(error, 'Login attempt failed');
+
       tokenManager.removeToken();
       return rejectWithValue(
         error instanceof Error ? error.message : "Login failed"
@@ -75,6 +79,9 @@ export const registerUser = createAsyncThunk(
       const response = await authAPI.register(userData);
       return response;
     } catch (error) {
+      // Log error for debugging
+      logError(error, 'Registration attempt failed');
+
       return rejectWithValue(
         error instanceof Error ? error.message : "Registration failed"
       );
@@ -131,7 +138,10 @@ export const initializeAuth = createAsyncThunk(
           user: userResponse,
         };
       }
-    } catch {
+    } catch (error) {
+      // Log error for debugging
+      logError(error, 'Auth initialization failed');
+
       tokenManager.removeToken();
       return rejectWithValue("Token invalid or expired");
     }

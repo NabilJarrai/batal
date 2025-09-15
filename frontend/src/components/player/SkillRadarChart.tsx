@@ -22,14 +22,14 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set canvas size
-    const size = 400;
+    // Set canvas size - increased to accommodate labels
+    const size = 500;
     canvas.width = size;
     canvas.height = size;
 
     const centerX = size / 2;
     const centerY = size / 2;
-    const radius = size / 3;
+    const radius = size / 4; // Reduced radius to leave more room for labels
 
     // Group skills by category and calculate averages
     const categoryAverages: Record<string, { sum: number; count: number }> = {};
@@ -128,17 +128,17 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
     });
 
     // Draw labels
-    ctx.font = "12px sans-serif";
+    ctx.font = "13px sans-serif";
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
     categories.forEach((category, index) => {
       const angle = index * angleStep - Math.PI / 2;
-      const labelRadius = radius + 30;
+      const labelRadius = radius + 50; // Increased spacing from chart
       const x = centerX + Math.cos(angle) * labelRadius;
       const y = centerY + Math.sin(angle) * labelRadius;
-      
+
       // Adjust text alignment based on position
       if (Math.abs(x - centerX) < 10) {
         ctx.textAlign = "center";
@@ -147,7 +147,7 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
       } else {
         ctx.textAlign = "right";
       }
-      
+
       ctx.fillText(category, x, y);
     });
   }, [skills]);

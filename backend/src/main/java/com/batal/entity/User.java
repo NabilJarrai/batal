@@ -109,6 +109,10 @@ public class User {
     @JoinColumn(name = "group_id")
     private Group group;
     
+    // TODO: Add normalized player relationship when migrations are enabled
+    // @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    // private PlayerNormalized playerInfo;
+    
     public enum Gender {
         MALE, FEMALE
     }
@@ -348,6 +352,16 @@ public class User {
         int age = LocalDate.now().getYear() - dateOfBirth.getYear();
         return AgeGroup.getByAge(age);
     }
+    
+    // TODO: Uncomment when PlayerNormalized relationship is enabled
+    // public PlayerNormalized getPlayerInfo() {
+    //     return playerInfo;
+    // }
+    // 
+    // public void setPlayerInfo(PlayerNormalized playerInfo) {
+    //     this.playerInfo = playerInfo;
+    // }
+    
     
     @Override
     public boolean equals(Object o) {

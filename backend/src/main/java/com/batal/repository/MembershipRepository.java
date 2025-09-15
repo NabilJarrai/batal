@@ -77,6 +77,6 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
     @Query("SELECT SUM(m.totalAmount) FROM Membership m WHERE m.startDate BETWEEN :startDate AND :endDate")
     BigDecimal getTotalRevenueInPeriod(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
     
-    @Query("SELECT m FROM Membership m WHERE m.player.group.coach = :coach")
+    @Query("SELECT m FROM Membership m WHERE m.player.user.group.coach = :coach")
     List<Membership> findByPlayerGroupCoach(@Param("coach") User coach);
 }

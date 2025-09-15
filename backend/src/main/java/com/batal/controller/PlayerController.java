@@ -50,18 +50,40 @@ public class PlayerController {
     public ResponseEntity<Page<PlayerDTO>> getAllPlayers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "firstName") String sortBy,
+            @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) String search) {
         
+        // Map frontend sorting fields to valid Player entity fields
+        String mappedSortBy = mapSortField(sortBy);
+        
         Sort sort = sortDir.equalsIgnoreCase("desc") ? 
-            Sort.by(sortBy).descending() : 
-            Sort.by(sortBy).ascending();
+            Sort.by(mappedSortBy).descending() : 
+            Sort.by(mappedSortBy).ascending();
         
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<PlayerDTO> players = playerService.getAllPlayers(pageable, search);
         
         return ResponseEntity.ok(players);
+    }
+    
+    /**
+     * Map frontend sort fields to valid Player entity fields
+     */
+    private String mapSortField(String sortBy) {
+        switch (sortBy.toLowerCase()) {
+            case "firstname":
+                return "user.firstName";
+            case "lastname":
+                return "user.lastName";
+            case "email":
+                return "user.email";
+            case "fullname":
+                // For full name, we'll use firstName as the primary sort
+                return "user.firstName";
+            default:
+                return sortBy;
+        }
     }
     
     /**
