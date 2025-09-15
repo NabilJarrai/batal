@@ -19,11 +19,11 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Process assessments to get category averages over time
-  const progressData: CategoryProgressData[] = assessments
+  const assessmentData: CategoryProgressData[] = assessments
     .filter(assessment => assessment.skillScores && assessment.skillScores.length > 0)
     .map(assessment => {
       const categories: { [category: string]: { sum: number; count: number } } = {};
-      
+
       assessment.skillScores?.forEach(skill => {
         if (!categories[skill.skillCategory]) {
           categories[skill.skillCategory] = { sum: 0, count: 0 };
@@ -45,6 +45,27 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
+  // Get all unique categories from assessments to create baseline
+  const allCategories = Array.from(
+    new Set(assessmentData.flatMap(d => Object.keys(d.categories)))
+  );
+
+  // Create baseline point with all categories starting at 1
+  const baselineCategories: { [category: string]: number } = {};
+  allCategories.forEach(category => {
+    baselineCategories[category] = 1;
+  });
+
+  // Add baseline starting point (x=0, all categories=1) at the beginning
+  const progressData: CategoryProgressData[] = [
+    {
+      date: "",
+      period: "Baseline",
+      categories: baselineCategories,
+    },
+    ...assessmentData
+  ];
+
   useEffect(() => {
     if (!canvasRef.current || progressData.length === 0) return;
 
@@ -62,10 +83,7 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
     const chartWidth = width - padding * 2;
     const chartHeight = height - padding * 2;
 
-    // Get all unique categories
-    const allCategories = Array.from(
-      new Set(progressData.flatMap(d => Object.keys(d.categories)))
-    );
+    // Categories are already defined above, but keep this for the drawing logic
 
     // Color palette for categories
     const colors = [
@@ -82,9 +100,10 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
       categoryColors[category] = colors[index % colors.length];
     });
 
-    // Calculate scales
+    // Calculate scales - axis shows 0-10 but plotting emphasizes 1-10 range
     const maxScore = 10;
-    const minScore = 0;
+    const minScore = 0; // Axis shows 0
+    const plotMinScore = 1; // But data plotting starts from 1
     const xStep = chartWidth / (progressData.length - 1 || 1);
     const yScale = chartHeight / (maxScore - minScore);
 
@@ -97,7 +116,7 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
 
     // Horizontal grid lines
     for (let i = 0; i <= 10; i++) {
-      const y = padding + (10 - i) * (chartHeight / 10);
+      const y = padding + (10 - i) * yScale;
       ctx.beginPath();
       ctx.moveTo(padding, y);
       ctx.lineTo(width - padding, y);
@@ -133,7 +152,7 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
         .filter(d => d.categories[category] !== undefined)
         .map((d, index) => ({
           x: padding + (progressData.indexOf(d)) * xStep,
-          y: padding + (maxScore - d.categories[category]) * yScale,
+          y: padding + (maxScore - Math.max(plotMinScore, d.categories[category])) * yScale,
           score: d.categories[category],
         }));
 
@@ -168,15 +187,25 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
     // Draw x-axis labels (dates)
     progressData.forEach((data, index) => {
       const x = padding + index * xStep;
-      ctx.save();
-      ctx.translate(x, height - padding + 25);
-      ctx.rotate(-Math.PI / 4);
-      ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-      ctx.font = "10px sans-serif";
-      ctx.textAlign = "right";
-      ctx.textBaseline = "middle";
-      ctx.fillText(new Date(data.date).toLocaleDateString(), 0, 0);
-      ctx.restore();
+
+      if (index === 0) {
+        // Label the baseline point
+        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.font = "10px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillText("Start", x, height - padding + 5);
+      } else if (data.date) {
+        ctx.save();
+        ctx.translate(x, height - padding + 25);
+        ctx.rotate(-Math.PI / 4);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.font = "10px sans-serif";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillText(new Date(data.date).toLocaleDateString(), 0, 0);
+        ctx.restore();
+      }
     });
 
     // Draw title
@@ -198,10 +227,7 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
     );
   }
 
-  // Get all unique categories for legend
-  const allCategories = Array.from(
-    new Set(progressData.flatMap(d => Object.keys(d.categories)))
-  );
+  // Use the allCategories already defined above for legend
 
   const colors = [
     "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4"
@@ -238,11 +264,12 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
             const categoryScores = progressData
               .filter(d => d.categories[category] !== undefined)
               .map(d => d.categories[category]);
-            
+
             if (categoryScores.length === 0) return null;
 
             const current = categoryScores[categoryScores.length - 1];
-            const previous = categoryScores.length > 1 ? categoryScores[categoryScores.length - 2] : current;
+            // Skip baseline (index 0) when calculating previous for trend
+            const previous = categoryScores.length > 2 ? categoryScores[categoryScores.length - 2] : (categoryScores.length > 1 ? categoryScores[0] : current);
             const change = current - previous;
 
             return (

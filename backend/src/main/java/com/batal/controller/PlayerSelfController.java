@@ -6,6 +6,7 @@ import com.batal.dto.PasswordChangeRequest;
 import com.batal.entity.Player;
 import com.batal.entity.Assessment;
 import com.batal.entity.User;
+import com.batal.entity.enums.Gender;
 import com.batal.repository.PlayerRepository;
 import com.batal.repository.AssessmentRepository;
 import com.batal.service.PlayerService;
@@ -68,11 +69,11 @@ public class PlayerSelfController {
         try {
             Player player = getCurrentPlayer();
             
-            // Only allow updating certain fields
-            player.setPhone(playerDTO.getPhone());
-            player.setAddress(playerDTO.getAddress());
-            player.setEmergencyContactName(playerDTO.getEmergencyContactName());
-            player.setEmergencyContactPhone(playerDTO.getEmergencyContactPhone());
+            // Only allow updating certain fields - these now exist on the User entity
+            player.getUser().setPhone(playerDTO.getPhone());
+            player.getUser().setAddress(playerDTO.getAddress());
+            player.getUser().setEmergencyContactName(playerDTO.getEmergencyContactName());
+            player.getUser().setEmergencyContactPhone(playerDTO.getEmergencyContactPhone());
             
             // Update user record as well
             if (player.getUser() != null) {
@@ -189,26 +190,33 @@ public class PlayerSelfController {
     private PlayerDTO convertToPlayerDTO(Player player) {
         PlayerDTO dto = new PlayerDTO();
         dto.setId(player.getId());
+
+        // Use Player's utility methods that handle null checks
         dto.setFirstName(player.getFirstName());
         dto.setLastName(player.getLastName());
         dto.setEmail(player.getEmail());
-        dto.setPhone(player.getPhone());
-        dto.setDateOfBirth(player.getDateOfBirth());
-        dto.setGender(player.getGender());
-        dto.setAddress(player.getAddress());
-        dto.setParentName(player.getParentName());
-        dto.setJoiningDate(player.getJoiningDate());
-        dto.setLevel(player.getLevel());
-        dto.setBasicFoot(player.getBasicFoot());
-        dto.setEmergencyContactName(player.getEmergencyContactName());
-        dto.setEmergencyContactPhone(player.getEmergencyContactPhone());
-        dto.setIsActive(player.getIsActive());
-        
-        if (player.getGroup() != null) {
-            dto.setGroupId(player.getGroup().getId());
-            dto.setGroupName(player.getGroup().getName());
+
+        // Access user data safely with null checks
+        if (player.getUser() != null) {
+            User user = player.getUser();
+            dto.setPhone(user.getPhone());
+            dto.setDateOfBirth(user.getDateOfBirth());
+            dto.setGender(user.getGender() != null ? Gender.valueOf(user.getGender().toString()) : null);
+            dto.setAddress(user.getAddress());
+            dto.setParentName(user.getParentName());
+            dto.setJoiningDate(user.getJoiningDate());
+            dto.setLevel(user.getLevel());
+            dto.setBasicFoot(user.getBasicFoot());
+            dto.setEmergencyContactName(user.getEmergencyContactName());
+            dto.setEmergencyContactPhone(user.getEmergencyContactPhone());
+            dto.setIsActive(user.getIsActive());
+
+            if (user.getGroup() != null) {
+                dto.setGroupId(user.getGroup().getId());
+                dto.setGroupName(user.getGroup().getName());
+            }
         }
-        
+
         return dto;
     }
     

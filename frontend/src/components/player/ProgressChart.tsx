@@ -34,16 +34,31 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
     const chartWidth = width - padding * 2;
     const chartHeight = height - padding * 2;
 
-    // Sort assessments by date
-    const sortedData = [...assessments].sort((a, b) => 
+    // Sort assessments by date and add baseline starting point
+    const sortedData = [...assessments].sort((a, b) =>
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
-    // Calculate scales
+    // Add baseline starting point (x=0, y=1) at the beginning
+    const dataWithBaseline = [
+      { date: "", score: 1, period: "Baseline" },
+      ...sortedData
+    ];
+
+    // Calculate scales - axis shows 0-10 but plotting compresses 1-10 to visible area
     const maxScore = 10;
-    const minScore = 0;
-    const xStep = chartWidth / (sortedData.length - 1 || 1);
+    const minScore = 0; // Axis shows 0
+    const plotMinScore = 1; // But data plotting starts from 1
+    const xStep = chartWidth / (dataWithBaseline.length - 1 || 1);
     const yScale = chartHeight / (maxScore - minScore);
+
+    // Function to map score to Y position (compresses 1-10 range to most of chart)
+    const getYPosition = (score: number) => {
+      // Clamp score to 1-10 range
+      const clampedScore = Math.max(plotMinScore, Math.min(maxScore, score));
+      // Map 1-10 to 1-10 on axis, but visually compress the 0-1 area
+      return padding + (maxScore - clampedScore) * yScale;
+    };
 
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
@@ -54,7 +69,7 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
 
     // Horizontal grid lines
     for (let i = 0; i <= 10; i++) {
-      const y = padding + (10 - i) * yScale * ((maxScore - minScore) / 10);
+      const y = padding + (10 - i) * yScale;
       ctx.beginPath();
       ctx.moveTo(padding, y);
       ctx.lineTo(width - padding, y);
@@ -89,10 +104,10 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
     ctx.lineWidth = 3;
     ctx.beginPath();
 
-    sortedData.forEach((data, index) => {
+    dataWithBaseline.forEach((data, index) => {
       const x = padding + index * xStep;
-      const y = padding + (maxScore - data.score) * yScale;
-      
+      const y = getYPosition(data.score);
+
       if (index === 0) {
         ctx.moveTo(x, y);
       } else {
@@ -104,9 +119,9 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
     // Calculate label positions below points to avoid overlaps
     const labelPositions: { x: number; y: number; text: string; originalY: number }[] = [];
 
-    sortedData.forEach((data, index) => {
+    dataWithBaseline.forEach((data, index) => {
       const x = padding + index * xStep;
-      const y = padding + (maxScore - data.score) * yScale;
+      const y = getYPosition(data.score);
       const labelText = data.score.toFixed(1);
 
       labelPositions.push({
@@ -138,9 +153,9 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
     }
 
     // Draw data points and labels
-    sortedData.forEach((data, index) => {
+    dataWithBaseline.forEach((data, index) => {
       const x = padding + index * xStep;
-      const y = padding + (maxScore - data.score) * yScale;
+      const y = getYPosition(data.score);
       const labelPos = labelPositions[index];
 
       // Draw point
@@ -163,16 +178,25 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
         ctx.stroke();
       }
 
-      // Draw x-axis labels (dates)
-      ctx.save();
-      ctx.translate(x, height - padding + 20);
-      ctx.rotate(-Math.PI / 4);
-      ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-      ctx.font = "10px sans-serif";
-      ctx.textAlign = "right";
-      ctx.textBaseline = "middle";
-      ctx.fillText(new Date(data.date).toLocaleDateString(), 0, 0);
-      ctx.restore();
+      // Draw x-axis labels (dates) - skip baseline point for date labels
+      if (index > 0 && data.date) {
+        ctx.save();
+        ctx.translate(x, height - padding + 20);
+        ctx.rotate(-Math.PI / 4);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.font = "10px sans-serif";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillText(new Date(data.date).toLocaleDateString(), 0, 0);
+        ctx.restore();
+      } else if (index === 0) {
+        // Label the baseline point
+        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.font = "10px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillText("Start", x, height - padding + 5);
+      }
 
       // Draw score labels with background at adjusted position
       const labelText = labelPos.text;
@@ -218,9 +242,9 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
     ctx.fillText(`${skillName} Progress`, width / 2, 10);
 
     // Draw trend indicator
-    if (sortedData.length >= 2) {
-      const lastScore = sortedData[sortedData.length - 1].score;
-      const prevScore = sortedData[sortedData.length - 2].score;
+    if (dataWithBaseline.length >= 2) {
+      const lastScore = dataWithBaseline[dataWithBaseline.length - 1].score;
+      const prevScore = dataWithBaseline[dataWithBaseline.length - 2].score;
       const trend = lastScore - prevScore;
       
       ctx.fillStyle = trend >= 0 ? "#10B981" : "#EF4444";

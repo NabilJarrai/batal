@@ -42,8 +42,13 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
     });
 
     const categories = Object.keys(categoryAverages);
+    // Normalize values to 0-1 scale for radar chart plotting (0-10 scale but emphasizing 1-10)
     const values = categories.map(
-      (cat) => (categoryAverages[cat].sum / categoryAverages[cat].count) / 10
+      (cat) => {
+        const score = categoryAverages[cat].sum / categoryAverages[cat].count;
+        // For radar chart, we still use the full 0-10 scale but data will naturally be in 1-10 range
+        return score / 10;
+      }
     );
 
     const angleStep = (Math.PI * 2) / categories.length;
@@ -51,7 +56,7 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
     // Clear canvas
     ctx.clearRect(0, 0, size, size);
 
-    // Draw grid circles
+    // Draw grid circles (representing scores 2, 4, 6, 8, 10)
     for (let i = 1; i <= 5; i++) {
       ctx.beginPath();
       ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";

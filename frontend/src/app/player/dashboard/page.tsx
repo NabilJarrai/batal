@@ -5,6 +5,8 @@ import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
 import { useAppSelector } from "@/store/hooks";
 import { AssessmentCard } from "@/components/player/AssessmentCard";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 import { 
   UserCircleIcon, 
   CalendarIcon, 
@@ -43,7 +45,7 @@ export default function PlayerDashboard() {
       setLoading(true);
       
       // Fetch player profile
-      const profileResponse = await fetch("http://localhost:8080/api/players/me", {
+      const profileResponse = await fetch(`${API_BASE_URL}/players/me`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("jwt_token")}`,
