@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useAppSelector } from "@/store/hooks";
 import { UserCircleIcon } from "@heroicons/react/24/outline";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+
 interface PlayerProfile {
   id: number;
   firstName: string;
@@ -38,7 +40,7 @@ export default function PlayerProfile() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/players/me", {
+      const response = await fetch(`${API_BASE_URL}/players/me`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("jwt_token")}`,
         },
@@ -66,7 +68,7 @@ export default function PlayerProfile() {
       setSaving(true);
       setMessage("");
       
-      const response = await fetch("/api/players/me", {
+      const response = await fetch(`${API_BASE_URL}/players/me`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

@@ -10,7 +10,7 @@ import {
   AssessmentPeriod
 } from '@/types/assessments';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 class AssessmentsAPI {
   private async getAuthHeaders() {
@@ -304,6 +304,34 @@ class AssessmentsAPI {
     });
     
     return this.handleResponse<Assessment[]>(response);
+  }
+
+  // Player-specific operations
+  async getMyAssessments(): Promise<Assessment[]> {
+    const response = await fetch(`${API_BASE}/players/me/assessments`, {
+      method: 'GET',
+      headers: await this.getAuthHeaders(),
+    });
+    
+    return this.handleResponse<Assessment[]>(response);
+  }
+
+  async getMyAssessmentById(id: number): Promise<Assessment> {
+    const response = await fetch(`${API_BASE}/players/me/assessments/${id}`, {
+      method: 'GET',
+      headers: await this.getAuthHeaders(),
+    });
+    
+    return this.handleResponse<Assessment>(response);
+  }
+
+  async getMyAssessmentAnalytics(): Promise<any> {
+    const response = await fetch(`${API_BASE}/assessments/analytics/me`, {
+      method: 'GET',
+      headers: await this.getAuthHeaders(),
+    });
+    
+    return this.handleResponse<any>(response);
   }
 
   // Helper methods for frontend

@@ -157,6 +157,33 @@ public class GroupController {
         }
     }
 
+    // POST /api/groups/{groupId}/assign-player/{playerId} - Streamlined player assignment 
+    // No request body required - player and group IDs are in the URL path
+    @PostMapping("/{groupId}/assign-player/{playerId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<?> assignPlayerToGroupStreamlined(
+            @PathVariable Long groupId, 
+            @PathVariable Long playerId,
+            @RequestBody(required = false) Map<String, Object> options) {
+        try {
+            // Extract optional parameters
+            String reason = options != null ? (String) options.get("reason") : "Manual assignment";
+            Boolean forceAssignment = options != null ? (Boolean) options.get("forceAssignment") : null;
+            
+            // Create assignment request
+            GroupAssignmentRequest request = new GroupAssignmentRequest(playerId, groupId, reason);
+            request.setForceAssignment(forceAssignment != null ? forceAssignment : false);
+            
+            GroupResponse updatedGroup = groupService.assignPlayerToGroup(request);
+            return ResponseEntity.ok(updatedGroup);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+
     // DELETE /api/groups/{groupId}/remove-player/{playerId} - Remove player from group
     @DeleteMapping("/{groupId}/remove-player/{playerId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")

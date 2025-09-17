@@ -75,6 +75,8 @@ export default function AdminDashboard() {
     isOpen: boolean;
     groupId?: number;
     selectedGroup?: GroupResponse;
+    selectedPlayer?: PlayerDTO;
+    playerPreSelected?: boolean;
   }>({ isOpen: false });
   
   const [coachAssignmentModal, setCoachAssignmentModal] = useState<{
@@ -256,6 +258,15 @@ export default function AdminDashboard() {
     const group = groups.find(g => g.id === groupId);
     console.log('Found group for player assignment:', group);
     setPlayerAssignmentModal({ isOpen: true, groupId, selectedGroup: group });
+  };
+
+  const handleAssignPlayerFromCard = (player: PlayerDTO) => {
+    console.log('handleAssignPlayerFromCard called with player:', player);
+    setPlayerAssignmentModal({ 
+      isOpen: true, 
+      selectedPlayer: player,
+      playerPreSelected: true
+    });
   };
 
   const handleCreateGroup = () => {
@@ -1017,7 +1028,7 @@ export default function AdminDashboard() {
                     onDeactivate={handlePlayerDeactivate}
                     onReactivate={handlePlayerReactivate}
                     showActions={true}
-                    onAssignGroup={player.groupId ? undefined : () => handleAssignPlayer(0)}
+                    onAssignGroup={player.groupId ? undefined : () => handleAssignPlayerFromCard(player)}
                     onPromote={player.level === Level.DEVELOPMENT ? () => handlePromotePlayer(player.id!) : undefined}
                     onUnassignGroup={player.groupId ? (playerId) => handleRemovePlayer(player.groupId!, playerId) : undefined}
                     onReassignGroup={player.groupId ? handleOpenReassignModal : undefined}
@@ -1073,6 +1084,8 @@ export default function AdminDashboard() {
           onClose={() => setPlayerAssignmentModal({ isOpen: false })}
           groupId={playerAssignmentModal.groupId}
           selectedGroup={playerAssignmentModal.selectedGroup}
+          selectedPlayer={playerAssignmentModal.selectedPlayer}
+          playerPreSelected={playerAssignmentModal.playerPreSelected}
           onAssignmentComplete={handleAssignmentComplete}
         />
 

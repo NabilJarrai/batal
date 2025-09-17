@@ -25,6 +25,8 @@ interface PlayerAssignmentModalProps {
   onClose: () => void;
   groupId?: number;
   selectedGroup?: GroupResponse;
+  selectedPlayer?: PlayerDTO;
+  playerPreSelected?: boolean;
   onAssignmentComplete?: (playerId: number, groupId: number) => void;
 }
 
@@ -33,6 +35,8 @@ export function PlayerAssignmentModal({
   onClose, 
   groupId, 
   selectedGroup,
+  selectedPlayer: preSelectedPlayer,
+  playerPreSelected = false,
   onAssignmentComplete 
 }: PlayerAssignmentModalProps) {
   const [loading, setLoading] = useState(false);
@@ -45,11 +49,15 @@ export function PlayerAssignmentModal({
   // Load unassigned players and available groups
   useEffect(() => {
     if (isOpen) {
-      console.log('PlayerAssignmentModal opened with:', { groupId, selectedGroup });
+      console.log('PlayerAssignmentModal opened with:', { groupId, selectedGroup, preSelectedPlayer, playerPreSelected });
       loadData();
       // Set initial selected group if provided
       if (selectedGroup) {
         setSelectedGroup_(selectedGroup);
+      }
+      // Set initial selected player if provided
+      if (preSelectedPlayer) {
+        setSelectedPlayer(preSelectedPlayer);
       }
     } else {
       // Reset state when modal closes
@@ -58,7 +66,7 @@ export function PlayerAssignmentModal({
       setUnassignedPlayers([]);
       setAvailableGroups([]);
     }
-  }, [isOpen, selectedGroup]);
+  }, [isOpen, selectedGroup, preSelectedPlayer]);
 
   const loadData = async () => {
     console.log('Loading player assignment data...');
@@ -222,43 +230,58 @@ export function PlayerAssignmentModal({
                   {/* Player Selection */}
                   <div>
                     <label className="block text-sm font-medium text-blue-200 mb-2">
-                      Select Player ({unassignedPlayers.length} available)
+                      {playerPreSelected ? 'Selected Player' : `Select Player (${unassignedPlayers.length} available)`}
                     </label>
                     
-                    <Listbox 
-                      value={selectedPlayer} 
-                      onChange={setSelectedPlayer}
-                    >
-                      <div className="relative">
-                        <Listbox.Button className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-cyan-400 flex items-center justify-between">
-                          <span>
-                            {selectedPlayer 
-                              ? `${selectedPlayer.firstName} ${selectedPlayer.lastName}${selectedPlayer.level ? ` - ${selectedPlayer.level}` : ''}` 
-                              : 'Choose a player...'}
-                          </span>
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </Listbox.Button>
-                        <Listbox.Options className="absolute z-50 mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
-                          {unassignedPlayers.length === 0 ? (
-                            <div className="px-3 py-2 text-gray-400 text-sm">
-                              No unassigned players available
-                            </div>
-                          ) : (
-                            unassignedPlayers.map((player) => (
-                              <Listbox.Option
-                                key={player.id}
-                                value={player}
-                                className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
-                              >
-                                {player.firstName} {player.lastName} {player.level ? `- ${player.level}` : ''}
-                              </Listbox.Option>
-                            ))
-                          )}
-                        </Listbox.Options>
+                    {playerPreSelected ? (
+                      // Show pre-selected player as disabled field
+                      <div className="w-full px-3 py-2 bg-gray-500/20 border border-gray-500/30 rounded-lg text-gray-300 flex items-center justify-between">
+                        <span>
+                          {selectedPlayer 
+                            ? `${selectedPlayer.firstName} ${selectedPlayer.lastName}${selectedPlayer.level ? ` - ${selectedPlayer.level}` : ''}` 
+                            : 'No player selected'}
+                        </span>
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
                       </div>
-                    </Listbox>
+                    ) : (
+                      // Show normal dropdown for player selection
+                      <Listbox 
+                        value={selectedPlayer} 
+                        onChange={setSelectedPlayer}
+                      >
+                        <div className="relative">
+                          <Listbox.Button className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-cyan-400 flex items-center justify-between">
+                            <span>
+                              {selectedPlayer 
+                                ? `${selectedPlayer.firstName} ${selectedPlayer.lastName}${selectedPlayer.level ? ` - ${selectedPlayer.level}` : ''}` 
+                                : 'Choose a player...'}
+                            </span>
+                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </Listbox.Button>
+                          <Listbox.Options className="absolute z-50 mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
+                            {unassignedPlayers.length === 0 ? (
+                              <div className="px-3 py-2 text-gray-400 text-sm">
+                                No unassigned players available
+                              </div>
+                            ) : (
+                              unassignedPlayers.map((player) => (
+                                <Listbox.Option
+                                  key={player.id}
+                                  value={player}
+                                  className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                                >
+                                  {player.firstName} {player.lastName} {player.level ? `- ${player.level}` : ''}
+                                </Listbox.Option>
+                              ))
+                            )}
+                          </Listbox.Options>
+                        </div>
+                      </Listbox>
+                    )}
                   </div>
 
                   {/* Group Selection */}

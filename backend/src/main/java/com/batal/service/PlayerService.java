@@ -73,22 +73,23 @@ public class PlayerService {
             throw new RuntimeException("User with email " + playerDTO.getEmail() + " already exists");
         }
 
-        Player player = convertToEntity(playerDTO);
-        player.setCreatedAt(LocalDateTime.now());
-        player.setUpdatedAt(LocalDateTime.now());
-
-        // Create user account for the player
+        // Create user account for the player (trigger will automatically create Player record)
         User user = createUserForPlayer(playerDTO);
-        player.setUser(user);
+        
+        // Retrieve the automatically created Player record
+        Player player = playerRepository.findByUserId(user.getId())
+            .orElseThrow(() -> new RuntimeException("Player record was not automatically created for user: " + user.getId()));
+        
+        // Update the player with any additional fields from DTO
+        player.setUpdatedAt(LocalDateTime.now());
 
         // Set group if provided, otherwise auto-assign if enabled
         if (playerDTO.getGroupId() != null) {
             Group group = groupRepository.findById(playerDTO.getGroupId())
                     .orElseThrow(() -> new RuntimeException("Group not found with id: " + playerDTO.getGroupId()));
-            player.setGroup(group);
-        } else if (autoAssignGroup && player.getDateOfBirth() != null && player.getLevel() != null) {
-            // Save player first, then auto-assign to group
-            player = playerRepository.save(player);
+            user.setGroup(group);
+            userRepository.save(user); // Save user with group assignment
+        } else if (autoAssignGroup && user.getDateOfBirth() != null && user.getLevel() != null) {
             try {
                 autoAssignPlayerToGroup(player);
             } catch (Exception e) {
@@ -128,7 +129,7 @@ public class PlayerService {
      */
     @Transactional(readOnly = true)
     public List<PlayerDTO> getActivePlayers() {
-        List<Player> players = playerRepository.findByIsActiveTrue();
+        List<Player> players = playerRepository.findAllActive();
         return players.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -160,7 +161,7 @@ public class PlayerService {
                 .orElseThrow(() -> new RuntimeException("Player not found with id: " + id));
 
         // Check if email is being changed and if new email already exists
-        if (!existingPlayer.getEmail().equals(playerDTO.getEmail()) &&
+        if (!existingPlayer.getUser().getEmail().equals(playerDTO.getEmail()) &&
                 playerRepository.existsByEmail(playerDTO.getEmail())) {
             throw new RuntimeException("Player with email " + playerDTO.getEmail() + " already exists");
         }
@@ -173,9 +174,9 @@ public class PlayerService {
         if (playerDTO.getGroupId() != null) {
             Group group = groupRepository.findById(playerDTO.getGroupId())
                     .orElseThrow(() -> new RuntimeException("Group not found with id: " + playerDTO.getGroupId()));
-            existingPlayer.setGroup(group);
+            existingPlayer.getUser().setGroup(group);
         } else {
-            existingPlayer.setGroup(null);
+            existingPlayer.getUser().setGroup(null);
         }
 
         Player updatedPlayer = playerRepository.save(existingPlayer);
@@ -189,8 +190,8 @@ public class PlayerService {
         Player player = playerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Player not found with id: " + id));
 
-        player.setIsActive(false);
-        player.setInactiveReason(reason);
+        player.getUser().setIsActive(false);
+        player.getUser().setInactiveReason(reason);
         player.setUpdatedAt(LocalDateTime.now());
 
         Player updatedPlayer = playerRepository.save(player);
@@ -204,8 +205,8 @@ public class PlayerService {
         Player player = playerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Player not found with id: " + id));
 
-        player.setIsActive(true);
-        player.setInactiveReason(null);
+        player.getUser().setIsActive(true);
+        player.getUser().setInactiveReason(null);
         player.setUpdatedAt(LocalDateTime.now());
 
         Player updatedPlayer = playerRepository.save(player);
@@ -221,9 +222,9 @@ public class PlayerService {
                 .orElseThrow(() -> new RuntimeException("Player not found with id: " + id));
         
         // Remove player from their group if assigned
-        if (player.getGroup() != null) {
-            Group group = player.getGroup();
-            group.getPlayers().remove(player);
+        if (player.getUser().getGroup() != null) {
+            Group group = player.getUser().getGroup();
+            group.getPlayers().remove(player.getUser());
             groupRepository.save(group);
         }
         
@@ -264,7 +265,7 @@ public class PlayerService {
      */
     @Transactional(readOnly = true)
     public List<PlayerDTO> getUnassignedPlayers() {
-        List<Player> players = playerRepository.findByGroupIsNullAndIsActiveTrue();
+        List<Player> players = playerRepository.findUnassignedActivePlayers();
         return players.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -286,12 +287,12 @@ public class PlayerService {
      * Internal method to auto-assign player to group
      */
     private void autoAssignPlayerToGroup(Player player) {
-        if (player.getDateOfBirth() == null || player.getLevel() == null) {
+        if (player.getUser().getDateOfBirth() == null || player.getUser().getLevel() == null) {
             throw new RuntimeException("Player must have date of birth and level to be auto-assigned");
         }
 
         // Calculate player age
-        int playerAge = LocalDate.now().getYear() - player.getDateOfBirth().getYear();
+        int playerAge = LocalDate.now().getYear() - player.getUser().getDateOfBirth().getYear();
         AgeGroup ageGroup = AgeGroup.getByAge(playerAge);
 
         if (ageGroup == null) {
@@ -300,7 +301,7 @@ public class PlayerService {
 
         // Find available group with matching level and age group
         List<Group> availableGroups = groupRepository.findAvailableGroupsByLevelAndAgeGroup(
-                player.getLevel(), ageGroup);
+                player.getUser().getLevel(), ageGroup);
 
         if (availableGroups.isEmpty()) {
             // Create new group if none available
@@ -308,7 +309,7 @@ public class PlayerService {
         } else {
             // Assign to first available group
             Group targetGroup = availableGroups.get(0);
-            player.setGroup(targetGroup);
+            player.getUser().setGroup(targetGroup);
         }
     }
 
@@ -317,12 +318,12 @@ public class PlayerService {
      */
     private void createNewGroupForPlayer(Player player, AgeGroup ageGroup) {
         // Find next group number for this level and age group
-        List<Group> existingGroups = groupRepository.findByLevelAndAgeGroup(player.getLevel(), ageGroup);
+        List<Group> existingGroups = groupRepository.findByLevelAndAgeGroup(player.getUser().getLevel(), ageGroup);
         int nextGroupNumber = existingGroups.size() + 1;
 
         // Create new group
         Group newGroup = new Group();
-        newGroup.setLevel(player.getLevel());
+        newGroup.setLevel(player.getUser().getLevel());
         newGroup.setAgeGroup(ageGroup);
         newGroup.setCapacity(15); // Default capacity
         newGroup.setMinAge(ageGroup.getMinAge());
@@ -331,11 +332,11 @@ public class PlayerService {
 
         // Generate group name
         String suffix = nextGroupNumber > 1 ? " " + nextGroupNumber : "";
-        newGroup.setName(player.getLevel().getDisplayName() + " " +
+        newGroup.setName(player.getUser().getLevel().getDisplayName() + " " +
                 ageGroup.getDisplayName() + suffix);
 
         Group savedGroup = groupRepository.save(newGroup);
-        player.setGroup(savedGroup);
+        player.getUser().setGroup(savedGroup);
     }
 
     /**
@@ -345,17 +346,17 @@ public class PlayerService {
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new RuntimeException("Player not found with id: " + playerId));
 
-        if (player.getLevel() == com.batal.entity.enums.Level.ADVANCED) {
+        if (player.getUser().getLevel() == com.batal.entity.enums.Level.ADVANCED) {
             throw new RuntimeException("Player is already at Advanced level");
         }
 
         // Update level
-        player.setLevel(com.batal.entity.enums.Level.ADVANCED);
+        player.getUser().setLevel(com.batal.entity.enums.Level.ADVANCED);
         player.setUpdatedAt(LocalDateTime.now());
 
         // Remove from current group
-        if (player.getGroup() != null) {
-            player.setGroup(null);
+        if (player.getUser().getGroup() != null) {
+            player.getUser().setGroup(null);
         }
 
         // Auto-assign to new Advanced group
@@ -371,29 +372,35 @@ public class PlayerService {
     private PlayerDTO convertToDTO(Player player) {
         PlayerDTO dto = new PlayerDTO();
         dto.setId(player.getId());
-        dto.setFirstName(player.getFirstName());
-        dto.setLastName(player.getLastName());
-        dto.setEmail(player.getEmail());
-        dto.setPhone(player.getPhone());
-        dto.setDateOfBirth(player.getDateOfBirth());
-        dto.setGender(player.getGender());
-        dto.setAddress(player.getAddress());
-        dto.setParentName(player.getParentName());
-        dto.setJoiningDate(player.getJoiningDate());
-        dto.setLevel(player.getLevel());
-        dto.setBasicFoot(player.getBasicFoot());
-        dto.setEmergencyContactName(player.getEmergencyContactName());
-        dto.setEmergencyContactPhone(player.getEmergencyContactPhone());
-        dto.setIsActive(player.getIsActive());
-        dto.setInactiveReason(player.getInactiveReason());
+        
+        // Get data from User entity
+        User user = player.getUser();
+        if (user != null) {
+            dto.setFirstName(user.getFirstName());
+            dto.setLastName(user.getLastName());
+            dto.setEmail(user.getEmail());
+            dto.setPhone(user.getPhone());
+            dto.setDateOfBirth(user.getDateOfBirth());
+            dto.setGender(user.getGender() != null ? Gender.valueOf(user.getGender().toString()) : null);
+            dto.setAddress(user.getAddress());
+            dto.setParentName(user.getParentName());
+            dto.setJoiningDate(user.getJoiningDate());
+            dto.setLevel(user.getLevel());
+            dto.setBasicFoot(user.getBasicFoot());
+            dto.setEmergencyContactName(user.getEmergencyContactName());
+            dto.setEmergencyContactPhone(user.getEmergencyContactPhone());
+            dto.setIsActive(user.getIsActive());
+            dto.setInactiveReason(user.getInactiveReason());
+            
+            // Set group information
+            if (user.getGroup() != null) {
+                dto.setGroupId(user.getGroup().getId());
+                dto.setGroupName(user.getGroup().getName());
+            }
+        }
+        
         dto.setCreatedAt(player.getCreatedAt());
         dto.setUpdatedAt(player.getUpdatedAt());
-
-        // Set group information
-        if (player.getGroup() != null) {
-            dto.setGroupId(player.getGroup().getId());
-            dto.setGroupName(player.getGroup().getName());
-        }
 
         return dto;
     }
@@ -403,22 +410,8 @@ public class PlayerService {
      */
     private Player convertToEntity(PlayerDTO dto) {
         Player player = new Player();
-        player.setFirstName(dto.getFirstName());
-        player.setLastName(dto.getLastName());
-        player.setEmail(dto.getEmail());
-        player.setPhone(dto.getPhone());
-        player.setDateOfBirth(dto.getDateOfBirth());
-        player.setGender(dto.getGender());
-        player.setAddress(dto.getAddress());
-        player.setParentName(dto.getParentName());
-        player.setJoiningDate(dto.getJoiningDate());
-        player.setLevel(dto.getLevel());
-        player.setBasicFoot(dto.getBasicFoot());
-        player.setEmergencyContactName(dto.getEmergencyContactName());
-        player.setEmergencyContactPhone(dto.getEmergencyContactPhone());
-        player.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
-        player.setInactiveReason(dto.getInactiveReason());
-
+        // Note: Personal data will be set in the User entity via createUserForPlayer() or updatePlayerFields()
+        // Player entity only contains player-specific fields which are not in the DTO currently
         return player;
     }
 
@@ -426,28 +419,7 @@ public class PlayerService {
      * Update player fields from DTO
      */
     private void updatePlayerFields(Player player, PlayerDTO dto) {
-        player.setFirstName(dto.getFirstName());
-        player.setLastName(dto.getLastName());
-        player.setEmail(dto.getEmail());
-        player.setPhone(dto.getPhone());
-        player.setDateOfBirth(dto.getDateOfBirth());
-        player.setGender(dto.getGender());
-        player.setAddress(dto.getAddress());
-        player.setParentName(dto.getParentName());
-        player.setJoiningDate(dto.getJoiningDate());
-        player.setLevel(dto.getLevel());
-        player.setBasicFoot(dto.getBasicFoot());
-        player.setEmergencyContactName(dto.getEmergencyContactName());
-        player.setEmergencyContactPhone(dto.getEmergencyContactPhone());
-
-        if (dto.getIsActive() != null) {
-            player.setIsActive(dto.getIsActive());
-        }
-        if (dto.getInactiveReason() != null) {
-            player.setInactiveReason(dto.getInactiveReason());
-        }
-
-        // Update user account if it exists
+        // Update user account - all personal data is now in the User entity
         if (player.getUser() != null) {
             User user = player.getUser();
             user.setFirstName(dto.getFirstName());
@@ -463,8 +435,14 @@ public class PlayerService {
             user.setBasicFoot(dto.getBasicFoot());
             user.setEmergencyContactName(dto.getEmergencyContactName());
             user.setEmergencyContactPhone(dto.getEmergencyContactPhone());
-            user.setIsActive(dto.getIsActive());
-            user.setInactiveReason(dto.getInactiveReason());
+            
+            if (dto.getIsActive() != null) {
+                user.setIsActive(dto.getIsActive());
+            }
+            if (dto.getInactiveReason() != null) {
+                user.setInactiveReason(dto.getInactiveReason());
+            }
+            
             user.setUpdatedAt(LocalDateTime.now());
             userRepository.save(user);
         }

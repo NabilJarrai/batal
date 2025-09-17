@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 interface SkillScore {
   skillName: string;
-  category: string;
+  skillCategory: string;
   score: number;
 }
 
@@ -22,28 +22,33 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set canvas size
-    const size = 400;
+    // Set canvas size - increased to accommodate labels
+    const size = 500;
     canvas.width = size;
     canvas.height = size;
 
     const centerX = size / 2;
     const centerY = size / 2;
-    const radius = size / 3;
+    const radius = size / 4; // Reduced radius to leave more room for labels
 
     // Group skills by category and calculate averages
     const categoryAverages: Record<string, { sum: number; count: number }> = {};
     skills.forEach((skill) => {
-      if (!categoryAverages[skill.category]) {
-        categoryAverages[skill.category] = { sum: 0, count: 0 };
+      if (!categoryAverages[skill.skillCategory]) {
+        categoryAverages[skill.skillCategory] = { sum: 0, count: 0 };
       }
-      categoryAverages[skill.category].sum += skill.score;
-      categoryAverages[skill.category].count++;
+      categoryAverages[skill.skillCategory].sum += skill.score;
+      categoryAverages[skill.skillCategory].count++;
     });
 
     const categories = Object.keys(categoryAverages);
+    // Normalize values to 0-1 scale for radar chart plotting (0-10 scale but emphasizing 1-10)
     const values = categories.map(
-      (cat) => (categoryAverages[cat].sum / categoryAverages[cat].count) / 10
+      (cat) => {
+        const score = categoryAverages[cat].sum / categoryAverages[cat].count;
+        // For radar chart, we still use the full 0-10 scale but data will naturally be in 1-10 range
+        return score / 10;
+      }
     );
 
     const angleStep = (Math.PI * 2) / categories.length;
@@ -51,7 +56,7 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
     // Clear canvas
     ctx.clearRect(0, 0, size, size);
 
-    // Draw grid circles
+    // Draw grid circles (representing scores 2, 4, 6, 8, 10)
     for (let i = 1; i <= 5; i++) {
       ctx.beginPath();
       ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
@@ -123,17 +128,17 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
     });
 
     // Draw labels
-    ctx.font = "12px sans-serif";
+    ctx.font = "13px sans-serif";
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
     categories.forEach((category, index) => {
       const angle = index * angleStep - Math.PI / 2;
-      const labelRadius = radius + 30;
+      const labelRadius = radius + 50; // Increased spacing from chart
       const x = centerX + Math.cos(angle) * labelRadius;
       const y = centerY + Math.sin(angle) * labelRadius;
-      
+
       // Adjust text alignment based on position
       if (Math.abs(x - centerX) < 10) {
         ctx.textAlign = "center";
@@ -142,7 +147,7 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
       } else {
         ctx.textAlign = "right";
       }
-      
+
       ctx.fillText(category, x, y);
     });
   }, [skills]);
@@ -153,11 +158,11 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
       <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
         {Object.entries(
           skills.reduce((acc, skill) => {
-            if (!acc[skill.category]) {
-              acc[skill.category] = { sum: 0, count: 0 };
+            if (!acc[skill.skillCategory]) {
+              acc[skill.skillCategory] = { sum: 0, count: 0 };
             }
-            acc[skill.category].sum += skill.score;
-            acc[skill.category].count++;
+            acc[skill.skillCategory].sum += skill.score;
+            acc[skill.skillCategory].count++;
             return acc;
           }, {} as Record<string, { sum: number; count: number }>)
         ).map(([category, data]) => (

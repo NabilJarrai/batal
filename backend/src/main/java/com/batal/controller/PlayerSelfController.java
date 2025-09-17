@@ -6,6 +6,7 @@ import com.batal.dto.PasswordChangeRequest;
 import com.batal.entity.Player;
 import com.batal.entity.Assessment;
 import com.batal.entity.User;
+import com.batal.entity.enums.Gender;
 import com.batal.repository.PlayerRepository;
 import com.batal.repository.AssessmentRepository;
 import com.batal.service.PlayerService;
@@ -19,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +28,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/players/me")
+@RequestMapping("/players/me")
 @CrossOrigin(origins = "*", maxAge = 3600)
 @PreAuthorize("hasRole('PLAYER')")
 public class PlayerSelfController {
@@ -47,6 +49,7 @@ public class PlayerSelfController {
      * Get current player's own profile
      */
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getMyProfile() {
         try {
             Player player = getCurrentPlayer();
@@ -66,11 +69,11 @@ public class PlayerSelfController {
         try {
             Player player = getCurrentPlayer();
             
-            // Only allow updating certain fields
-            player.setPhone(playerDTO.getPhone());
-            player.setAddress(playerDTO.getAddress());
-            player.setEmergencyContactName(playerDTO.getEmergencyContactName());
-            player.setEmergencyContactPhone(playerDTO.getEmergencyContactPhone());
+            // Only allow updating certain fields - these now exist on the User entity
+            player.getUser().setPhone(playerDTO.getPhone());
+            player.getUser().setAddress(playerDTO.getAddress());
+            player.getUser().setEmergencyContactName(playerDTO.getEmergencyContactName());
+            player.getUser().setEmergencyContactPhone(playerDTO.getEmergencyContactPhone());
             
             // Update user record as well
             if (player.getUser() != null) {
@@ -126,14 +129,15 @@ public class PlayerSelfController {
      * Get all assessments for current player
      */
     @GetMapping("/assessments")
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getMyAssessments() {
         try {
             Player player = getCurrentPlayer();
-            List<Assessment> assessments = assessmentRepository.findByPlayerIdOrderByAssessmentDateDesc(player.getId());
+            List<Assessment> assessments = assessmentRepository.findByPlayerIdWithAllRelationsOrderByAssessmentDateDesc(player.getId());
             List<AssessmentDTO> assessmentDTOs = assessments.stream()
                 .map(this::convertToAssessmentDTO)
                 .collect(Collectors.toList());
-            
+
             return ResponseEntity.ok(assessmentDTOs);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -145,21 +149,22 @@ public class PlayerSelfController {
      * Get specific assessment details for current player
      */
     @GetMapping("/assessments/{id}")
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getMyAssessmentById(@PathVariable Long id) {
         try {
             Player player = getCurrentPlayer();
-            Optional<Assessment> assessment = assessmentRepository.findById(id);
-            
+            Optional<Assessment> assessment = assessmentRepository.findByIdWithAllRelations(id);
+
             if (assessment.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            
+
             // Verify the assessment belongs to the current player
             if (!assessment.get().getPlayer().getId().equals(player.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Access denied to this assessment"));
             }
-            
+
             AssessmentDTO assessmentDTO = convertToAssessmentDTO(assessment.get());
             return ResponseEntity.ok(assessmentDTO);
         } catch (Exception e) {
@@ -185,26 +190,33 @@ public class PlayerSelfController {
     private PlayerDTO convertToPlayerDTO(Player player) {
         PlayerDTO dto = new PlayerDTO();
         dto.setId(player.getId());
+
+        // Use Player's utility methods that handle null checks
         dto.setFirstName(player.getFirstName());
         dto.setLastName(player.getLastName());
         dto.setEmail(player.getEmail());
-        dto.setPhone(player.getPhone());
-        dto.setDateOfBirth(player.getDateOfBirth());
-        dto.setGender(player.getGender());
-        dto.setAddress(player.getAddress());
-        dto.setParentName(player.getParentName());
-        dto.setJoiningDate(player.getJoiningDate());
-        dto.setLevel(player.getLevel());
-        dto.setBasicFoot(player.getBasicFoot());
-        dto.setEmergencyContactName(player.getEmergencyContactName());
-        dto.setEmergencyContactPhone(player.getEmergencyContactPhone());
-        dto.setIsActive(player.getIsActive());
-        
-        if (player.getGroup() != null) {
-            dto.setGroupId(player.getGroup().getId());
-            dto.setGroupName(player.getGroup().getName());
+
+        // Access user data safely with null checks
+        if (player.getUser() != null) {
+            User user = player.getUser();
+            dto.setPhone(user.getPhone());
+            dto.setDateOfBirth(user.getDateOfBirth());
+            dto.setGender(user.getGender() != null ? Gender.valueOf(user.getGender().toString()) : null);
+            dto.setAddress(user.getAddress());
+            dto.setParentName(user.getParentName());
+            dto.setJoiningDate(user.getJoiningDate());
+            dto.setLevel(user.getLevel());
+            dto.setBasicFoot(user.getBasicFoot());
+            dto.setEmergencyContactName(user.getEmergencyContactName());
+            dto.setEmergencyContactPhone(user.getEmergencyContactPhone());
+            dto.setIsActive(user.getIsActive());
+
+            if (user.getGroup() != null) {
+                dto.setGroupId(user.getGroup().getId());
+                dto.setGroupName(user.getGroup().getName());
+            }
         }
-        
+
         return dto;
     }
     
@@ -233,7 +245,7 @@ public class PlayerSelfController {
                     Map<String, Object> skillMap = new HashMap<>();
                     skillMap.put("skillId", score.getSkill().getId());
                     skillMap.put("skillName", score.getSkill().getName());
-                    skillMap.put("category", score.getSkill().getCategory().toString());
+                    skillMap.put("skillCategory", score.getSkill().getCategory().toString());
                     skillMap.put("score", score.getScore());
                     skillMap.put("notes", score.getNotes() != null ? score.getNotes() : "");
                     return skillMap;

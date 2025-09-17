@@ -31,7 +31,84 @@ export const tokenManager = {
   },
 };
 
-// Generic API fetch wrapper with JWT support
+// Enhanced error interface for better error handling
+interface APIError {
+  message: string;
+  status: number;
+  type: 'AUTHENTICATION' | 'VALIDATION' | 'NETWORK' | 'SERVER' | 'UNKNOWN';
+  details?: any;
+}
+
+// Create enhanced error object
+function createAPIError(response: Response, errorData: any = {}): APIError {
+  const status = response.status;
+  let type: APIError['type'] = 'UNKNOWN';
+  let message = errorData.message || `HTTP error! status: ${status}`;
+
+  // Categorize errors based on status code or backend error code
+  switch (status) {
+    case 401:
+      type = 'AUTHENTICATION';
+      // Use backend error message if available, otherwise default message
+      if (!errorData.message) {
+        message = 'Invalid email or password. Please check your credentials and try again.';
+      }
+      break;
+    case 403:
+      type = 'AUTHENTICATION';
+      if (!errorData.message) {
+        message = 'Access denied. Please contact your administrator.';
+      }
+      break;
+    case 400:
+      type = 'VALIDATION';
+      if (!errorData.message) {
+        message = 'Please check your input and try again.';
+      }
+      break;
+    case 404:
+      type = 'NETWORK';
+      if (!errorData.message) {
+        message = 'Service not available. Please try again later.';
+      }
+      break;
+    case 500:
+    case 502:
+    case 503:
+    case 504:
+      type = 'SERVER';
+      if (!errorData.message) {
+        message = 'Server error. Please try again in a few moments.';
+      }
+      break;
+    default:
+      if (status >= 400 && status < 500) {
+        type = 'VALIDATION';
+      } else if (status >= 500) {
+        type = 'SERVER';
+      }
+  }
+
+  // Override type based on backend errorCode if available
+  if (errorData.errorCode) {
+    switch (errorData.errorCode) {
+      case 'AUTHENTICATION_FAILED':
+        type = 'AUTHENTICATION';
+        break;
+      case 'VALIDATION_ERROR':
+      case 'CONSTRAINT_VIOLATION':
+        type = 'VALIDATION';
+        break;
+      case 'ACCESS_DENIED':
+        type = 'AUTHENTICATION';
+        break;
+    }
+  }
+
+  return { message, status, type, details: errorData };
+}
+
+// Generic API fetch wrapper with enhanced error handling
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -48,16 +125,44 @@ async function apiRequest<T>(
     ...options,
   };
 
-  const response = await fetch(url, config);
+  try {
+    const response = await fetch(url, config);
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.message || `HTTP error! status: ${response.status}`
-    );
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+
+      // Handle structured error response from backend (ErrorResponse class)
+      let message = errorData.message || `HTTP error! status: ${response.status}`;
+
+      // If we have a structured error response, use its message
+      if (errorData.error && errorData.message) {
+        message = errorData.message;
+      }
+
+      const apiError = createAPIError(response, { ...errorData, message });
+
+      // Create an Error object with enhanced properties
+      const error = new Error(apiError.message) as Error & APIError;
+      error.status = apiError.status;
+      error.type = apiError.type;
+      error.details = apiError.details;
+
+      throw error;
+    }
+
+    return response.json();
+  } catch (error) {
+    // Handle network errors (fetch failures)
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      const networkError = new Error('Network connection failed. Please check your internet connection and try again.') as Error & APIError;
+      networkError.status = 0;
+      networkError.type = 'NETWORK';
+      throw networkError;
+    }
+
+    // Re-throw API errors as-is
+    throw error;
   }
-
-  return response.json();
 }
 
 // Auth API calls

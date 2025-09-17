@@ -193,15 +193,15 @@ public class GroupService {
         }
         
         // Remove player from current group if assigned
-        if (player.getGroup() != null) {
-            Group currentGroup = player.getGroup();
-            currentGroup.removePlayer(player);
+        if (player.getUser().getGroup() != null) {
+            Group currentGroup = player.getUser().getGroup();
+            currentGroup.removePlayer(player.getUser());
             groupRepository.save(currentGroup);
         }
         
         // Assign player to new group
-        group.addPlayer(player);
-        player.setGroup(group);
+        group.addPlayer(player.getUser());
+        player.getUser().setGroup(group);
         
         playerRepository.save(player);
         Group savedGroup = groupRepository.save(group);
@@ -217,12 +217,12 @@ public class GroupService {
         Player player = playerRepository.findById(playerId)
             .orElseThrow(() -> new RuntimeException("Player not found"));
         
-        if (player.getGroup() == null || !player.getGroup().getId().equals(groupId)) {
+        if (player.getUser().getGroup() == null || !player.getUser().getGroup().getId().equals(groupId)) {
             throw new RuntimeException("Player is not assigned to this group");
         }
         
-        group.removePlayer(player);
-        player.setGroup(null);
+        group.removePlayer(player.getUser());
+        player.getUser().setGroup(null);
         
         playerRepository.save(player);
         Group savedGroup = groupRepository.save(group);
@@ -330,7 +330,7 @@ public class GroupService {
             .orElseThrow(() -> new RuntimeException("Player not found"));
         
         // Calculate player age
-        int playerAge = LocalDate.now().getYear() - player.getDateOfBirth().getYear();
+        int playerAge = LocalDate.now().getYear() - player.getUser().getDateOfBirth().getYear();
         AgeGroup ageGroup = AgeGroup.getByAge(playerAge);
         
         if (ageGroup == null) {
@@ -338,7 +338,7 @@ public class GroupService {
         }
         
         // Use the player's actual level, not hardcoded level
-        Level playerLevel = player.getLevel();
+        Level playerLevel = player.getUser().getLevel();
         
         // Find available group with matching level and age group
         List<Group> availableGroups = groupRepository.findAvailableGroupsByLevelAndAgeGroup(
@@ -369,5 +369,93 @@ public class GroupService {
             assignmentRequest.setForceAssignment(true);
             return assignPlayerToGroup(assignmentRequest);
         }
+    }
+
+    // Get available groups for a specific player (based on age, level, capacity)
+    public List<GroupResponse> getAvailableGroupsForPlayer(Long playerId) {
+        Player player = playerRepository.findByIdWithGroup(playerId)
+            .orElseThrow(() -> new RuntimeException("Player not found with ID: " + playerId));
+        
+        User playerUser = player.getUser();
+        if (playerUser == null) {
+            throw new RuntimeException("Player user data not found");
+        }
+        
+        // Calculate player age
+        int playerAge = calculatePlayerAge(playerUser.getDateOfBirth());
+        
+        // Get player's current level (default to DEVELOPMENT if null)
+        Level playerLevel = playerUser.getLevel() != null ? playerUser.getLevel() : Level.DEVELOPMENT;
+        
+        // Find all active groups that can accommodate this player
+        List<Group> availableGroups = groupRepository.findAll().stream()
+            .filter(group -> {
+                // Group must be active
+                if (!group.getIsActive()) return false;
+                
+                // Group must have capacity (unless it's the player's current group)
+                if (group.isFull() && !group.equals(playerUser.getGroup())) return false;
+                
+                // Age must be within group's age range (with some flexibility)
+                if (playerAge > 0) { // Only check if we have a valid age
+                    if (playerAge < group.getMinAge() - 1 || playerAge > group.getMaxAge() + 1) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            })
+            .collect(Collectors.toList());
+        
+        // Convert to DTOs and sort by relevance (same level first, then by age group match)
+        return availableGroups.stream()
+            .map(this::mapToGroupResponse)
+            .sorted((g1, g2) -> {
+                // Prioritize groups of the same level
+                boolean g1SameLevel = g1.getLevel().equals(playerLevel);
+                boolean g2SameLevel = g2.getLevel().equals(playerLevel);
+                
+                if (g1SameLevel && !g2SameLevel) return -1;
+                if (!g1SameLevel && g2SameLevel) return 1;
+                
+                // Then prioritize by available spots (more spots = better)
+                return Integer.compare(g2.getAvailableSpots(), g1.getAvailableSpots());
+            })
+            .collect(Collectors.toList());
+    }
+    
+    // Helper method to calculate player age
+    private int calculatePlayerAge(LocalDate dateOfBirth) {
+        if (dateOfBirth == null) {
+            return 0; // Unknown age
+        }
+        return LocalDate.now().getYear() - dateOfBirth.getYear();
+    }
+    
+    // Helper method to map Group to GroupResponse (simplified version)
+    private GroupResponse mapToGroupResponse(Group group) {
+        GroupResponse response = new GroupResponse();
+        response.setId(group.getId());
+        response.setName(group.getName());
+        response.setLevel(group.getLevel());
+        response.setAgeGroup(group.getAgeGroup());
+        response.setMinAge(group.getMinAge());
+        response.setMaxAge(group.getMaxAge());
+        response.setCapacity(group.getCapacity());
+        response.setCurrentPlayerCount(group.getCurrentPlayerCount());
+        response.setAvailableSpots(group.getAvailableSpots());
+        response.setIsFull(group.isFull());
+        response.setZone(group.getZone());
+        response.setDescription(group.getDescription());
+        response.setIsActive(group.getIsActive());
+        response.setCreatedAt(group.getCreatedAt());
+        response.setUpdatedAt(group.getUpdatedAt());
+        
+        // Simplified mapping - coach and players would need more complex mapping if needed
+        if (group.getCoach() != null) {
+            response.setCoach(new UserResponse()); // Simplified - you'd map coach details here
+        }
+        
+        return response;
     }
 }

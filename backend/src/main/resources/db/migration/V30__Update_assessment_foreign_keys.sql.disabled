@@ -1,0 +1,115 @@
+-- V30: Update Assessment table to reference users instead of players
+-- This migration updates foreign key relationships to point to the users table
+
+-- Step 1: Add new column for user-based player reference
+ALTER TABLE assessments ADD COLUMN player_user_id BIGINT;
+
+-- Step 2: Populate the new column with corresponding user IDs
+-- Link assessments to users via the players.user_id relationship
+UPDATE assessments a 
+SET player_user_id = (
+    SELECT p.user_id 
+    FROM players p 
+    WHERE p.id = a.player_id
+) 
+WHERE a.player_user_id IS NULL;
+
+-- Step 3: Handle any assessments that don't have valid player links
+-- Check for orphaned assessments
+DO $$
+DECLARE
+    orphaned_count INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO orphaned_count
+    FROM assessments
+    WHERE player_user_id IS NULL;
+    
+    IF orphaned_count > 0 THEN
+        RAISE NOTICE 'WARNING: Found % assessments without valid user links. These will be marked as invalid.', orphaned_count;
+        
+        -- Option 1: Delete orphaned assessments (aggressive cleanup)
+        -- DELETE FROM assessments WHERE player_user_id IS NULL;
+        
+        -- Option 2: Link to a default "unknown" user (preserve data)
+        -- First, create an unknown user if it doesn't exist
+        INSERT INTO users (
+            email, first_name, last_name, user_type, is_active, 
+            created_at, updated_at, password
+        ) 
+        SELECT 
+            'unknown@batal.system', 'Unknown', 'Player', 'PLAYER', false,
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
+            '$2a$10$K8.6T8Qm7Fz7zX2t3V8Hxu0N4B1L9M.P6R5S9T3A7C2E8F1G4H6I'
+        WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'unknown@batal.system');
+        
+        -- Link orphaned assessments to the unknown user
+        UPDATE assessments 
+        SET player_user_id = (SELECT id FROM users WHERE email = 'unknown@batal.system')
+        WHERE player_user_id IS NULL;
+        
+        RAISE NOTICE 'Orphaned assessments have been linked to unknown user for data preservation.';
+    ELSE
+        RAISE NOTICE 'SUCCESS: All assessments have valid user links.';
+    END IF;
+END $$;
+
+-- Step 4: Add foreign key constraint for new column
+ALTER TABLE assessments 
+ADD CONSTRAINT fk_assessments_player_user 
+FOREIGN KEY (player_user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+-- Step 5: Add NOT NULL constraint to new column
+ALTER TABLE assessments ALTER COLUMN player_user_id SET NOT NULL;
+
+-- Step 6: Create index for performance
+CREATE INDEX idx_assessments_player_user_id ON assessments(player_user_id);
+
+-- Step 7: Drop old foreign key constraint and column
+-- First drop the foreign key constraint on player_id
+ALTER TABLE assessments DROP CONSTRAINT IF EXISTS fk_assessment_player;
+ALTER TABLE assessments DROP CONSTRAINT IF EXISTS fk_assessments_player;
+
+-- Drop the old column
+ALTER TABLE assessments DROP COLUMN player_id;
+
+-- Step 8: Rename new column to player_id for consistency
+ALTER TABLE assessments RENAME COLUMN player_user_id TO player_id;
+
+-- Step 9: Update index names for consistency
+DROP INDEX IF EXISTS idx_assessments_player_user_id;
+CREATE INDEX idx_assessments_player_id ON assessments(player_id);
+
+-- Step 10: Update table comment
+COMMENT ON TABLE assessments IS 'Player assessments - now references users table instead of players table';
+COMMENT ON COLUMN assessments.player_id IS 'References users.id for players (user_type = PLAYER)';
+
+-- Step 11: Validation and reporting
+DO $$
+DECLARE
+    total_assessments INTEGER;
+    valid_links INTEGER;
+    assessment_players INTEGER;
+BEGIN
+    -- Count total assessments
+    SELECT COUNT(*) INTO total_assessments FROM assessments;
+    
+    -- Count valid user links
+    SELECT COUNT(*) INTO valid_links
+    FROM assessments a
+    JOIN users u ON a.player_id = u.id
+    WHERE u.user_type = 'PLAYER';
+    
+    -- Count distinct players with assessments
+    SELECT COUNT(DISTINCT player_id) INTO assessment_players FROM assessments;
+    
+    RAISE NOTICE 'Migration V30 completed successfully:';
+    RAISE NOTICE '- Total assessments: %', total_assessments;
+    RAISE NOTICE '- Valid player links: %', valid_links;
+    RAISE NOTICE '- Unique players with assessments: %', assessment_players;
+    
+    IF total_assessments = valid_links THEN
+        RAISE NOTICE 'SUCCESS: All assessment foreign keys updated successfully.';
+    ELSE
+        RAISE NOTICE 'WARNING: % assessments may have invalid links.', total_assessments - valid_links;
+    END IF;
+END $$;

@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/hooks";
 import { loginUser, clearError } from "@/store/authSlice";
 
+// Enhanced error interface matching API error structure
+interface EnhancedError extends Error {
+  status?: number;
+  type?: 'AUTHENTICATION' | 'VALIDATION' | 'NETWORK' | 'SERVER' | 'UNKNOWN';
+  details?: any;
+}
+
 export default function LoginFormClient() {
   const router = useRouter();
   const { isAuthenticated, isLoading, error, user, dispatch } = useAuth();
@@ -18,6 +25,12 @@ export default function LoginFormClient() {
     password?: string;
   }>({});
 
+  const [errorDetails, setErrorDetails] = useState<{
+    type?: string;
+    canRetry?: boolean;
+    suggestion?: string;
+  }>({});
+
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -29,7 +42,8 @@ export default function LoginFormClient() {
       } else if (user.roles?.includes('COACH')) {
         router.push('/coach');
       } else {
-        router.push('/');
+        // Default to player dashboard for players or users without specific roles
+        router.push('/player/dashboard');
       }
     }
   }, [isAuthenticated, user, router]);
@@ -40,7 +54,39 @@ export default function LoginFormClient() {
       dispatch(clearError());
     }
     setValidationErrors({});
+    setErrorDetails({});
   }, [formData.email, formData.password, error, dispatch]);
+
+  // Analyze error details for better user feedback
+  useEffect(() => {
+    if (error) {
+      const enhancedError = error as unknown as EnhancedError;
+      const errorType = enhancedError.type || 'UNKNOWN';
+
+      let canRetry = true;
+      let suggestion = '';
+
+      switch (errorType) {
+        case 'AUTHENTICATION':
+          suggestion = 'Please double-check your email and password.';
+          break;
+        case 'NETWORK':
+          suggestion = 'Check your internet connection and try again.';
+          break;
+        case 'SERVER':
+          suggestion = 'Our servers are experiencing issues. Please try again in a few minutes.';
+          break;
+        case 'VALIDATION':
+          suggestion = 'Please check your input format.';
+          canRetry = false;
+          break;
+        default:
+          suggestion = 'Please try again or contact support if the problem persists.';
+      }
+
+      setErrorDetails({ type: errorType, canRetry, suggestion });
+    }
+  }, [error]);
 
   const validateForm = () => {
     const errors: typeof validationErrors = {};
@@ -93,14 +139,53 @@ export default function LoginFormClient() {
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Error Message */}
+        {/* Enhanced Error Message */}
         {error && (
           <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 backdrop-blur-sm">
-            <div className="flex items-center">
-              <svg className="h-5 w-5 text-red-300 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-sm text-red-200">{error}</p>
+            <div className="flex items-start">
+              {/* Error Icon - different based on error type */}
+              {errorDetails.type === 'NETWORK' ? (
+                <svg className="h-5 w-5 text-red-300 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-12.728 12.728m0-12.728l12.728 12.728" />
+                </svg>
+              ) : errorDetails.type === 'SERVER' ? (
+                <svg className="h-5 w-5 text-red-300 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              ) : (
+                <svg className="h-5 w-5 text-red-300 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              )}
+
+              <div className="flex-1">
+                <p className="text-sm font-medium text-red-200 mb-1">Sign In Failed</p>
+                <p className="text-xs text-red-300">{error}</p>
+                {errorDetails.suggestion && (
+                  <p className="text-xs text-red-400 mt-2 italic">{errorDetails.suggestion}</p>
+                )}
+                {errorDetails.type === 'AUTHENTICATION' && (
+                  <div className="mt-3 flex items-center space-x-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        dispatch(clearError());
+                        setErrorDetails({});
+                      }}
+                      className="text-xs text-red-200 hover:text-red-100 underline"
+                    >
+                      Try Again
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => alert('Forgot password functionality coming soon!')}
+                      className="text-xs text-red-200 hover:text-red-100 underline"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -172,7 +257,7 @@ export default function LoginFormClient() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || Boolean(error && errorDetails.canRetry === false)}
             className="group relative w-full flex justify-center py-3 px-4 border border-transparent rounded-xl text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             {isLoading ? (
@@ -186,11 +271,17 @@ export default function LoginFormClient() {
             ) : (
               <>
                 <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                  <svg className="h-5 w-5 text-blue-300 group-hover:text-blue-200" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                  </svg>
+                  {error && !errorDetails.canRetry ? (
+                    <svg className="h-5 w-5 text-blue-300 group-hover:text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-12.728 12.728m0-12.728l12.728 12.728" />
+                    </svg>
+                  ) : (
+                    <svg className="h-5 w-5 text-blue-300 group-hover:text-blue-200" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
                 </span>
-                Sign in to Academy
+                {error && !errorDetails.canRetry ? 'Please Fix Errors Above' : 'Sign in to Academy'}
               </>
             )}
           </button>

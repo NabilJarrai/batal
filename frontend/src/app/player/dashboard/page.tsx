@@ -1,22 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import Link from "next/link";
 import { useAppSelector } from "@/store/hooks";
 import { AssessmentCard } from "@/components/player/AssessmentCard";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 import { 
   UserCircleIcon, 
   CalendarIcon, 
   TrophyIcon,
   ChartBarIcon 
 } from "@heroicons/react/24/outline";
-
-interface Assessment {
-  id: number;
-  assessmentDate: string;
-  period: string;
-  overallScore?: number;
-  isFinalized: boolean;
-}
+import { AppDispatch, RootState } from "@/store";
+import { fetchMyAssessments, selectLatestAssessment, selectAssessments } from "@/store/assessmentSlice";
 
 interface PlayerProfile {
   id: number;
@@ -30,21 +28,26 @@ interface PlayerProfile {
 
 export default function PlayerDashboard() {
   const user = useAppSelector((state) => state.auth.user);
+  const dispatch = useDispatch<AppDispatch>();
+  const latestAssessment = useSelector((state: RootState) => selectLatestAssessment(state));
+  const assessments = useSelector((state: RootState) => selectAssessments(state));
+  
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
-  const [latestAssessment, setLatestAssessment] = useState<Assessment | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchPlayerData();
-  }, []);
+    fetchPlayerProfile();
+    dispatch(fetchMyAssessments());
+  }, [dispatch]);
 
-  const fetchPlayerData = async () => {
+  const fetchPlayerProfile = async () => {
     try {
       setLoading(true);
       
       // Fetch player profile
-      const profileResponse = await fetch("/api/players/me", {
+      const profileResponse = await fetch(`${API_BASE_URL}/players/me`, {
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("jwt_token")}`,
         },
       });
@@ -53,22 +56,8 @@ export default function PlayerDashboard() {
         const profileData = await profileResponse.json();
         setProfile(profileData);
       }
-
-      // Fetch latest assessment
-      const assessmentResponse = await fetch("/api/players/me/assessments", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("jwt_token")}`,
-        },
-      });
-      
-      if (assessmentResponse.ok) {
-        const assessments = await assessmentResponse.json();
-        if (assessments.length > 0) {
-          setLatestAssessment(assessments[0]);
-        }
-      }
     } catch (error) {
-      console.error("Error fetching player data:", error);
+      console.error("Error fetching player profile:", error);
     } finally {
       setLoading(false);
     }
@@ -140,7 +129,7 @@ export default function PlayerDashboard() {
             <div>
               <p className="text-sm text-blue-200">Assessments</p>
               <p className="text-xl font-bold text-white">
-                {latestAssessment ? "View Latest" : "None Yet"}
+                {assessments.length}
               </p>
             </div>
           </div>
@@ -150,9 +139,17 @@ export default function PlayerDashboard() {
       {/* Latest Assessment */}
       {latestAssessment && (
         <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-          <h2 className="text-2xl font-bold text-white mb-4">
-            Latest Assessment
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-white">
+              Latest Assessment
+            </h2>
+            <Link
+              href={`/player/assessments/${latestAssessment.id}`}
+              className="text-blue-300 hover:text-white transition-colors"
+            >
+              View Details →
+            </Link>
+          </div>
           <AssessmentCard assessment={latestAssessment} />
         </div>
       )}
@@ -164,9 +161,15 @@ export default function PlayerDashboard() {
           <h3 className="text-xl font-bold text-white mb-2">
             No Assessments Yet
           </h3>
-          <p className="text-blue-200">
+          <p className="text-blue-200 mb-4">
             Your coach will evaluate your performance regularly. Check back soon!
           </p>
+          <Link
+            href="/player/assessments"
+            className="inline-block px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+          >
+            View All Assessments
+          </Link>
         </div>
       )}
     </div>
