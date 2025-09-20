@@ -11,17 +11,19 @@ public class LoginResponse {
     private String firstName;
     private String lastName;
     private List<String> roles;
+    private boolean isFirstLogin;
     
     public LoginResponse() {}
     
-    public LoginResponse(String token, Long id, String email, String firstName, 
-                        String lastName, List<String> roles) {
+    public LoginResponse(String token, Long id, String email, String firstName,
+                        String lastName, List<String> roles, boolean isFirstLogin) {
         this.token = token;
         this.id = id;
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.roles = roles;
+        this.isFirstLogin = isFirstLogin;
     }
     
     public String getToken() {
@@ -78,5 +80,13 @@ public class LoginResponse {
     
     public void setRoles(List<String> roles) {
         this.roles = roles;
+    }
+
+    public boolean isFirstLogin() {
+        return isFirstLogin;
+    }
+
+    public void setFirstLogin(boolean firstLogin) {
+        this.isFirstLogin = firstLogin;
     }
 }

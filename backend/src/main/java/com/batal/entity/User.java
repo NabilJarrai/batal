@@ -95,6 +95,9 @@ public class User {
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "first_login_at")
+    private LocalDateTime firstLoginAt;
     
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -239,6 +242,14 @@ public class User {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public LocalDateTime getFirstLoginAt() {
+        return firstLoginAt;
+    }
+
+    public void setFirstLoginAt(LocalDateTime firstLoginAt) {
+        this.firstLoginAt = firstLoginAt;
+    }
     
     public Set<Role> getRoles() {
         return roles;
@@ -351,6 +362,10 @@ public class User {
         if (dateOfBirth == null) return null;
         int age = LocalDate.now().getYear() - dateOfBirth.getYear();
         return AgeGroup.getByAge(age);
+    }
+
+    public boolean isFirstLogin() {
+        return firstLoginAt == null && (isCoach() || userType == UserType.PLAYER);
     }
     
     // TODO: Uncomment when PlayerNormalized relationship is enabled

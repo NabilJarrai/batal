@@ -1,5 +1,6 @@
 package com.batal.service;
 
+import com.batal.dto.ChangeFirstLoginPasswordRequest;
 import com.batal.dto.LoginRequest;
 import com.batal.dto.LoginResponse;
 import com.batal.dto.RegisterRequest;
@@ -22,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -101,7 +103,39 @@ public class AuthService {
         User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
         
-        return new LoginResponse(jwt, user.getId(), user.getEmail(), 
-                user.getFirstName(), user.getLastName(), roles);
+        return new LoginResponse(jwt, user.getId(), user.getEmail(),
+                user.getFirstName(), user.getLastName(), roles, user.isFirstLogin());
+    }
+
+    @Transactional
+    public LoginResponse changeFirstLoginPassword(ChangeFirstLoginPasswordRequest request, String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new AuthenticationException("User not found"));
+
+        if (!user.isFirstLogin()) {
+            throw new AuthenticationException("Password change not required for this user");
+        }
+
+        if (!request.isPasswordMatching()) {
+            throw new AuthenticationException("New password and confirmation do not match");
+        }
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new AuthenticationException("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setFirstLoginAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        List<String> roleNames = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toList());
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String jwt = jwtUtil.generateJwtToken(authentication);
+
+        return new LoginResponse(jwt, user.getId(), user.getEmail(),
+                user.getFirstName(), user.getLastName(), roleNames, false);
     }
 }
