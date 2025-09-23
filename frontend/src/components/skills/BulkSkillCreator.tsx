@@ -154,13 +154,13 @@ export default function BulkSkillCreator({
   };
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
+    <div className="card-base p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-semibold text-white">Bulk Skill Creator</h3>
+        <h3 className="text-xl font-semibold text-text-primary">Bulk Skill Creator</h3>
         <button
           onClick={onCancel}
-          className="text-gray-400 hover:text-white transition-colors"
+          className="text-text-secondary hover:text-text-primary transition-colors"
           disabled={isSubmitting}
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,17 +170,17 @@ export default function BulkSkillCreator({
       </div>
 
       {/* Global Settings */}
-      <div className="mb-6 p-4 bg-white/5 rounded-lg">
-        <h4 className="text-white font-medium mb-3">Global Settings</h4>
+      <div className="mb-6 p-4 bg-secondary-50 rounded-lg border border-border">
+        <h4 className="text-text-primary font-medium mb-3">Global Settings</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-blue-200 mb-2">
+            <label className="block text-sm font-medium text-text-primary mb-2">
               Default Category
             </label>
             <select
               value={globalSettings.category}
               onChange={(e) => setGlobalSettings(prev => ({ ...prev, category: e.target.value as SkillCategory }))}
-              className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              className="input-base"
             >
               {SKILL_CATEGORIES.map(category => (
                 <option key={category.key} value={category.key}>
@@ -191,13 +191,13 @@ export default function BulkSkillCreator({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-blue-200 mb-2">
+            <label className="block text-sm font-medium text-text-primary mb-2">
               Default Level
             </label>
             <select
               value={globalSettings.applicableLevels[0] || SkillLevel.DEVELOPMENT}
               onChange={(e) => setGlobalSettings(prev => ({ ...prev, applicableLevels: [e.target.value as SkillLevel] }))}
-              className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              className="input-base"
             >
               {SKILL_LEVELS.map(level => (
                 <option key={level.key} value={level.key}>
@@ -214,14 +214,14 @@ export default function BulkSkillCreator({
                   type="checkbox"
                   checked={globalSettings.applyToAll}
                   onChange={(e) => setGlobalSettings(prev => ({ ...prev, applyToAll: e.target.checked }))}
-                  className="w-4 h-4 text-cyan-600 bg-white/10 border-white/20 rounded focus:ring-cyan-500"
+                  className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary"
                 />
-                <span className="text-sm text-blue-200">Apply to all skills</span>
+                <span className="text-sm text-text-primary">Apply to all skills</span>
               </label>
               <button
                 onClick={applyGlobalSettings}
                 disabled={!globalSettings.applyToAll}
-                className="px-3 py-2 text-sm bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Apply Now
               </button>
@@ -234,17 +234,17 @@ export default function BulkSkillCreator({
       <div className="mb-6 flex flex-wrap gap-3">
         <button
           onClick={loadDefaultSkills}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+          className="btn-primary btn-md"
         >
           Load Default Skills (16)
         </button>
         <button
           onClick={addSkillRow}
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+          className="btn-success btn-md"
         >
           Add Skill Row
         </button>
-        <span className="px-3 py-2 bg-white/10 text-blue-200 rounded-lg text-sm">
+        <span className="px-3 py-2 bg-secondary-50 text-text-primary rounded-lg text-sm border border-border">
           {skills.length} skill{skills.length !== 1 ? 's' : ''} to create
         </span>
       </div>
@@ -265,19 +265,19 @@ export default function BulkSkillCreator({
       <div className="mb-6 overflow-x-auto">
         <table className="w-full min-w-[800px]">
           <thead>
-            <tr className="border-b border-white/20">
-              <th className="text-left text-blue-200 font-medium py-3 px-2 w-8">#</th>
-              <th className="text-left text-blue-200 font-medium py-3 px-2">Skill Name *</th>
-              <th className="text-left text-blue-200 font-medium py-3 px-2">Category</th>
-              <th className="text-left text-blue-200 font-medium py-3 px-2">Level</th>
-              <th className="text-left text-blue-200 font-medium py-3 px-2">Description</th>
-              <th className="text-left text-blue-200 font-medium py-3 px-2 w-12">Actions</th>
+            <tr className="border-b border-border">
+              <th className="text-left text-text-primary font-medium py-3 px-2 w-8">#</th>
+              <th className="text-left text-text-primary font-medium py-3 px-2">Skill Name *</th>
+              <th className="text-left text-text-primary font-medium py-3 px-2">Category</th>
+              <th className="text-left text-text-primary font-medium py-3 px-2">Level</th>
+              <th className="text-left text-text-primary font-medium py-3 px-2">Description</th>
+              <th className="text-left text-text-primary font-medium py-3 px-2 w-12">Actions</th>
             </tr>
           </thead>
           <tbody>
             {skills.map((skill, index) => (
-              <tr key={index} className="border-b border-white/10 hover:bg-white/5">
-                <td className="py-2 px-2 text-gray-400 text-sm">
+              <tr key={index} className="border-b border-border hover:bg-secondary-50">
+                <td className="py-2 px-2 text-text-secondary text-sm">
                   {index + 1}
                 </td>
                 
@@ -287,7 +287,7 @@ export default function BulkSkillCreator({
                     value={skill.name}
                     onChange={(e) => updateSkill(index, 'name', e.target.value)}
                     placeholder="Enter skill name"
-                    className="w-full px-2 py-1 bg-white/10 border border-white/20 text-white text-sm rounded focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                    className="w-full px-2 py-1 bg-background border border-border text-text-primary text-sm rounded focus:outline-none focus:ring-1 focus:ring-primary"
                     maxLength={100}
                   />
                 </td>
@@ -296,7 +296,7 @@ export default function BulkSkillCreator({
                   <select
                     value={skill.category}
                     onChange={(e) => updateSkill(index, 'category', e.target.value as SkillCategory)}
-                    className="w-full px-2 py-1 bg-white/10 border border-white/20 text-white text-sm rounded focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                    className="w-full px-2 py-1 bg-background border border-border text-text-primary text-sm rounded focus:outline-none focus:ring-1 focus:ring-primary"
                   >
                     {SKILL_CATEGORIES.map(category => (
                       <option key={category.key} value={category.key}>
@@ -310,7 +310,7 @@ export default function BulkSkillCreator({
                   <select
                     value={skill.applicableLevels[0] || SkillLevel.DEVELOPMENT}
                     onChange={(e) => updateSkill(index, 'applicableLevels', [e.target.value as SkillLevel])}
-                    className="w-full px-2 py-1 bg-white/10 border border-white/20 text-white text-sm rounded focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                    className="w-full px-2 py-1 bg-background border border-border text-text-primary text-sm rounded focus:outline-none focus:ring-1 focus:ring-primary"
                   >
                     {SKILL_LEVELS.map(level => (
                       <option key={level.key} value={level.key}>
@@ -326,7 +326,7 @@ export default function BulkSkillCreator({
                     value={skill.description}
                     onChange={(e) => updateSkill(index, 'description', e.target.value)}
                     placeholder="Optional description"
-                    className="w-full px-2 py-1 bg-white/10 border border-white/20 text-white text-sm rounded focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                    className="w-full px-2 py-1 bg-background border border-border text-text-primary text-sm rounded focus:outline-none focus:ring-1 focus:ring-primary"
                     maxLength={500}
                   />
                 </td>
@@ -349,19 +349,19 @@ export default function BulkSkillCreator({
       </div>
 
       {/* Form Actions */}
-      <div className="flex justify-end gap-3 pt-4 border-t border-white/20">
+      <div className="flex justify-end gap-3 pt-4 border-t border-border">
         <button
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="px-4 py-2 text-gray-300 hover:text-white transition-colors disabled:opacity-50"
+          className="btn-ghost btn-md disabled:opacity-50"
         >
           Cancel
         </button>
         <button
           onClick={handleSubmit}
           disabled={isSubmitting || isLoading || skills.length === 0}
-          className="px-6 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="btn-primary btn-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {(isSubmitting || isLoading) && (
             <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">

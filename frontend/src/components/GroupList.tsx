@@ -150,7 +150,7 @@ export default function GroupList({
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
+        <div className="bg-background border border-border shadow-sm rounded-xl p-6">
           <div className="animate-pulse space-y-4">
             <div className="h-4 bg-white/20 rounded w-1/4"></div>
             <div className="space-y-2">
@@ -161,7 +161,7 @@ export default function GroupList({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
+            <div key={i} className="bg-background border border-border shadow-sm rounded-xl p-6">
               <div className="animate-pulse space-y-4">
                 <div className="h-4 bg-white/20 rounded w-3/4"></div>
                 <div className="h-3 bg-white/20 rounded w-1/2"></div>
@@ -180,7 +180,7 @@ export default function GroupList({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white">Groups</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Groups</h2>
           <p className="text-blue-200">
             {filteredGroups.length} of {groups.length} groups
           </p>
@@ -189,7 +189,7 @@ export default function GroupList({
         {onCreateGroup && (
           <button
             onClick={onCreateGroup}
-            className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl text-text-primary font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -200,7 +200,7 @@ export default function GroupList({
       </div>
 
       {/* Filters */}
-      <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4">
+      <div className="bg-background border border-border shadow-sm rounded-xl p-4">
         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {/* Search */}
           <div className="md:col-span-2">
@@ -209,7 +209,7 @@ export default function GroupList({
               placeholder="Search groups..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 placeholder-blue-300 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+              className="w-full px-3 py-2 bg-background border border-border shadow-sm placeholder-text-secondary text-text-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
 
@@ -218,7 +218,7 @@ export default function GroupList({
             <select
               value={selectedLevel}
               onChange={(e) => setSelectedLevel(e.target.value as Level | 'ALL')}
-              className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              className="w-full px-3 py-2 bg-background border border-border shadow-sm text-text-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="ALL">All Levels</option>
               <option value={Level.DEVELOPMENT}>Development</option>
@@ -231,7 +231,7 @@ export default function GroupList({
             <select
               value={selectedAgeGroup}
               onChange={(e) => setSelectedAgeGroup(e.target.value as AgeGroup | 'ALL')}
-              className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              className="w-full px-3 py-2 bg-background border border-border shadow-sm text-text-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="ALL">All Ages</option>
               <option value={AgeGroup.COOKIES}>Cookies (4-6)</option>
@@ -243,7 +243,7 @@ export default function GroupList({
 
           {/* Show Inactive Toggle */}
           <div className="flex items-center">
-            <label className="flex items-center text-blue-200 text-sm">
+            <label className="flex items-center text-text-primary text-sm">
               <input
                 type="checkbox"
                 checked={showInactive}
@@ -258,7 +258,7 @@ export default function GroupList({
           <div>
             <button
               onClick={clearFilters}
-              className="w-full px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white text-sm transition-colors duration-200"
+              className="w-full px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-text-primary text-sm transition-colors duration-200"
             >
               Clear Filters
             </button>
@@ -269,11 +269,11 @@ export default function GroupList({
       {/* Groups Display */}
       {filteredGroups.length === 0 ? (
         <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="mx-auto h-12 w-12 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-300">No groups found</h3>
-          <p className="mt-1 text-sm text-gray-400">
+          <h3 className="mt-2 text-sm font-medium text-text-primary">No groups found</h3>
+          <p className="mt-1 text-sm text-text-secondary">
             {groups.length === 0 
               ? 'No groups have been created yet.' 
               : 'Try adjusting your search criteria.'}
@@ -282,7 +282,7 @@ export default function GroupList({
             <div className="mt-6">
               <button
                 onClick={onCreateGroup}
-                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl text-white font-medium transition-all duration-200"
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl text-text-primary font-medium transition-all duration-200"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -297,7 +297,7 @@ export default function GroupList({
           {/* Development Groups */}
           {groupsByLevel[Level.DEVELOPMENT].length > 0 && (
             <div>
-              <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+              <h3 className="text-xl font-semibold text-text-primary mb-4 flex items-center">
                 <div className="w-4 h-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full mr-3"></div>
                 Development Level ({groupsByLevel[Level.DEVELOPMENT].length})
               </h3>
@@ -330,7 +330,7 @@ export default function GroupList({
           {/* Advanced Groups */}
           {groupsByLevel[Level.ADVANCED].length > 0 && (
             <div>
-              <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+              <h3 className="text-xl font-semibold text-text-primary mb-4 flex items-center">
                 <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full mr-3"></div>
                 Advanced Level ({groupsByLevel[Level.ADVANCED].length})
               </h3>
@@ -364,7 +364,7 @@ export default function GroupList({
 
       {/* Selection Summary */}
       {isSelectable && selectedGroups.length > 0 && (
-        <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg">
+        <div className="fixed bottom-4 right-4 bg-blue-600 text-text-primary px-4 py-2 rounded-lg shadow-lg">
           {selectedGroups.length} group{selectedGroups.length > 1 ? 's' : ''} selected
         </div>
       )}

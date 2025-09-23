@@ -53,13 +53,15 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
 
     const angleStep = (Math.PI * 2) / categories.length;
 
-    // Clear canvas
+    // Clear canvas and set light gray background
     ctx.clearRect(0, 0, size, size);
+    ctx.fillStyle = "#f9fafb";
+    ctx.fillRect(0, 0, size, size);
 
     // Draw grid circles (representing scores 2, 4, 6, 8, 10)
     for (let i = 1; i <= 5; i++) {
       ctx.beginPath();
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.1)";
       ctx.lineWidth = 1;
       
       for (let j = 0; j <= categories.length; j++) {
@@ -82,11 +84,11 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
       const angle = index * angleStep - Math.PI / 2;
       const x = centerX + Math.cos(angle) * radius;
       const y = centerY + Math.sin(angle) * radius;
-      
+
       ctx.beginPath();
       ctx.moveTo(centerX, centerY);
       ctx.lineTo(x, y);
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
       ctx.stroke();
     });
 
@@ -122,14 +124,14 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
       ctx.arc(x, y, 4, 0, Math.PI * 2);
       ctx.fillStyle = "#3B82F6";
       ctx.fill();
-      ctx.strokeStyle = "white";
+      ctx.strokeStyle = "#1F2937";
       ctx.lineWidth = 2;
       ctx.stroke();
     });
 
     // Draw labels
     ctx.font = "13px sans-serif";
-    ctx.fillStyle = "white";
+    ctx.fillStyle = "#1F2937";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
@@ -167,9 +169,9 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
           }, {} as Record<string, { sum: number; count: number }>)
         ).map(([category, data]) => (
           <div key={category} className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-500 rounded-full" />
-            <span className="text-blue-200">{category}:</span>
-            <span className="text-white font-medium">
+            <div className="w-3 h-3 bg-primary rounded-full" />
+            <span className="text-text-secondary">{category}:</span>
+            <span className="text-text-primary font-medium">
               {(data.sum / data.count).toFixed(1)}/10
             </span>
           </div>

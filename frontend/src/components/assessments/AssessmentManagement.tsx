@@ -147,7 +147,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-white">Assessment Management</h1>
-                <p className="text-blue-200 mt-1">
+                <p className="text-text-secondary mt-1">
                   {playerId ? 'Player assessment history and progress' : 'Manage player assessments and track progress'}
                 </p>
               </div>
@@ -156,7 +156,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
                 <button
                   onClick={loadData}
                   disabled={loading}
-                  className="p-2 text-blue-200 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+                  className="p-2 text-text-secondary hover:text-white hover:bg-white/20 rounded-lg transition-colors"
                   title="Refresh"
                 >
                   <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
@@ -203,7 +203,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
                   <p className="text-sm text-gray-600">Total Assessments</p>
                   <p className="text-2xl font-bold text-gray-900">{assessments.length}</p>
                 </div>
-                <FileText className="text-gray-400" size={24} />
+                <FileText className="text-text-secondary" size={24} />
               </div>
             </div>
 
@@ -213,7 +213,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
                   <p className="text-sm text-gray-600">Completed</p>
                   <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
                 </div>
-                <CheckCircle className="text-green-400" size={24} />
+                <CheckCircle className="text-accent-teal" size={24} />
               </div>
             </div>
 
@@ -223,7 +223,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
                   <p className="text-sm text-gray-600">In Progress</p>
                   <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
                 </div>
-                <Clock className="text-yellow-400" size={24} />
+                <Clock className="text-accent-yellow" size={24} />
               </div>
             </div>
 
@@ -233,7 +233,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
                   <p className="text-sm text-gray-600">This Month</p>
                   <p className="text-2xl font-bold text-blue-600">{stats.thisMonth}</p>
                 </div>
-                <Calendar className="text-blue-400" size={24} />
+                <Calendar className="text-text-primary" size={24} />
               </div>
             </div>
           </div>
@@ -316,9 +316,9 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
             <div className="space-y-6">
               {/* Trends Chart Placeholder */}
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <TrendingUp className="mx-auto text-gray-400 mb-4" size={48} />
+                <TrendingUp className="mx-auto text-text-secondary mb-4" size={48} />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Performance Trends</h3>
-                <p className="text-gray-500">
+                <p className="text-text-secondary">
                   Detailed analytics and progress charts will be implemented here
                 </p>
               </div>

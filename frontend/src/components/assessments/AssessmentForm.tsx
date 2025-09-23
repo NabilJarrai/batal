@@ -305,14 +305,14 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
+        <div className="glass-effect p-6 rounded-xl">
           <div className="flex items-center justify-between">
             <div className="text-white">
-              <h2 className="text-2xl font-bold">
+              <h2 className="text-heading-2">
                 {isCreating ? 'New Assessment' : isEditing ? 'Edit Assessment' : 'View Assessment'}
               </h2>
               {selectedPlayer && (
-                <p className="text-blue-200 mt-1">
+                <p className="text-text-secondary mt-1">
                   {selectedPlayer.fullName} - {selectedPlayer.level} Level
                 </p>
               )}
@@ -320,12 +320,12 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
             
             <div className="flex items-center gap-2">
               {isDraft && !isReadOnly && (
-                <span className="bg-yellow-500/20 text-yellow-200 px-3 py-1 rounded-full text-sm font-medium border border-yellow-400/30">
+                <span className="badge-warning">
                   Draft
                 </span>
               )}
               {assessment?.isFinalized && (
-                <span className="bg-green-500/20 text-green-200 px-3 py-1 rounded-full text-sm font-medium border border-green-400/30">
+                <span className="badge-success">
                   Finalized
                 </span>
               )}
@@ -335,9 +335,9 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
         <div className="space-y-6">
         {error && (
-          <div className="bg-red-500/10 border border-red-400/30 rounded-xl p-4 flex items-center gap-2 backdrop-blur-sm">
-            <AlertCircle className="text-red-300" size={20} />
-            <span className="text-red-200">{error}</span>
+          <div className="alert-error">
+            <AlertCircle className="text-accent-red" size={20} />
+            <span className="text-accent-red">{error}</span>
           </div>
         )}
 
@@ -346,7 +346,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
           <h3 className="text-lg font-semibold text-white mb-4">Basic Information</h3>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 <User size={16} className="inline mr-1" />
                 Player
               </label>
@@ -354,7 +354,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 value={formData.playerId || ''}
                 onChange={(e) => handleInputChange('playerId', parseInt(e.target.value) || null)}
                 disabled={isReadOnly || isEditing}
-                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-blue-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent disabled:bg-white/5 disabled:text-blue-300"
+                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-text-secondary focus:ring-2 focus:ring-blue-400 focus:border-transparent disabled:bg-white/5 disabled:text-text-secondary"
               >
                 <option value="">Select a player...</option>
                 {players.map(player => (
@@ -366,7 +366,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 <Calendar size={16} className="inline mr-1" />
                 Assessment Date
               </label>
@@ -375,12 +375,12 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 value={formData.assessmentDate}
                 onChange={(e) => handleInputChange('assessmentDate', e.target.value)}
                 disabled={isReadOnly}
-                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-blue-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent disabled:bg-white/5 disabled:text-blue-300"
+                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-text-secondary focus:ring-2 focus:ring-blue-400 focus:border-transparent disabled:bg-white/5 disabled:text-text-secondary"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 <Clock size={16} className="inline mr-1" />
                 Period
               </label>
@@ -388,7 +388,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 value={formData.period}
                 onChange={(e) => handleInputChange('period', e.target.value as AssessmentPeriod)}
                 disabled={isReadOnly}
-                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-blue-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent disabled:bg-white/5 disabled:text-blue-300"
+                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-text-secondary focus:ring-2 focus:ring-blue-400 focus:border-transparent disabled:bg-white/5 disabled:text-text-secondary"
               >
                 {ASSESSMENT_PERIODS.map(period => (
                   <option key={period.key} value={period.key} className="bg-blue-800 text-white">
@@ -406,14 +406,14 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
           {!formData.playerId ? (
             <div className="text-center py-12">
-              <User className="mx-auto h-12 w-12 text-blue-300 mb-4" />
-              <p className="text-blue-200 text-lg mb-2">Select a player to load skills</p>
-              <p className="text-blue-300 text-sm">Skills will be loaded based on the player's level</p>
+              <User className="mx-auto h-12 w-12 text-text-secondary mb-4" />
+              <p className="text-text-secondary text-lg mb-2">Select a player to load skills</p>
+              <p className="text-text-secondary text-sm">Skills will be loaded based on the player's level</p>
             </div>
           ) : skills.length === 0 ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-300 mx-auto mb-4"></div>
-              <p className="text-blue-200">Loading skills...</p>
+              <p className="text-text-secondary">Loading skills...</p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -428,7 +428,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                         {category.icon}
                       </div>
                       <h4 className="text-lg font-medium text-white">{category.label}</h4>
-                      <span className="text-sm text-blue-300">({categorySkills.length} skills)</span>
+                      <span className="text-sm text-text-secondary">({categorySkills.length} skills)</span>
                     </div>
 
                     <div className="grid gap-4">
@@ -455,7 +455,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
           <h3 className="text-lg font-semibold text-white mb-4">Comments</h3>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 <FileText size={16} className="inline mr-1" />
                 General Comments
               </label>
@@ -465,12 +465,12 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 disabled={isReadOnly}
                 placeholder="Overall assessment comments..."
                 rows={4}
-                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-blue-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none disabled:bg-white/5 disabled:text-blue-300"
+                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-text-secondary focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none disabled:bg-white/5 disabled:text-text-secondary"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 <Tag size={16} className="inline mr-1" />
                 Coach Notes
               </label>
@@ -480,7 +480,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 disabled={isReadOnly}
                 placeholder="Private coach notes and recommendations..."
                 rows={4}
-                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-blue-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none disabled:bg-white/5 disabled:text-blue-300"
+                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-text-secondary focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none disabled:bg-white/5 disabled:text-text-secondary"
               />
             </div>
           </div>
@@ -490,7 +490,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
         {!isReadOnly && (
           <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-blue-200">
+              <div className="text-sm text-text-secondary">
                 {hasChanges && 'Unsaved changes • '}
                 {saving ? 'Saving...' : 'Auto-saves every 30 seconds'}
               </div>
@@ -499,7 +499,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 <button
                   onClick={onCancel}
                   disabled={saving}
-                  className="px-4 py-2 text-blue-200 hover:text-white disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 text-text-secondary hover:text-white disabled:opacity-50 transition-colors"
                 >
                   Cancel
                 </button>

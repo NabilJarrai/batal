@@ -216,32 +216,32 @@ export function PlayerAssignmentModal({
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className="w-full max-w-md transform overflow-visible bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title className="text-lg font-medium text-white mb-4">
+                <Dialog.Title className="text-lg font-medium text-text-primary mb-4">
                   Assign Player to Group
                 </Dialog.Title>
 
                 {error && (
-                  <div className="mb-4 bg-red-500/20 border border-red-500/30 rounded-xl p-3">
-                    <p className="text-sm text-red-200">{error}</p>
+                  <div className="alert-error mb-4">
+                    <p className="text-sm text-accent-red">{error}</p>
                   </div>
                 )}
 
                 <div className="space-y-4">
                   {/* Player Selection */}
                   <div>
-                    <label className="block text-sm font-medium text-blue-200 mb-2">
+                    <label className="block text-sm font-medium text-text-primary mb-2">
                       {playerPreSelected ? 'Selected Player' : `Select Player (${unassignedPlayers.length} available)`}
                     </label>
                     
                     {playerPreSelected ? (
                       // Show pre-selected player as disabled field
-                      <div className="w-full px-3 py-2 bg-gray-500/20 border border-gray-500/30 rounded-lg text-gray-300 flex items-center justify-between">
+                      <div className="w-full px-3 py-2 bg-secondary-50 border border-border rounded-lg text-text-primary flex items-center justify-between">
                         <span>
                           {selectedPlayer 
                             ? `${selectedPlayer.firstName} ${selectedPlayer.lastName}${selectedPlayer.level ? ` - ${selectedPlayer.level}` : ''}` 
                             : 'No player selected'}
                         </span>
-                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
@@ -252,19 +252,19 @@ export function PlayerAssignmentModal({
                         onChange={setSelectedPlayer}
                       >
                         <div className="relative">
-                          <Listbox.Button className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-cyan-400 flex items-center justify-between">
+                          <Listbox.Button className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-cyan-400 flex items-center justify-between">
                             <span>
                               {selectedPlayer 
                                 ? `${selectedPlayer.firstName} ${selectedPlayer.lastName}${selectedPlayer.level ? ` - ${selectedPlayer.level}` : ''}` 
                                 : 'Choose a player...'}
                             </span>
-                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                           </Listbox.Button>
-                          <Listbox.Options className="absolute z-50 mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
+                          <Listbox.Options className="absolute z-50 mt-1 w-full bg-background-modal border border-border border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
                             {unassignedPlayers.length === 0 ? (
-                              <div className="px-3 py-2 text-gray-400 text-sm">
+                              <div className="px-3 py-2 text-text-secondary text-sm">
                                 No unassigned players available
                               </div>
                             ) : (
@@ -272,7 +272,7 @@ export function PlayerAssignmentModal({
                                 <Listbox.Option
                                   key={player.id}
                                   value={player}
-                                  className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                                  className="px-3 py-2 hover:bg-background cursor-pointer text-text-primary"
                                 >
                                   {player.firstName} {player.lastName} {player.level ? `- ${player.level}` : ''}
                                 </Listbox.Option>
@@ -287,20 +287,20 @@ export function PlayerAssignmentModal({
                   {/* Group Selection */}
                   {!groupId && !selectedGroup && (
                     <div>
-                      <label className="block text-sm font-medium text-blue-200 mb-2">
+                      <label className="block text-sm font-medium text-text-primary mb-2">
                         Select Group
                       </label>
                       <Listbox value={selectedGroup_} onChange={setSelectedGroup_}>
                         <div className="relative">
-                          <Listbox.Button className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                          <Listbox.Button className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-cyan-400">
                             {selectedGroup_ ? selectedGroup_.name : 'Choose a group...'}
                           </Listbox.Button>
-                          <Listbox.Options className="absolute z-50 mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
+                          <Listbox.Options className="absolute z-50 mt-1 w-full bg-background-modal border border-border border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
                             {availableGroups.map((group) => (
                               <Listbox.Option
                                 key={group.id}
                                 value={group}
-                                className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                                className="px-3 py-2 hover:bg-background cursor-pointer text-text-primary"
                               >
                                 {group.name} - {group.level} ({group.availableSpots} spots)
                               </Listbox.Option>
@@ -313,10 +313,10 @@ export function PlayerAssignmentModal({
 
                   {selectedGroup_ && (
                     <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-3">
-                      <p className="text-sm text-blue-200">
+                      <p className="text-sm text-text-primary">
                         <strong>Target Group:</strong> {selectedGroup_.name}
                       </p>
-                      <p className="text-xs text-blue-300">
+                      <p className="text-xs text-text-secondary">
                         {selectedGroup_.level} • {selectedGroup_.availableSpots} spots available
                       </p>
                     </div>
@@ -329,7 +329,7 @@ export function PlayerAssignmentModal({
                     type="button"
                     onClick={handleClose}
                     disabled={loading}
-                    className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-colors duration-200"
+                    className="btn-secondary btn-md flex-1"
                   >
                     Cancel
                   </button>
@@ -338,7 +338,7 @@ export function PlayerAssignmentModal({
                     type="button"
                     onClick={handleAutoAssign}
                     disabled={!selectedPlayer || loading}
-                    className="flex-1 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white transition-colors duration-200 disabled:opacity-50"
+                    className="flex-1 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-text-primary transition-colors duration-200 disabled:opacity-50"
                   >
                     {loading ? 'Assigning...' : 'Auto Assign'}
                   </button>
@@ -347,7 +347,7 @@ export function PlayerAssignmentModal({
                     type="button"
                     onClick={handleAssign}
                     disabled={!selectedPlayer || !selectedGroup_ || loading}
-                    className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white transition-colors duration-200 disabled:opacity-50"
+                    className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-text-primary transition-colors duration-200 disabled:opacity-50"
                   >
                     {loading ? 'Assigning...' : 'Assign'}
                   </button>
@@ -557,20 +557,20 @@ export function CoachAssignmentModal({
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className="w-full max-w-md transform overflow-hidden bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title className="text-lg font-medium text-white mb-4">
+                <Dialog.Title className="text-lg font-medium text-text-primary mb-4">
                   Assign Coach to Group
                 </Dialog.Title>
 
                 {error && (
-                  <div className="mb-4 bg-red-500/20 border border-red-500/30 rounded-xl p-3">
-                    <p className="text-sm text-red-200">{error}</p>
+                  <div className="alert-error mb-4">
+                    <p className="text-sm text-accent-red">{error}</p>
                   </div>
                 )}
 
                 <div className="space-y-4">
                   {/* Coach Selection */}
                   <div>
-                    <label className="block text-sm font-medium text-blue-200 mb-2">
+                    <label className="block text-sm font-medium text-text-primary mb-2">
                       Select Coach
                     </label>
                     <Listbox 
@@ -581,15 +581,15 @@ export function CoachAssignmentModal({
                       }}
                     >
                       <div className="relative">
-                        <Listbox.Button className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                        <Listbox.Button className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-cyan-400">
                           {selectedCoach ? selectedCoach.firstName + ' ' + selectedCoach.lastName : 'Choose a coach...'}
                         </Listbox.Button>
-                        <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
+                        <Listbox.Options className="absolute z-10 mt-1 w-full bg-background-modal border border-border border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
                           {availableCoaches.map((coach) => (
                             <Listbox.Option
                               key={coach.id}
                               value={coach}
-                              className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                              className="px-3 py-2 hover:bg-background cursor-pointer text-text-primary"
                             >
                               {coach.firstName} {coach.lastName}
                             </Listbox.Option>
@@ -602,20 +602,20 @@ export function CoachAssignmentModal({
                   {/* Group Selection */}
                   {!groupId && !selectedGroup && (
                     <div>
-                      <label className="block text-sm font-medium text-blue-200 mb-2">
+                      <label className="block text-sm font-medium text-text-primary mb-2">
                         Select Group
                       </label>
                       <Listbox value={selectedGroup_} onChange={setSelectedGroup_}>
                         <div className="relative">
-                          <Listbox.Button className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                          <Listbox.Button className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-cyan-400">
                             {selectedGroup_ ? selectedGroup_.name : 'Choose a group...'}
                           </Listbox.Button>
-                          <Listbox.Options className="absolute z-50 mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
+                          <Listbox.Options className="absolute z-50 mt-1 w-full bg-background-modal border border-border border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
                             {availableGroups.map((group) => (
                               <Listbox.Option
                                 key={group.id}
                                 value={group}
-                                className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                                className="px-3 py-2 hover:bg-background cursor-pointer text-text-primary"
                               >
                                 {group.name} - {group.level}
                               </Listbox.Option>
@@ -628,10 +628,10 @@ export function CoachAssignmentModal({
 
                   {selectedGroup_ && (
                     <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-3">
-                      <p className="text-sm text-blue-200">
+                      <p className="text-sm text-text-primary">
                         <strong>Target Group:</strong> {selectedGroup_.name}
                       </p>
-                      <p className="text-xs text-blue-300">
+                      <p className="text-xs text-text-secondary">
                         {selectedGroup_.level} • {selectedGroup_.currentPlayerCount} players
                       </p>
                     </div>
@@ -644,7 +644,7 @@ export function CoachAssignmentModal({
                     type="button"
                     onClick={handleClose}
                     disabled={loading}
-                    className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-colors duration-200"
+                    className="btn-secondary btn-md flex-1"
                   >
                     Cancel
                   </button>
@@ -653,7 +653,7 @@ export function CoachAssignmentModal({
                     type="button"
                     onClick={handleAssign}
                     disabled={!selectedCoach || !selectedGroup_ || loading}
-                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors duration-200 disabled:opacity-50"
+                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-text-primary transition-colors duration-200 disabled:opacity-50"
                     title={`Coach: ${selectedCoach ? 'Selected' : 'Not selected'}, Group: ${selectedGroup_ ? 'Selected' : 'Not selected'}, Loading: ${loading}`}
                   >
                     {loading ? 'Assigning...' : 'Assign Coach'}

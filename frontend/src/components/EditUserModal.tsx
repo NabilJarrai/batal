@@ -131,7 +131,7 @@ export default function EditUserModal({
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-background-modal border border-border p-6 text-left align-middle shadow-xl transition-all">
                   <div className="flex items-center justify-center p-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
                   </div>
@@ -170,14 +170,14 @@ export default function EditUserModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title as="h3" className="text-lg font-medium text-white mb-4">
+              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-background-modal border border-border p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Title as="h3" className="text-lg font-medium text-text-primary mb-4">
                   Edit User
                 </Dialog.Title>
 
                 {error && (
                   <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                    <p className="text-sm text-red-300">{error}</p>
+                    <p className="text-sm text-accent-red">{error}</p>
                   </div>
                 )}
 
@@ -185,7 +185,7 @@ export default function EditUserModal({
                   {/* Name Fields */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         First Name *
                       </label>
                       <input
@@ -193,13 +193,13 @@ export default function EditUserModal({
                         required
                         value={formData.firstName}
                         onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="Enter first name"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Last Name *
                       </label>
                       <input
@@ -207,7 +207,7 @@ export default function EditUserModal({
                         required
                         value={formData.lastName}
                         onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="Enter last name"
                       />
                     </div>
@@ -216,7 +216,7 @@ export default function EditUserModal({
                   {/* Contact Information */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Email *
                       </label>
                       <input
@@ -224,20 +224,20 @@ export default function EditUserModal({
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="user@example.com"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Phone
                       </label>
                       <input
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="+1234567890"
                       />
                     </div>
@@ -245,22 +245,22 @@ export default function EditUserModal({
 
                   {/* User Type */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
                       User Type *
                     </label>
                     <Listbox value={formData.userType} onChange={(value) => setFormData({...formData, userType: value})}>
                       <div className="relative">
-                        <Listbox.Button className="relative w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <Listbox.Button className="relative w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-primary">
                           <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gradient-to-r ${getUserTypeColor(formData.userType)}`}>
                             {formData.userType}
                           </span>
                         </Listbox.Button>
-                        <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
+                        <Listbox.Options className="absolute z-10 mt-1 w-full bg-background-modal border border-border rounded-lg shadow-lg max-h-40 overflow-auto">
                           {Object.values(UserType).map((type) => (
                             <Listbox.Option
                               key={type}
                               value={type}
-                              className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                              className="px-3 py-2 hover:bg-secondary-100 cursor-pointer text-text-primary"
                             >
                               <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gradient-to-r ${getUserTypeColor(type)}`}>
                                 {type}
@@ -279,9 +279,9 @@ export default function EditUserModal({
                         type="checkbox"
                         checked={formData.isActive}
                         onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
-                        className="form-checkbox h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                        className="form-checkbox h-4 w-4 text-primary bg-background border border-border rounded focus:ring-primary"
                       />
-                      <span className="text-sm font-medium text-gray-300">Active User</span>
+                      <span className="text-sm font-medium text-text-secondary">Active User</span>
                     </label>
                   </div>
 
@@ -291,7 +291,7 @@ export default function EditUserModal({
                       type="button"
                       onClick={handleClose}
                       disabled={isSubmitting}
-                      className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-600/50 text-white rounded-lg font-medium transition-colors duration-200"
+                      className="flex-1 px-4 py-2 bg-secondary-600 hover:bg-secondary-700 disabled:bg-secondary-600/50 text-white rounded-lg font-medium transition-colors duration-200"
                     >
                       Cancel
                     </button>

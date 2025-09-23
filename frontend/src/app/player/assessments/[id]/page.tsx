@@ -57,8 +57,8 @@ export default function AssessmentDetail() {
   if (error) {
     return (
       <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6">
-        <h3 className="text-lg font-bold text-red-300 mb-2">Error Loading Assessment</h3>
-        <p className="text-red-200">{error}</p>
+        <h3 className="text-lg font-bold text-accent-red mb-2">Error Loading Assessment</h3>
+        <p className="text-accent-red">{error}</p>
         <button 
           onClick={() => router.push("/player/assessments")}
           className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
@@ -72,14 +72,14 @@ export default function AssessmentDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   if (!assessment) {
     return (
-      <div className="text-center text-white">
+      <div className="text-center text-gray-900">
         <p>Assessment not found</p>
       </div>
     );
@@ -90,10 +90,10 @@ export default function AssessmentDetail() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+      <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
         <button
           onClick={() => router.push("/player/assessments")}
-          className="flex items-center gap-2 text-blue-300 hover:text-white mb-4 transition-colors"
+          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4 transition-colors"
         >
           <ArrowLeftIcon className="h-4 w-4" />
           Back to Assessments
@@ -101,10 +101,10 @@ export default function AssessmentDetail() {
 
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               {assessment.period} Assessment
             </h1>
-            <div className="flex items-center gap-6 text-sm text-blue-200">
+            <div className="flex items-center gap-6 text-sm text-gray-600">
               <span className="flex items-center gap-1">
                 <CalendarIcon className="h-4 w-4" />
                 {new Date(assessment.assessmentDate).toLocaleDateString()}
@@ -119,15 +119,15 @@ export default function AssessmentDetail() {
           <div className="text-right">
             <span className={`px-3 py-1 rounded-full text-xs font-medium ${
               assessment.isFinalized
-                ? "bg-green-500/20 text-green-300"
-                : "bg-yellow-500/20 text-yellow-300"
+                ? "bg-green-500/20 text-accent-teal"
+                : "bg-yellow-500/20 text-accent-yellow"
             }`}>
               {assessment.isFinalized ? "Finalized" : "Draft"}
             </span>
             {assessment.skillScores && assessment.skillScores.length > 0 && (
               <div className="mt-3">
-                <p className="text-sm text-blue-200">Overall Score</p>
-                <p className="text-3xl font-bold text-white">
+                <p className="text-sm text-gray-600">Overall Score</p>
+                <p className="text-3xl font-bold text-gray-900">
                   {getOverallAverage(assessment)}/10
                 </p>
               </div>
@@ -138,8 +138,8 @@ export default function AssessmentDetail() {
 
       {/* Skill Radar Chart */}
       {assessment.skillScores && assessment.skillScores.length > 0 && (
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-          <h2 className="text-2xl font-bold text-white mb-4">Performance Overview</h2>
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Performance Overview</h2>
           <SkillRadarChart skills={assessment.skillScores} />
         </div>
       )}
@@ -150,11 +150,11 @@ export default function AssessmentDetail() {
           {Object.entries(groupedSkills).map(([category, skills]) => (
             <div
               key={category}
-              className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20"
+              className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-white">{category}</h3>
-                <span className="text-lg font-bold text-blue-300">
+                <h3 className="text-xl font-semibold text-gray-900">{category}</h3>
+                <span className="text-lg font-bold text-blue-600">
                   Avg: {getCategoryAverage(skills)}/10
                 </span>
               </div>
@@ -163,17 +163,17 @@ export default function AssessmentDetail() {
                 {skills.map((skill) => (
                   <div key={skill.skillId}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-blue-200">{skill.skillName}</span>
-                      <span className="text-white font-medium">{skill.score}/10</span>
+                      <span className="text-sm text-gray-600">{skill.skillName}</span>
+                      <span className="text-gray-900 font-medium">{skill.score}/10</span>
                     </div>
-                    <div className="w-full bg-white/10 rounded-full h-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-gradient-to-r from-blue-400 to-cyan-300 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${skill.score * 10}%` }}
                       />
                     </div>
                     {skill.notes && (
-                      <p className="text-xs text-blue-200 mt-1">{skill.notes}</p>
+                      <p className="text-xs text-gray-600 mt-1">{skill.notes}</p>
                     )}
                   </div>
                 ))}
@@ -185,27 +185,27 @@ export default function AssessmentDetail() {
 
       {/* Comments Section */}
       {(assessment.comments || assessment.coachNotes) && (
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-          <h2 className="text-2xl font-bold text-white mb-4">Comments</h2>
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Comments</h2>
           
           {assessment.comments && (
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-blue-300 mb-2">General Comments</h3>
-              <p className="text-white">{assessment.comments}</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">General Comments</h3>
+              <p className="text-gray-900">{assessment.comments}</p>
             </div>
           )}
           
           {assessment.coachNotes && (
             <div>
-              <h3 className="text-lg font-semibold text-blue-300 mb-2">Coach Notes</h3>
-              <p className="text-white">{assessment.coachNotes}</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Coach Notes</h3>
+              <p className="text-gray-900">{assessment.coachNotes}</p>
             </div>
           )}
         </div>
       )}
 
       {/* Footer */}
-      <div className="text-center text-sm text-blue-200">
+      <div className="text-center text-sm text-gray-600">
         <p>Assessment created on {new Date(assessment.createdAt).toLocaleString()}</p>
         {assessment.updatedAt !== assessment.createdAt && (
           <p>Last updated on {new Date(assessment.updatedAt).toLocaleString()}</p>

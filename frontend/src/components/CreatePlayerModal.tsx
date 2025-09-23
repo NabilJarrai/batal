@@ -125,14 +125,14 @@ export default function CreatePlayerModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title as="h3" className="text-lg font-medium text-white mb-4">
+              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-background-modal border border-border p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Title as="h3" className="text-lg font-medium text-text-primary mb-4">
                   Add New Player
                 </Dialog.Title>
 
                 {error && (
                   <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                    <p className="text-sm text-red-300">{error}</p>
+                    <p className="text-sm text-accent-red">{error}</p>
                   </div>
                 )}
 
@@ -140,7 +140,7 @@ export default function CreatePlayerModal({
                   {/* Personal Information */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         First Name *
                       </label>
                       <input
@@ -148,13 +148,13 @@ export default function CreatePlayerModal({
                         required
                         value={formData.firstName}
                         onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="Enter first name"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Last Name *
                       </label>
                       <input
@@ -162,7 +162,7 @@ export default function CreatePlayerModal({
                         required
                         value={formData.lastName}
                         onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="Enter last name"
                       />
                     </div>
@@ -171,7 +171,7 @@ export default function CreatePlayerModal({
                   {/* Contact Information */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Email *
                       </label>
                       <input
@@ -179,20 +179,20 @@ export default function CreatePlayerModal({
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="player@example.com"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Phone
                       </label>
                       <input
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="+1234567890"
                       />
                     </div>
@@ -200,7 +200,7 @@ export default function CreatePlayerModal({
 
                   {/* Parent Information */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-text-secondary mb-1">
                       Parent/Guardian Name *
                     </label>
                     <input
@@ -208,7 +208,7 @@ export default function CreatePlayerModal({
                       required
                       value={formData.parentName}
                       onChange={(e) => setFormData({...formData, parentName: e.target.value})}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                       placeholder="Enter parent/guardian name"
                     />
                   </div>
@@ -216,7 +216,7 @@ export default function CreatePlayerModal({
                   {/* Player Details */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Date of Birth *
                       </label>
                       <DatePicker
@@ -234,21 +234,21 @@ export default function CreatePlayerModal({
                         yearDropdownItemNumber={15}
                         scrollableYearDropdown
                         placeholderText="Select birth date"
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                         wrapperClassName="w-full"
                         required
                         peekNextMonth
                         showPopperArrow={false}
                       />
                       {formData.dateOfBirth && (
-                        <p className="text-xs text-blue-300 mt-1">
+                        <p className="text-xs text-text-secondary mt-1">
                           Age Group: {calculateAgeGroup() || 'Outside age range'}
                         </p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Joining Date
                       </label>
                       <DatePicker
@@ -266,7 +266,7 @@ export default function CreatePlayerModal({
                         yearDropdownItemNumber={6}
                         scrollableYearDropdown
                         placeholderText="Select joining date"
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                         wrapperClassName="w-full"
                         showPopperArrow={false}
                       />
@@ -276,7 +276,7 @@ export default function CreatePlayerModal({
                   {/* Football Details */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Preferred Foot
                       </label>
                       <Listbox 
@@ -284,10 +284,10 @@ export default function CreatePlayerModal({
                         onChange={(value) => setFormData({...formData, basicFoot: value})}
                       >
                         <div className="relative">
-                          <Listbox.Button className="relative w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-blue-400">
+                          <Listbox.Button className="relative w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-primary">
                             <span className="block truncate">{formData.basicFoot}</span>
                             <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                              <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                              <svg className="h-5 w-5 text-text-secondary" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                               </svg>
                             </span>
@@ -298,14 +298,14 @@ export default function CreatePlayerModal({
                             leaveFrom="opacity-100"
                             leaveTo="opacity-0"
                           >
-                            <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-700 border border-gray-600 rounded-lg shadow-lg">
+                            <Listbox.Options className="absolute z-10 mt-1 w-full bg-background border border-border rounded-lg shadow-lg">
                               {Object.values(BasicFoot).map((foot) => (
                                 <Listbox.Option
                                   key={foot}
                                   value={foot}
                                   className={({ active }) =>
                                     `cursor-pointer px-3 py-2 ${
-                                      active ? 'bg-gray-600 text-white' : 'text-gray-300'
+                                      active ? 'bg-secondary text-text-primary' : 'text-text-secondary'
                                     }`
                                   }
                                 >
@@ -319,7 +319,7 @@ export default function CreatePlayerModal({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Level
                       </label>
                       <Listbox 
@@ -327,10 +327,10 @@ export default function CreatePlayerModal({
                         onChange={(value) => setFormData({...formData, level: value})}
                       >
                         <div className="relative">
-                          <Listbox.Button className="relative w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-blue-400">
+                          <Listbox.Button className="relative w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-primary">
                             <span className="block truncate">{formData.level}</span>
                             <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                              <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                              <svg className="h-5 w-5 text-text-secondary" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                               </svg>
                             </span>
@@ -341,14 +341,14 @@ export default function CreatePlayerModal({
                             leaveFrom="opacity-100"
                             leaveTo="opacity-0"
                           >
-                            <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-700 border border-gray-600 rounded-lg shadow-lg">
+                            <Listbox.Options className="absolute z-10 mt-1 w-full bg-background border border-border rounded-lg shadow-lg">
                               {Object.values(Level).map((level) => (
                                 <Listbox.Option
                                   key={level}
                                   value={level}
                                   className={({ active }) =>
                                     `cursor-pointer px-3 py-2 ${
-                                      active ? 'bg-gray-600 text-white' : 'text-gray-300'
+                                      active ? 'bg-secondary text-text-primary' : 'text-text-secondary'
                                     }`
                                   }
                                 >
@@ -372,8 +372,8 @@ export default function CreatePlayerModal({
                         className="h-4 w-4 rounded text-blue-600"
                       />
                       <div>
-                        <p className="text-sm font-medium text-white">Auto-assign to group</p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-sm font-medium text-text-primary">Auto-assign to group</p>
+                        <p className="text-xs text-text-secondary">
                           Automatically assign player to an appropriate group based on age and level
                         </p>
                       </div>
@@ -385,14 +385,14 @@ export default function CreatePlayerModal({
                     <button
                       type="button"
                       onClick={handleClose}
-                      className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-white transition-colors"
+                      className="flex-1 px-4 py-2 bg-secondary-600 hover:bg-secondary-700 rounded-lg text-white transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="flex-1 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg text-white font-medium transition-all disabled:opacity-50"
+                      className="flex-1 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg text-text-primary font-medium transition-all disabled:opacity-50"
                     >
                       {isSubmitting ? 'Creating...' : 'Create Player'}
                     </button>

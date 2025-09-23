@@ -71,9 +71,9 @@ export default function GroupCard({
   };
 
   const getCapacityColor = (percentage: number) => {
-    if (percentage >= 90) return 'text-red-400';
-    if (percentage >= 75) return 'text-yellow-400';
-    return 'text-green-400';
+    if (percentage >= 90) return 'text-accent-red';
+    if (percentage >= 75) return 'text-accent-yellow';
+    return 'text-accent-teal';
   };
 
   const handleUnassignClick = (player: PlayerDTO) => {
@@ -121,12 +121,11 @@ export default function GroupCard({
   };
 
   return (
-    <div 
+    <div
       className={`
-        relative bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6 
-        transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl
-        ${isSelectable ? 'cursor-pointer' : ''}
-        ${isSelected ? 'ring-2 ring-cyan-400 bg-white/20' : ''}
+        card-base p-6 relative
+        ${isSelectable ? 'card-interactive' : 'card-hover'}
+        ${isSelected ? 'card-selected' : ''}
         ${group.isActive ? '' : 'opacity-60'}
       `}
       onMouseEnter={() => setIsHovered(true)}
@@ -137,18 +136,18 @@ export default function GroupCard({
       <div className="absolute top-4 right-4">
         <div className={`
           w-3 h-3 rounded-full 
-          ${group.isActive ? 'bg-green-400' : 'bg-gray-400'}
+          ${group.isActive ? 'bg-accent-teal' : 'bg-disabled'}
         `} />
       </div>
 
       {/* Group Header */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-xl font-semibold text-white">
+          <h3 className="text-xl font-semibold text-text-primary">
             {group.name}
           </h3>
           {group.isFull && (
-            <span className="px-2 py-1 bg-red-500/20 border border-red-500/30 rounded-full text-xs text-red-300">
+            <span className="badge-error">
               Full
             </span>
           )}
@@ -165,13 +164,13 @@ export default function GroupCard({
 
       {/* Age Group Info */}
       <div className="mb-4">
-        <div className="flex items-center text-blue-200 mb-2">
+        <div className="flex items-center text-primary mb-2">
           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
           </svg>
           <span className="text-sm font-medium">{ageGroupMeta.displayName}</span>
         </div>
-        <p className="text-sm text-blue-300">
+        <p className="text-sm text-primary">
           Ages {ageGroupMeta.minAge}-{ageGroupMeta.maxAge} years
         </p>
       </div>
@@ -179,31 +178,31 @@ export default function GroupCard({
       {/* Capacity Info */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-blue-200">Capacity</span>
+          <span className="text-sm text-primary">Capacity</span>
           <span className={`text-sm font-medium ${getCapacityColor(utilizationPercentage)}`}>
             {group.currentPlayerCount}/{group.capacity} ({utilizationPercentage}%)
           </span>
         </div>
         
         {/* Progress Bar */}
-        <div className="w-full bg-white/10 rounded-full h-2">
+        <div className="w-full bg-secondary-50 rounded-full h-2">
           <div 
             className={`h-2 rounded-full transition-all duration-300 ${
-              utilizationPercentage >= 90 ? 'bg-red-400' : 
-              utilizationPercentage >= 75 ? 'bg-yellow-400' : 'bg-green-400'
+              utilizationPercentage >= 90 ? 'bg-accent-red' : 
+              utilizationPercentage >= 75 ? 'bg-accent-yellow' : 'bg-accent-teal'
             }`}
             style={{ width: `${utilizationPercentage}%` }}
           />
         </div>
         
-        <p className="text-xs text-blue-300 mt-1">
+        <p className="text-xs text-primary mt-1">
           {group.availableSpots} spots available
         </p>
       </div>
 
       {/* Coach Info */}
       <div className="mb-4">
-        <div className="flex items-center justify-between text-blue-200 mb-1">
+        <div className="flex items-center justify-between text-primary mb-1">
           <div className="flex items-center">
             <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 2a4 4 0 100 8 4 4 0 000-8zM8 14a6 6 0 00-6 6 2 2 0 002 2h12a2 2 0 002-2 6 6 0 00-6-6H8z" clipRule="evenodd" />
@@ -216,7 +215,7 @@ export default function GroupCard({
                 e.stopPropagation();
                 onRemoveCoach(group.id);
               }}
-              className="text-xs px-2 py-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded text-red-300 transition-colors"
+              className="btn-destructive btn-xs"
               title="Remove Coach"
             >
               Remove
@@ -224,19 +223,19 @@ export default function GroupCard({
           )}
         </div>
         {group.coach ? (
-          <p className="text-sm text-white">
+          <p className="text-sm text-text-primary">
             {group.coach.firstName} {group.coach.lastName}
           </p>
         ) : (
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-400 italic">No coach assigned</p>
+            <p className="text-sm text-text-secondary italic">No coach assigned</p>
             {showActions && onAssignCoach && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onAssignCoach(group.id);
                 }}
-                className="text-xs px-2 py-1 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded text-purple-200 transition-colors"
+                className="btn-secondary btn-xs"
               >
                 Assign Coach
               </button>
@@ -248,19 +247,19 @@ export default function GroupCard({
       {/* Zone Info */}
       {group.zone && (
         <div className="mb-4">
-          <div className="flex items-center text-blue-200 mb-1">
+          <div className="flex items-center text-primary mb-1">
             <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
             </svg>
             <span className="text-sm font-medium">Zone</span>
           </div>
-          <p className="text-sm text-white">{group.zone}</p>
+          <p className="text-sm text-text-primary">{group.zone}</p>
         </div>
       )}
 
       {/* Player Management Section */}
       <div className="mb-4">
-        <div className="flex items-center justify-between text-blue-200 mb-2">
+        <div className="flex items-center justify-between text-primary mb-2">
           <div className="flex items-center">
             <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
@@ -278,13 +277,13 @@ export default function GroupCard({
                   console.error('onAssignPlayer is not defined');
                 }
               }}
-              className="text-xs px-2 py-1 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded text-green-200 transition-colors"
+              className="btn-success btn-xs"
             >
               Add Player
             </button>
           )}
         </div>
-        <p className="text-sm text-white mb-2">
+        <p className="text-sm text-text-primary mb-2">
           {group.currentPlayerCount} / {group.capacity} players
         </p>
         
@@ -292,8 +291,8 @@ export default function GroupCard({
         {group.players && group.players.length > 0 && (
           <div className="space-y-1 max-h-32 overflow-y-auto">
             {group.players.map((player) => (
-              <div key={player.id} className="flex items-center justify-between bg-white/5 rounded px-2 py-1">
-                <span className="text-xs text-white">
+              <div key={player.id} className="flex items-center justify-between bg-secondary-50 rounded px-2 py-1">
+                <span className="text-xs text-text-primary">
                   {player.firstName} {player.lastName}
                 </span>
                 {showActions && (onUnassignPlayer || onReassignPlayer) && (
@@ -304,7 +303,7 @@ export default function GroupCard({
                           e.stopPropagation();
                           handleReassignClick(player);
                         }}
-                        className="text-xs px-1 py-0.5 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded text-blue-300 transition-colors"
+                        className="btn-outline btn-xs"
                         title={`Reassign ${player.firstName} ${player.lastName} to another group`}
                       >
                         ↗
@@ -316,7 +315,7 @@ export default function GroupCard({
                           e.stopPropagation();
                           handleUnassignClick(player);
                         }}
-                        className="text-xs px-1 py-0.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded text-red-300 transition-colors"
+                        className="btn-destructive btn-xs"
                         title={`Remove ${player.firstName} ${player.lastName} from group`}
                       >
                         ×
@@ -330,7 +329,7 @@ export default function GroupCard({
         )}
         
         {group.players && group.players.length === 0 && (
-          <p className="text-xs text-gray-400 italic">No players assigned</p>
+          <p className="text-xs text-text-secondary italic">No players assigned</p>
         )}
       </div>
 
@@ -353,8 +352,8 @@ export default function GroupCard({
               }}
               className={`px-3 py-2 border rounded-lg text-sm font-medium transition-colors duration-200 ${
                 group.isActive 
-                  ? 'bg-red-500/20 hover:bg-red-500/30 border-red-500/30 text-red-200'
-                  : 'bg-green-500/20 hover:bg-green-500/30 border-green-500/30 text-green-200'
+                  ? 'bg-accent-red/20 hover:bg-accent-red/30 border-accent-red/30 text-accent-red'
+                  : 'bg-accent-teal/20 hover:bg-accent-teal/30 border-accent-teal/30 text-accent-teal'
               }`}
               title={group.isActive ? "Deactivate Group" : "Activate Group"}
             >
@@ -368,7 +367,7 @@ export default function GroupCard({
                 e.stopPropagation();
                 onViewDetails(group.id);
               }}
-              className="flex-1 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-blue-200 text-sm font-medium transition-colors duration-200"
+              className="btn-outline btn-sm flex-1"
             >
               View Details
             </button>
@@ -380,7 +379,7 @@ export default function GroupCard({
                 e.stopPropagation();
                 onEdit(group.id);
               }}
-              className="px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white text-sm font-medium transition-colors duration-200"
+              className="btn-secondary btn-sm"
               title="Edit Group"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -395,7 +394,7 @@ export default function GroupCard({
                 e.stopPropagation();
                 onDelete(group.id);
               }}
-              className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-200 text-sm font-medium transition-colors duration-200"
+              className="btn-destructive btn-sm"
               title="Delete Group"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -409,8 +408,8 @@ export default function GroupCard({
 
       {/* Description */}
       {group.description && (
-        <div className="mt-4 pt-4 border-t border-white/10">
-          <p className="text-sm text-blue-300">{group.description}</p>
+        <div className="mt-4 pt-4 border-t border-border">
+          <p className="text-sm text-primary">{group.description}</p>
         </div>
       )}
 

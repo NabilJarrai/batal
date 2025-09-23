@@ -64,7 +64,7 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
     ctx.clearRect(0, 0, width, height);
 
     // Draw grid lines
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
     ctx.lineWidth = 1;
 
     // Horizontal grid lines
@@ -84,7 +84,7 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
     }
 
     // Draw axes
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
     ctx.lineWidth = 2;
     
     // Y-axis

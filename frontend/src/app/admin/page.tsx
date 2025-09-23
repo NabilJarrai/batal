@@ -485,6 +485,15 @@ export default function AdminDashboard() {
     });
   };
 
+  // Helper function to get coach assignment info
+  const getCoachAssignmentInfo = (userId: number) => {
+    const assignedGroups = groups.filter(group => group.coach?.id === userId);
+    return {
+      assignedGroupsCount: assignedGroups.length,
+      assignedGroupNames: assignedGroups.map(group => group.name)
+    };
+  };
+
   const confirmDelete = async () => {
     if (!deleteModal.id || !deleteModal.type) return;
     
@@ -952,17 +961,22 @@ export default function AdminDashboard() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {users.map((user) => (
-                  <UserCard
-                    key={user.id}
-                    user={user}
-                    onEdit={handleEditUser}
-                    onDelete={handleDeleteUser}
-                    onDeactivate={(userId) => handleUserStatusUpdate(userId, false, 'Deactivated by admin')}
-                    onActivate={(userId) => handleUserStatusUpdate(userId, true)}
-                    showActions={true}
-                  />
-                ))}
+                {users.map((user) => {
+                  const coachInfo = getCoachAssignmentInfo(user.id);
+                  return (
+                    <UserCard
+                      key={user.id}
+                      user={user}
+                      onEdit={handleEditUser}
+                      onDelete={handleDeleteUser}
+                      onDeactivate={(userId) => handleUserStatusUpdate(userId, false, 'Deactivated by admin')}
+                      onActivate={(userId) => handleUserStatusUpdate(userId, true)}
+                      showActions={true}
+                      assignedGroupsCount={coachInfo.assignedGroupsCount}
+                      assignedGroupNames={coachInfo.assignedGroupNames}
+                    />
+                  );
+                })}
               </div>
 
               {/* Pagination Controls */}

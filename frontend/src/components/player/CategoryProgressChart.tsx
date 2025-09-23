@@ -85,14 +85,14 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
 
     // Categories are already defined above, but keep this for the drawing logic
 
-    // Color palette for categories
+    // Color palette for categories - clearer, brighter colors
     const colors = [
-      "#3B82F6", // Blue - Athletic
-      "#10B981", // Green - Technical  
-      "#F59E0B", // Yellow - Mentality
-      "#EF4444", // Red - Personality
-      "#8B5CF6", // Purple - Additional
-      "#06B6D4", // Cyan - Additional
+      "#60A5FA", // Bright Blue - Athletic
+      "#34D399", // Bright Green - Technical
+      "#FBBF24", // Bright Yellow - Mentality
+      "#F87171", // Bright Red - Personality
+      "#A78BFA", // Bright Purple - Additional
+      "#22D3EE", // Bright Cyan - Additional
     ];
 
     const categoryColors: { [key: string]: string } = {};
@@ -111,7 +111,7 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
     ctx.clearRect(0, 0, width, height);
 
     // Draw grid lines
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
     ctx.lineWidth = 1;
 
     // Horizontal grid lines
@@ -131,7 +131,7 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
     }
 
     // Draw axes
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
     ctx.lineWidth = 2;
     
     // Y-axis
@@ -219,8 +219,8 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
 
   if (progressData.length === 0) {
     return (
-      <div className="bg-white/10 backdrop-blur-lg rounded-xl p-8 border border-white/20 text-center">
-        <p className="text-blue-200">
+      <div className="card-base p-8 text-center">
+        <p className="text-text-secondary">
           No progress data available. Complete more assessments to see your progress over time.
         </p>
       </div>
@@ -230,14 +230,14 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
   // Use the allCategories already defined above for legend
 
   const colors = [
-    "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4"
+    "#60A5FA", "#34D399", "#FBBF24", "#F87171", "#A78BFA", "#22D3EE"
   ];
 
   return (
-    <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+    <div className="card-base p-6">
       <div className="mb-6">
-        <h3 className="text-xl font-bold text-white mb-2">Progress by Category</h3>
-        <p className="text-blue-200 text-sm">
+        <h3 className="text-xl font-bold text-text-primary mb-2">Progress by Category</h3>
+        <p className="text-text-secondary text-sm">
           Track your improvement across all skill categories over time
         </p>
       </div>
@@ -252,7 +252,7 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
               className="w-4 h-4 rounded-full"
               style={{ backgroundColor: colors[index % colors.length] }}
             />
-            <span className="text-white text-sm font-medium">{category}</span>
+            <span className="text-text-primary text-sm font-medium">{category}</span>
           </div>
         ))}
       </div>
@@ -273,19 +273,19 @@ export function CategoryProgressChart({ assessments }: CategoryProgressChartProp
             const change = current - previous;
 
             return (
-              <div key={category} className="bg-white/5 rounded-lg p-4">
+              <div key={category} className="bg-secondary-50 rounded-lg p-4 border border-border">
                 <div className="flex items-center gap-2 mb-2">
-                  <div 
+                  <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: colors[index % colors.length] }}
                   />
-                  <span className="text-blue-200 text-sm font-medium">{category}</span>
+                  <span className="text-text-primary text-sm font-medium">{category}</span>
                 </div>
-                <div className="text-white font-bold text-lg">
+                <div className="text-text-primary font-bold text-lg">
                   {current.toFixed(1)}/10
                 </div>
                 {change !== 0 && (
-                  <div className={`text-sm ${change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  <div className={`text-sm ${change >= 0 ? 'text-accent-teal' : 'text-accent-red'}`}>
                     {change >= 0 ? '↑' : '↓'} {Math.abs(change).toFixed(1)}
                   </div>
                 )}

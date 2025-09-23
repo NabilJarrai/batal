@@ -66,7 +66,7 @@ export default function PlayerDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
       </div>
     );
   }
@@ -74,47 +74,47 @@ export default function PlayerDashboard() {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-        <h1 className="text-3xl font-bold text-white mb-2">
+      <div className="bg-background rounded-xl p-6 border border-border shadow-sm">
+        <h1 className="text-3xl font-bold text-text-primary mb-2">
           Welcome back, {profile?.firstName}!
         </h1>
-        <p className="text-blue-200">
+        <p className="text-text-secondary">
           Track your progress and view your performance assessments
         </p>
       </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
+        <div className="bg-background rounded-xl p-4 border border-border shadow-sm">
           <div className="flex items-center gap-3">
-            <UserCircleIcon className="h-8 w-8 text-blue-400" />
+            <UserCircleIcon className="h-8 w-8 text-primary" />
             <div>
-              <p className="text-sm text-blue-200">Level</p>
-              <p className="text-xl font-bold text-white">
+              <p className="text-sm text-text-secondary">Level</p>
+              <p className="text-xl font-bold text-text-primary">
                 {profile?.level || "N/A"}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
+        <div className="bg-background rounded-xl p-4 border border-border shadow-sm">
           <div className="flex items-center gap-3">
-            <TrophyIcon className="h-8 w-8 text-yellow-400" />
+            <TrophyIcon className="h-8 w-8 text-accent-yellow" />
             <div>
-              <p className="text-sm text-blue-200">Group</p>
-              <p className="text-xl font-bold text-white">
+              <p className="text-sm text-text-secondary">Group</p>
+              <p className="text-xl font-bold text-text-primary">
                 {profile?.groupName || "Unassigned"}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
+        <div className="bg-background rounded-xl p-4 border border-border shadow-sm">
           <div className="flex items-center gap-3">
-            <CalendarIcon className="h-8 w-8 text-green-400" />
+            <CalendarIcon className="h-8 w-8 text-accent-teal" />
             <div>
-              <p className="text-sm text-blue-200">Member Since</p>
-              <p className="text-xl font-bold text-white">
+              <p className="text-sm text-text-secondary">Member Since</p>
+              <p className="text-xl font-bold text-text-primary">
                 {profile?.joiningDate
                   ? new Date(profile.joiningDate).toLocaleDateString()
                   : "N/A"}
@@ -123,12 +123,12 @@ export default function PlayerDashboard() {
           </div>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
+        <div className="bg-background rounded-xl p-4 border border-border shadow-sm">
           <div className="flex items-center gap-3">
-            <ChartBarIcon className="h-8 w-8 text-purple-400" />
+            <ChartBarIcon className="h-8 w-8 text-secondary" />
             <div>
-              <p className="text-sm text-blue-200">Assessments</p>
-              <p className="text-xl font-bold text-white">
+              <p className="text-sm text-text-secondary">Assessments</p>
+              <p className="text-xl font-bold text-text-primary">
                 {assessments.length}
               </p>
             </div>
@@ -138,14 +138,14 @@ export default function PlayerDashboard() {
 
       {/* Latest Assessment */}
       {latestAssessment && (
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+        <div className="bg-background rounded-xl p-6 border border-border shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="text-2xl font-bold text-text-primary">
               Latest Assessment
             </h2>
             <Link
               href={`/player/assessments/${latestAssessment.id}`}
-              className="text-blue-300 hover:text-white transition-colors"
+              className="text-primary hover:text-primary-hover transition-colors"
             >
               View Details →
             </Link>
@@ -156,17 +156,17 @@ export default function PlayerDashboard() {
 
       {/* No Assessment Message */}
       {!latestAssessment && (
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-8 border border-white/20 text-center">
-          <ChartBarIcon className="h-16 w-16 text-blue-400 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">
+        <div className="bg-background rounded-xl p-8 border border-border shadow-sm text-center">
+          <ChartBarIcon className="h-16 w-16 text-primary mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-text-primary mb-2">
             No Assessments Yet
           </h3>
-          <p className="text-blue-200 mb-4">
+          <p className="text-text-secondary mb-4">
             Your coach will evaluate your performance regularly. Check back soon!
           </p>
           <Link
             href="/player/assessments"
-            className="inline-block px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+            className="inline-block px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors"
           >
             View All Assessments
           </Link>

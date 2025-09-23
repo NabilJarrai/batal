@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/hooks";
-import { loginUser, clearError } from "@/store/authSlice";
+import { loginUser, clearError, setFirstLoginCompleted } from "@/store/authSlice";
+import FirstLoginPasswordForm from "./FirstLoginPasswordForm";
 
 // Enhanced error interface matching API error structure
 interface EnhancedError extends Error {
@@ -14,7 +15,7 @@ interface EnhancedError extends Error {
 
 export default function LoginFormClient() {
   const router = useRouter();
-  const { isAuthenticated, isLoading, error, user, dispatch } = useAuth();
+  const { isAuthenticated, isLoading, error, user, isFirstLogin, dispatch } = useAuth();
   
   const [formData, setFormData] = useState({
     email: "",
@@ -31,9 +32,9 @@ export default function LoginFormClient() {
     suggestion?: string;
   }>({});
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated and not first login
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user && !isFirstLogin) {
       // Redirect based on role
       if (user.roles?.includes('ADMIN')) {
         router.push('/admin');
@@ -46,7 +47,7 @@ export default function LoginFormClient() {
         router.push('/player/dashboard');
       }
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, isFirstLogin, router]);
 
   // Clear errors when form changes
   useEffect(() => {
@@ -136,63 +137,71 @@ export default function LoginFormClient() {
     }
   };
 
+  const handlePasswordChanged = () => {
+    dispatch(setFirstLoginCompleted());
+    // Will trigger the redirect useEffect
+  };
+
+  // Show first login password form if user is authenticated but needs to change password
+  if (isAuthenticated && isFirstLogin) {
+    return <FirstLoginPasswordForm onPasswordChanged={handlePasswordChanged} />;
+  }
+
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Enhanced Error Message */}
         {error && (
-          <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 backdrop-blur-sm">
-            <div className="flex items-start">
-              {/* Error Icon - different based on error type */}
-              {errorDetails.type === 'NETWORK' ? (
-                <svg className="h-5 w-5 text-red-300 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-12.728 12.728m0-12.728l12.728 12.728" />
-                </svg>
-              ) : errorDetails.type === 'SERVER' ? (
-                <svg className="h-5 w-5 text-red-300 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              ) : (
-                <svg className="h-5 w-5 text-red-300 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-              )}
+          <div className="alert-error">
+            {/* Error Icon - different based on error type */}
+            {errorDetails.type === 'NETWORK' ? (
+              <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-12.728 12.728m0-12.728l12.728 12.728" />
+              </svg>
+            ) : errorDetails.type === 'SERVER' ? (
+              <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            )}
 
-              <div className="flex-1">
-                <p className="text-sm font-medium text-red-200 mb-1">Sign In Failed</p>
-                <p className="text-xs text-red-300">{error}</p>
-                {errorDetails.suggestion && (
-                  <p className="text-xs text-red-400 mt-2 italic">{errorDetails.suggestion}</p>
-                )}
-                {errorDetails.type === 'AUTHENTICATION' && (
-                  <div className="mt-3 flex items-center space-x-4">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        dispatch(clearError());
-                        setErrorDetails({});
-                      }}
-                      className="text-xs text-red-200 hover:text-red-100 underline"
-                    >
-                      Try Again
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => alert('Forgot password functionality coming soon!')}
-                      className="text-xs text-red-200 hover:text-red-100 underline"
-                    >
-                      Forgot Password?
-                    </button>
-                  </div>
-                )}
-              </div>
+            <div className="flex-1">
+              <p className="text-body font-medium mb-1">Sign In Failed</p>
+              <p className="text-body-sm">{error}</p>
+              {errorDetails.suggestion && (
+                <p className="text-body-sm mt-2 italic">{errorDetails.suggestion}</p>
+              )}
+              {errorDetails.type === 'AUTHENTICATION' && (
+                <div className="mt-3 flex items-center space-x-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      dispatch(clearError());
+                      setErrorDetails({});
+                    }}
+                    className="btn-ghost btn-xs"
+                  >
+                    Try Again
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => alert('Forgot password functionality coming soon!')}
+                    className="btn-ghost btn-xs"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {/* Email Field */}
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-blue-200 mb-2">
+          <label htmlFor="email" className="text-caption mb-2">
             Email Address
           </label>
           <input
@@ -201,19 +210,17 @@ export default function LoginFormClient() {
             autoComplete="email"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className={`appearance-none relative block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border ${
-              validationErrors.email ? 'border-red-500/50' : 'border-white/20'
-            } placeholder-blue-300 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200`}
+            className={validationErrors.email ? 'input-error' : 'input-base'}
             placeholder="Enter your email"
           />
           {validationErrors.email && (
-            <p className="mt-1 text-xs text-red-300">{validationErrors.email}</p>
+            <p className="mt-1 text-body-sm text-accent-red">{validationErrors.email}</p>
           )}
         </div>
 
         {/* Password Field */}
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-blue-200 mb-2">
+          <label htmlFor="password" className="text-caption mb-2">
             Password
           </label>
           <input
@@ -222,19 +229,17 @@ export default function LoginFormClient() {
             autoComplete="current-password"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            className={`appearance-none relative block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border ${
-              validationErrors.password ? 'border-red-500/50' : 'border-white/20'
-            } placeholder-blue-300 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200`}
+            className={validationErrors.password ? 'input-error' : 'input-base'}
             placeholder="Enter your password"
           />
           {validationErrors.password && (
-            <p className="mt-1 text-xs text-red-300">{validationErrors.password}</p>
+            <p className="mt-1 text-body-sm text-accent-red">{validationErrors.password}</p>
           )}
           <div className="mt-2 flex justify-end">
-            <button 
+            <button
               type="button"
               onClick={() => alert('Forgot password functionality coming soon!')}
-              className="text-xs text-cyan-300 hover:text-cyan-200 cursor-pointer"
+              className="btn-ghost btn-xs"
             >
               Forgot password?
             </button>
@@ -247,9 +252,9 @@ export default function LoginFormClient() {
             <input
               id="remember-me"
               type="checkbox"
-              className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-white/30 rounded bg-white/10 backdrop-blur-sm"
+              className="h-4 w-4 text-primary focus:ring-primary border-border rounded bg-background"
             />
-            <label htmlFor="remember-me" className="ml-2 block text-sm text-blue-200">
+            <label htmlFor="remember-me" className="ml-2 block text-sm text-text-primary">
               Remember me for 30 days
             </label>
           </div>
@@ -258,25 +263,22 @@ export default function LoginFormClient() {
           <button
             type="submit"
             disabled={isLoading || Boolean(error && errorDetails.canRetry === false)}
-            className="group relative w-full flex justify-center py-3 px-4 border border-transparent rounded-xl text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="btn-primary btn-lg w-full"
           >
             {isLoading ? (
               <div className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <div className="loading-spinner mr-3"></div>
                 Signing in...
               </div>
             ) : (
               <>
-                <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                <span className="mr-2">
                   {error && !errorDetails.canRetry ? (
-                    <svg className="h-5 w-5 text-blue-300 group-hover:text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-12.728 12.728m0-12.728l12.728 12.728" />
                     </svg>
                   ) : (
-                    <svg className="h-5 w-5 text-blue-300 group-hover:text-blue-200" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                     </svg>
                   )}
@@ -289,13 +291,13 @@ export default function LoginFormClient() {
       </form>
 
       {/* Demo Credentials */}
-      <div className="mt-6 pt-6 border-t border-white/10">
-        <p className="text-xs text-blue-200 text-center mb-3">Quick demo access (for testing):</p>
+      <div className="mt-6 pt-6 divider">
+        <p className="text-body-sm text-center mb-3">Quick demo access (for testing):</p>
         <div className="grid grid-cols-3 gap-2">
           <button
             type="button"
             onClick={() => fillDemoCredentials('admin')}
-            className="px-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-xs text-purple-200 transition-all"
+            className="btn-outline btn-sm flex flex-col items-center"
           >
             <div className="font-medium">Admin</div>
             <div className="text-[10px] opacity-75">Full access</div>
@@ -303,7 +305,7 @@ export default function LoginFormClient() {
           <button
             type="button"
             onClick={() => fillDemoCredentials('manager')}
-            className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-xs text-red-200 transition-all"
+            className="btn-outline btn-sm flex flex-col items-center"
           >
             <div className="font-medium">Manager</div>
             <div className="text-[10px] opacity-75">Analytics</div>
@@ -311,7 +313,7 @@ export default function LoginFormClient() {
           <button
             type="button"
             onClick={() => fillDemoCredentials('coach')}
-            className="px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-xs text-blue-200 transition-all"
+            className="btn-outline btn-sm flex flex-col items-center"
           >
             <div className="font-medium">Coach</div>
             <div className="text-[10px] opacity-75">Groups</div>

@@ -393,13 +393,27 @@ public class AssessmentService {
     }
 
     private void validateCoachCanAssessPlayer(User coach, User player) {
-        if (!hasRole(coach, "ADMIN") && !hasRole(coach, "MANAGER")) {
-            // For coaches, ensure they can only assess players in their groups
-            if (hasRole(coach, "COACH")) {
-                if (player.getGroup() == null || !coach.equals(player.getGroup().getCoach())) {
-                    throw new SecurityException("Coach can only assess players in their assigned groups");
-                }
+        if (hasRole(coach, "ADMIN") || hasRole(coach, "MANAGER")) {
+            return; // Admins and managers can assess any player
+        }
+
+        if (hasRole(coach, "COACH")) {
+            // Check if player has a group assigned
+            if (player.getGroup() == null) {
+                throw new IllegalStateException("Cannot assess player: Player is not assigned to any group. Please assign the player to a group first.");
             }
+
+            // Check if group has a coach assigned
+            if (player.getGroup().getCoach() == null) {
+                throw new IllegalStateException("Cannot assess player: Player's group has no assigned coach. Please assign a coach to the group first.");
+            }
+
+            // Check if the current coach is authorized to assess this player
+            if (!coach.equals(player.getGroup().getCoach())) {
+                throw new SecurityException("Coach can only assess players in their assigned groups");
+            }
+        } else {
+            throw new SecurityException("User does not have permission to create assessments");
         }
     }
 
@@ -407,16 +421,23 @@ public class AssessmentService {
         if (hasRole(user, "ADMIN") || hasRole(user, "MANAGER")) {
             return; // Admins and managers can view all assessments
         }
-        
+
         if (hasRole(user, "COACH")) {
-            // Coaches can view assessments for players in their groups or assessments they created
-            if (user.equals(assessment.getAssessor()) || 
-                (assessment.getPlayer().getUser().getGroup() != null && 
-                 user.equals(assessment.getPlayer().getUser().getGroup().getCoach()))) {
+            // First check: Coach can view their own assessments regardless of group assignment
+            if (user.equals(assessment.getAssessor())) {
+                return;
+            }
+
+            // Second check: Coach can view assessments for players in their groups (if properly assigned)
+            if (assessment.getPlayer() != null &&
+                assessment.getPlayer().getUser() != null &&
+                assessment.getPlayer().getUser().getGroup() != null &&
+                assessment.getPlayer().getUser().getGroup().getCoach() != null &&
+                user.equals(assessment.getPlayer().getUser().getGroup().getCoach())) {
                 return;
             }
         }
-        
+
         throw new SecurityException("Access denied to view this assessment");
     }
 
@@ -438,17 +459,23 @@ public class AssessmentService {
         if (hasRole(user, "ADMIN") || hasRole(user, "MANAGER")) {
             return; // Admins and managers can edit all assessments
         }
-        
+
         if (hasRole(user, "COACH")) {
-            // Coaches can only edit their own assessments for players in their groups
-            if (user.getId().equals(assessment.getAssessor().getId()) && 
-                assessment.getPlayer().getUser().getGroup() != null && 
+            // First check: Coach can edit their own assessments regardless of group assignment
+            if (user.getId().equals(assessment.getAssessor().getId())) {
+                return;
+            }
+
+            // Second check: Coach can edit assessments for players in their groups (if properly assigned)
+            if (assessment.getPlayer() != null &&
+                assessment.getPlayer().getUser() != null &&
+                assessment.getPlayer().getUser().getGroup() != null &&
                 assessment.getPlayer().getUser().getGroup().getCoach() != null &&
                 user.getId().equals(assessment.getPlayer().getUser().getGroup().getCoach().getId())) {
                 return;
             }
         }
-        
+
         throw new SecurityException("Access denied to edit this assessment");
     }
 

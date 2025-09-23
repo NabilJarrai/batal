@@ -190,8 +190,12 @@ class SkillsAPI {
   }
 
   async getSkillsForAssessment(playerLevel: SkillLevel): Promise<Skill[]> {
-    const result = await this.getAll({ level: playerLevel, activeOnly: true });
-    return result.content;
+    const response = await fetch(`${API_BASE}/skills/list?level=${playerLevel}&activeOnly=true`, {
+      method: 'GET',
+      headers: await this.getAuthHeaders(),
+    });
+
+    return this.handleResponse<Skill[]>(response);
   }
 }
 

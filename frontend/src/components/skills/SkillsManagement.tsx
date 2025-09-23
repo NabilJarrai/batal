@@ -177,8 +177,8 @@ export default function SkillsManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white">Skills Management</h2>
-          <p className="text-blue-200 mt-1">
+          <h2 className="text-2xl font-bold text-text-primary">Skills Management</h2>
+          <p className="text-text-secondary mt-1">
             Manage skill definitions for player assessments ({skills.length} total)
           </p>
         </div>
@@ -186,7 +186,7 @@ export default function SkillsManagement() {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={() => setModalState('create')}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="btn-success btn-md flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -196,7 +196,7 @@ export default function SkillsManagement() {
           
           <button
             onClick={() => setModalState('bulk')}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="btn-primary btn-md flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
@@ -207,7 +207,7 @@ export default function SkillsManagement() {
           {!hasSkills && (
             <button
               onClick={() => setModalState('initialize')}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+              className="btn-outline btn-md flex items-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -219,7 +219,7 @@ export default function SkillsManagement() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4">
+      <div className="bg-background border border-border rounded-xl p-4">
         <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
           <div className="flex-1">
             <div className="relative">
@@ -228,9 +228,9 @@ export default function SkillsManagement() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search skills by name or description..."
-                className="w-full pl-10 pr-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                className="input-base pl-10"
               />
-              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -242,12 +242,12 @@ export default function SkillsManagement() {
                 type="checkbox"
                 checked={showInactive}
                 onChange={(e) => setShowInactive(e.target.checked)}
-                className="w-4 h-4 text-cyan-600 bg-white/10 border-white/20 rounded focus:ring-cyan-500"
+                className="w-4 h-4 text-primary bg-secondary-50 border-border rounded focus:ring-primary"
               />
-              <span className="text-blue-200 text-sm">Show inactive skills</span>
+              <span className="text-text-secondary text-sm">Show inactive skills</span>
             </label>
 
-            <div className="text-blue-200 text-sm">
+            <div className="text-text-secondary text-sm">
               Showing {filteredSkills.length} of {skills.length} skills
             </div>
           </div>
@@ -267,16 +267,16 @@ export default function SkillsManagement() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white/10 rounded-xl p-4 animate-pulse">
+            <div key={i} className="bg-secondary-50 rounded-xl p-4 animate-pulse">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full"></div>
+                <div className="w-10 h-10 bg-secondary-100 rounded-full"></div>
                 <div className="flex-1">
-                  <div className="h-4 bg-white/20 rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-white/20 rounded w-1/2"></div>
+                  <div className="h-4 bg-secondary-100 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-secondary-100 rounded w-1/2"></div>
                 </div>
               </div>
-              <div className="h-12 bg-white/20 rounded mb-3"></div>
-              <div className="h-8 bg-white/20 rounded"></div>
+              <div className="h-12 bg-secondary-100 rounded mb-3"></div>
+              <div className="h-8 bg-secondary-100 rounded"></div>
             </div>
           ))}
         </div>
@@ -303,8 +303,8 @@ export default function SkillsManagement() {
                 disabled={currentPage === 0}
                 className={`p-2 rounded-lg transition-colors ${
                   currentPage === 0
-                    ? 'bg-white/5 text-gray-500 cursor-not-allowed'
-                    : 'bg-white/10 text-white hover:bg-white/20'
+                    ? 'bg-white/5 text-disabled cursor-not-allowed'
+                    : 'bg-secondary-50 text-text-primary hover:bg-secondary-100'
                 }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -322,17 +322,17 @@ export default function SkillsManagement() {
                         onClick={() => setCurrentPage(i)}
                         className={`px-3 py-1 rounded-lg transition-colors ${
                           i === currentPage
-                            ? 'bg-cyan-600 text-white'
-                            : 'bg-white/10 text-white hover:bg-white/20'
+                            ? 'bg-cyan-600 text-text-primary'
+                            : 'bg-secondary-50 text-text-primary hover:bg-secondary-100'
                         }`}
                       >
                         {i + 1}
                       </button>
                     );
                   } else if (i === 1 && currentPage > 2) {
-                    return <span key={i} className="px-2 text-gray-400">...</span>;
+                    return <span key={i} className="px-2 text-text-secondary">...</span>;
                   } else if (i === totalPages - 2 && currentPage < totalPages - 3) {
-                    return <span key={i} className="px-2 text-gray-400">...</span>;
+                    return <span key={i} className="px-2 text-text-secondary">...</span>;
                   }
                   return null;
                 })}
@@ -343,8 +343,8 @@ export default function SkillsManagement() {
                 disabled={currentPage === totalPages - 1}
                 className={`p-2 rounded-lg transition-colors ${
                   currentPage === totalPages - 1
-                    ? 'bg-white/5 text-gray-500 cursor-not-allowed'
-                    : 'bg-white/10 text-white hover:bg-white/20'
+                    ? 'bg-white/5 text-disabled cursor-not-allowed'
+                    : 'bg-secondary-50 text-text-primary hover:bg-secondary-100'
                 }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -352,7 +352,7 @@ export default function SkillsManagement() {
                 </svg>
               </button>
               
-              <span className="ml-4 text-blue-200 text-sm">
+              <span className="ml-4 text-text-secondary text-sm">
                 Page {currentPage + 1} of {totalPages} ({filteredSkills.length} skills)
               </span>
             </div>
@@ -360,17 +360,17 @@ export default function SkillsManagement() {
         </>
       ) : (
         <div className="text-center py-12">
-          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-8">
-            <svg className="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-background border border-border rounded-xl p-8">
+            <svg className="mx-auto h-16 w-16 text-text-secondary mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
             </svg>
-            <h3 className="text-xl font-semibold text-white mb-2">
+            <h3 className="text-xl font-semibold text-text-primary mb-2">
               {searchTerm || activeCategory !== 'ALL' || !showInactive 
                 ? 'No skills match your filters' 
                 : 'No skills found'
               }
             </h3>
-            <p className="text-gray-400 mb-6">
+            <p className="text-text-secondary mb-6">
               {!hasSkills 
                 ? 'Get started by initializing the default skills or creating your own.'
                 : 'Try adjusting your search or filter criteria.'
@@ -381,13 +381,13 @@ export default function SkillsManagement() {
                 <>
                   <button
                     onClick={() => setModalState('initialize')}
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+                    className="btn-outline btn-md"
                   >
                     Initialize Default Skills
                   </button>
                   <button
                     onClick={() => setModalState('create')}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+                    className="btn-success btn-md"
                   >
                     Create First Skill
                   </button>
@@ -399,7 +399,7 @@ export default function SkillsManagement() {
                     setActiveCategory('ALL');
                     setShowInactive(false);
                   }}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                  className="btn-primary btn-md"
                 >
                   Clear Filters
                 </button>
@@ -446,22 +446,22 @@ export default function SkillsManagement() {
 
       {modalState === 'initialize' && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6 max-w-md w-full">
-            <h3 className="text-xl font-semibold text-white mb-4">Initialize Default Skills</h3>
-            <p className="text-blue-200 mb-6">
+          <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-semibold text-text-primary mb-4">Initialize Default Skills</h3>
+            <p className="text-text-secondary mb-6">
               This will create 16 default skills across 4 categories (Athletic, Technical, Mentality, Personality) 
               for Development level players. You can modify them later.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
+                className="px-4 py-2 text-text-secondary hover:text-text-primary transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleInitializeDefaults}
-                className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+                className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-text-primary rounded-lg font-medium transition-colors"
               >
                 Initialize Skills
               </button>
