@@ -577,13 +577,49 @@ public class AssessmentService {
     }
 
     private void updateSkillScores(Assessment assessment, List<SkillRatingRequest> skillRatings) {
-        // Remove existing skill scores
-        List<SkillScore> existingScores = new ArrayList<>(assessment.getSkillScores());
-        assessment.getSkillScores().clear();
-        skillScoreRepository.deleteAll(existingScores);
-        
-        // Create new skill scores
-        createSkillScores(assessment, skillRatings);
+        // Create a map of existing skill scores by skill ID for efficient lookup
+        Map<Long, SkillScore> existingScoresBySkillId = assessment.getSkillScores().stream()
+                .collect(Collectors.toMap(ss -> ss.getSkill().getId(), ss -> ss));
+
+        // Create a set to track which skill scores we've processed
+        Set<Long> processedSkillIds = new HashSet<>();
+
+        // Update or create skill scores
+        for (SkillRatingRequest rating : skillRatings) {
+            Skill skill = skillRepository.findById(rating.getSkillId())
+                    .orElseThrow(() -> new EntityNotFoundException("Skill not found with ID: " + rating.getSkillId()));
+
+            processedSkillIds.add(skill.getId());
+
+            if (existingScoresBySkillId.containsKey(skill.getId())) {
+                // Update existing skill score
+                SkillScore existingScore = existingScoresBySkillId.get(skill.getId());
+                existingScore.setScore(rating.getScore());
+                existingScore.setNotes(rating.getNotes());
+            } else {
+                // Create new skill score
+                Integer previousScore = getPreviousSkillScore(assessment.getPlayer().getUser(), skill);
+
+                SkillScore skillScore = new SkillScore();
+                skillScore.setAssessment(assessment);
+                skillScore.setSkill(skill);
+                skillScore.setScore(rating.getScore());
+                skillScore.setNotes(rating.getNotes());
+                skillScore.setPreviousScore(previousScore);
+
+                assessment.addSkillScore(skillScore);
+            }
+        }
+
+        // Remove skill scores that are no longer in the request
+        List<SkillScore> scoresToRemove = assessment.getSkillScores().stream()
+                .filter(ss -> !processedSkillIds.contains(ss.getSkill().getId()))
+                .collect(Collectors.toList());
+
+        for (SkillScore scoreToRemove : scoresToRemove) {
+            assessment.getSkillScores().remove(scoreToRemove);
+            skillScoreRepository.delete(scoreToRemove);
+        }
     }
 
     private Integer getPreviousSkillScore(User player, Skill skill) {
