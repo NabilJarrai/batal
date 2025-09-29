@@ -5,6 +5,19 @@ module.exports = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    'bg-gradient-to-br',
+    'from-purple-700',
+    'to-purple-900',
+    'from-purple-500',
+    'to-violet-600',
+    'from-rose-600',
+    'to-pink-700',
+    'from-blue-500',
+    'to-cyan-600',
+    'from-green-500',
+    'to-emerald-600'
+  ],
   theme: {
     extend: {
       colors: {

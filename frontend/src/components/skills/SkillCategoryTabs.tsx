@@ -42,7 +42,7 @@ export default function SkillCategoryTabs({
 
   return (
     <div className="card-base p-2">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 relative">
         {allTabs.map((tab) => {
           const isActive = activeCategory === tab.key;
           const totalCount = getCategoryCount(tab.key);
@@ -52,23 +52,31 @@ export default function SkillCategoryTabs({
             <button
               key={tab.key}
               onClick={() => onCategoryChange(tab.key)}
+              title={tab.description} // Add tooltip
               className={`
                 relative flex items-center gap-3 px-5 py-3 rounded-xl text-sm font-semibold
-                transition-all duration-300 transform hover:scale-105 group overflow-hidden
+                transition-all duration-300 transform hover:scale-105 group
+                hover:z-20 focus:z-20 focus:outline-none focus:ring-2 focus:ring-primary/50
+                active:scale-100
                 ${isActive
-                  ? `${tab.color} text-white shadow-lg scale-105 ring-2 ring-primary/30`
-                  : 'text-text-primary hover:text-white hover:bg-primary hover:shadow-md bg-background border border-border'
+                  ? `${tab.color} text-white shadow-xl scale-105 border-2 border-white/40`
+                  : 'text-text-primary hover:text-white hover:shadow-lg bg-background border border-border hover:border-transparent hover:bg-gradient-to-br hover:from-primary hover:to-primary-dark'
                 }
               `}
             >
-              {/* Icon */}
+              {/* Icon with enhanced hover effect */}
               <div className="relative">
-                <span className="text-xl transition-transform duration-300 group-hover:scale-110">
+                <span className="text-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                   {tab.icon}
                 </span>
                 {isActive && (
                   <div className="absolute -top-1 -right-1 w-2 h-2 bg-white/60 rounded-full animate-pulse" />
                 )}
+                {/* Hover description popup - Enhanced contrast */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-white text-gray-800 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-50 shadow-2xl border border-gray-300">
+                  {tab.description}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-white"></div>
+                </div>
               </div>
 
               {/* Label and Counts */}
@@ -102,21 +110,19 @@ export default function SkillCategoryTabs({
                 </div>
               </div>
 
-              {/* Badge for count */}
-              {totalCount > 0 && (
-                <div className={`
-                  ml-auto px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300
-                  flex items-center gap-1.5 shadow-lg
-                  ${isActive
-                    ? 'bg-white/25 text-white border border-white/30'
-                    : 'bg-secondary text-text-primary border border-border'
-                  }
-                  group-hover:scale-105
-                `}>
-                  <span className="text-xs">{(tab as any).emoji || tab.icon}</span>
-                  <span>{totalCount}</span>
-                </div>
-              )}
+              {/* Badge for count - Always show */}
+              <div className={`
+                ml-auto px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300
+                flex items-center gap-1.5 shadow-lg
+                ${isActive
+                  ? 'bg-black/20 text-white border border-white/30'
+                  : 'bg-secondary text-text-primary border border-border'
+                }
+                group-hover:scale-105
+              `}>
+                <span className="text-xs">{(tab as any).emoji || tab.icon}</span>
+                <span>{totalCount}</span>
+              </div>
             </button>
           );
         })}

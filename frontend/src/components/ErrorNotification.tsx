@@ -38,7 +38,7 @@ export default function ErrorNotification({
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <CheckCircleIcon className="h-6 w-6 text-green-400" />;
+        return <CheckCircleIcon className="h-6 w-6 text-green-600" />;
       case 'warning':
         return <ExclamationTriangleIcon className="h-6 w-6 text-yellow-400" />;
       case 'info':
@@ -53,9 +53,9 @@ export default function ErrorNotification({
     switch (type) {
       case 'success':
         return {
-          bg: 'bg-green-500/10',
-          border: 'border-green-500/20',
-          text: 'text-green-200'
+          bg: 'bg-green-50',
+          border: 'border-green-200',
+          text: 'text-green-700'
         };
       case 'warning':
         return {

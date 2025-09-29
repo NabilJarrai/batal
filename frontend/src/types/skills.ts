@@ -106,10 +106,10 @@ export const SKILL_CATEGORIES = [
     label: 'Personality',
     icon: '✨',
     emoji: '💎',
-    color: 'bg-gradient-to-br from-amber-500 to-orange-600',
-    bgColor: 'bg-amber-500/20',
-    borderColor: 'border-amber-400/30',
-    textColor: 'text-amber-300',
+    color: 'bg-gradient-to-br from-purple-700 to-purple-900',
+    bgColor: 'bg-purple-500/20',
+    borderColor: 'border-purple-400/30',
+    textColor: 'text-purple-300',
     description: 'Character traits, leadership, creativity'
   }
 ] as const;

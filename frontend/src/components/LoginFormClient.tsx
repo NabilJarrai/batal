@@ -49,14 +49,10 @@ export default function LoginFormClient() {
     }
   }, [isAuthenticated, user, isFirstLogin, router]);
 
-  // Clear errors when form changes
+  // Clear validation errors when form changes (but keep API errors until user submits again)
   useEffect(() => {
-    if (error) {
-      dispatch(clearError());
-    }
     setValidationErrors({});
-    setErrorDetails({});
-  }, [formData.email, formData.password, error, dispatch]);
+  }, [formData.email, formData.password]);
 
   // Analyze error details for better user feedback
   useEffect(() => {
@@ -69,7 +65,7 @@ export default function LoginFormClient() {
 
       switch (errorType) {
         case 'AUTHENTICATION':
-          suggestion = 'Please double-check your email and password.';
+          suggestion = 'Double-check your email and password, then try again.';
           break;
         case 'NETWORK':
           suggestion = 'Check your internet connection and try again.';
@@ -82,7 +78,7 @@ export default function LoginFormClient() {
           canRetry = false;
           break;
         default:
-          suggestion = 'Please try again or contact support if the problem persists.';
+          suggestion = 'Something went wrong. Please try again.';
       }
 
       setErrorDetails({ type: errorType, canRetry, suggestion });
@@ -110,10 +106,16 @@ export default function LoginFormClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
+
+    // Clear any previous API errors before making new login attempt
+    if (error) {
+      dispatch(clearError());
+    }
+    setErrorDetails({});
 
     // Dispatch login action
     await dispatch(loginUser({
@@ -169,11 +171,15 @@ export default function LoginFormClient() {
             )}
 
             <div className="flex-1">
-              <p className="text-body font-medium mb-1">Sign In Failed</p>
-              <p className="text-body-sm">{error}</p>
-              {errorDetails.suggestion && (
-                <p className="text-body-sm mt-2 italic">{errorDetails.suggestion}</p>
-              )}
+              <p className="text-body font-medium mb-1">
+                {errorDetails.type === 'AUTHENTICATION' ? 'Incorrect credentials' : 'Sign In Failed'}
+              </p>
+              <p className="text-body-sm">
+                {errorDetails.type === 'AUTHENTICATION'
+                  ? errorDetails.suggestion
+                  : error
+                }
+              </p>
               {errorDetails.type === 'AUTHENTICATION' && (
                 <div className="mt-3 flex items-center space-x-4">
                   <button
@@ -181,6 +187,8 @@ export default function LoginFormClient() {
                     onClick={() => {
                       dispatch(clearError());
                       setErrorDetails({});
+                      // Focus on email field to help user retry
+                      document.getElementById('email')?.focus();
                     }}
                     className="btn-ghost btn-xs"
                   >
@@ -188,7 +196,7 @@ export default function LoginFormClient() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => alert('Forgot password functionality coming soon!')}
+                    onClick={() => alert('Contact your administrator for password reset assistance.')}
                     className="btn-ghost btn-xs"
                   >
                     Forgot Password?
@@ -238,7 +246,7 @@ export default function LoginFormClient() {
           <div className="mt-2 flex justify-end">
             <button
               type="button"
-              onClick={() => alert('Forgot password functionality coming soon!')}
+              onClick={() => alert('Contact your administrator for password reset assistance.')}
               className="btn-ghost btn-xs"
             >
               Forgot password?

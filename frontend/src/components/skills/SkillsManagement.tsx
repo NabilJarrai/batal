@@ -411,7 +411,7 @@ export default function SkillsManagement() {
 
       {/* Modals */}
       {modalState === 'create' && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-900/20 via-slate-800/30 to-slate-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-2xl max-h-screen overflow-y-auto">
             <SkillForm
               onSubmit={handleCreateSkill}
@@ -422,7 +422,7 @@ export default function SkillsManagement() {
       )}
 
       {modalState === 'edit' && selectedSkill && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-900/20 via-slate-800/30 to-slate-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-2xl max-h-screen overflow-y-auto">
             <SkillForm
               skill={selectedSkill}
@@ -434,7 +434,7 @@ export default function SkillsManagement() {
       )}
 
       {modalState === 'bulk' && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-900/20 via-slate-800/30 to-slate-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-6xl max-h-screen overflow-y-auto">
             <BulkSkillCreator
               onSubmit={handleBulkCreate}
@@ -445,7 +445,7 @@ export default function SkillsManagement() {
       )}
 
       {modalState === 'initialize' && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-900/20 via-slate-800/30 to-slate-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full">
             <h3 className="text-xl font-semibold text-text-primary mb-4">Initialize Default Skills</h3>
             <p className="text-text-secondary mb-6">
