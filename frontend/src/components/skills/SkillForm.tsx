@@ -134,8 +134,8 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
           {/* Skill Name */}
           <div className="relative">
             <label className="flex items-center gap-2 text-sm font-semibold text-white mb-3">
-              <div className="p-1 bg-blue-500/20 rounded-lg">
-                <svg className="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-1 bg-primary/20 rounded-lg">
+                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
               </div>
@@ -152,7 +152,7 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
                   focus:outline-none focus:ring-2 focus:scale-[1.02]
                   ${errors.name
                     ? 'border-red-400/50 focus:border-red-400 focus:ring-red-400/30 bg-red-500/5'
-                    : 'border-white/20 focus:border-blue-400 focus:ring-blue-400/30 hover:border-white/30'
+                    : 'border-white/20 focus:border-primary focus:ring-primary/30 hover:border-white/30'
                   }
                   group-hover:shadow-lg
                 `}
@@ -160,7 +160,7 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
                 disabled={isSubmitting}
                 maxLength={100}
               />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm transition-colors duration-300 group-focus-within:text-blue-300">
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm transition-colors duration-300 group-focus-within:text-primary">
                 {formData.name.length}/100
               </div>
             </div>
@@ -507,7 +507,7 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
               disabled={isSubmitting || isLoading}
               className="
                 px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-3
-                bg-gradient-to-r from-blue-500 to-purple-600 text-white border border-blue-400/30
+                bg-gradient-to-r from-primary to-secondary text-white border border-primary/30
                 hover:from-blue-600 hover:to-purple-700 hover:scale-105 shadow-xl
                 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
                 backdrop-blur-sm

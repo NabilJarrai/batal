@@ -298,7 +298,7 @@ export default function EditUserModal({
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
+                      className="flex-1 px-4 py-2 bg-primary hover:bg-primary-hover disabled:bg-primary/50 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
                     >
                       {isSubmitting ? (
                         <div className="flex items-center">

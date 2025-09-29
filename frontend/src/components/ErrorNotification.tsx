@@ -40,12 +40,12 @@ export default function ErrorNotification({
       case 'success':
         return <CheckCircleIcon className="h-6 w-6 text-green-600" />;
       case 'warning':
-        return <ExclamationTriangleIcon className="h-6 w-6 text-yellow-400" />;
+        return <ExclamationTriangleIcon className="h-6 w-6 text-yellow-600" />;
       case 'info':
-        return <InformationCircleIcon className="h-6 w-6 text-blue-400" />;
+        return <InformationCircleIcon className="h-6 w-6 text-blue-600" />;
       case 'error':
       default:
-        return <ExclamationTriangleIcon className="h-6 w-6 text-red-400" />;
+        return <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />;
     }
   };
 
@@ -59,22 +59,22 @@ export default function ErrorNotification({
         };
       case 'warning':
         return {
-          bg: 'bg-yellow-500/10',
-          border: 'border-yellow-500/20',
-          text: 'text-yellow-200'
+          bg: 'bg-yellow-50',
+          border: 'border-yellow-200',
+          text: 'text-yellow-700'
         };
       case 'info':
         return {
-          bg: 'bg-blue-500/10',
-          border: 'border-blue-500/20',
-          text: 'text-blue-200'
+          bg: 'bg-blue-50',
+          border: 'border-blue-200',
+          text: 'text-blue-700'
         };
       case 'error':
       default:
         return {
-          bg: 'bg-red-500/10',
-          border: 'border-red-500/20',
-          text: 'text-red-200'
+          bg: 'bg-red-50',
+          border: 'border-red-200',
+          text: 'text-red-700'
         };
     }
   };

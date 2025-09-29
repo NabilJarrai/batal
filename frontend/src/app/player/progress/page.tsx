@@ -117,8 +117,8 @@ export default function PlayerProgress() {
               onClick={() => setViewMode("overview")}
               className={`px-4 py-2 rounded-lg transition-all ${
                 viewMode === "overview"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-primary text-white"
+                  : "bg-secondary-100 text-text-primary hover:bg-secondary-50"
               }`}
             >
               Category Overview
@@ -127,8 +127,8 @@ export default function PlayerProgress() {
               onClick={() => setViewMode("skills")}
               className={`px-4 py-2 rounded-lg transition-all ${
                 viewMode === "skills"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-primary text-white"
+                  : "bg-secondary-100 text-text-primary hover:bg-secondary-50"
               }`}
             >
               Individual Skills
@@ -155,8 +155,8 @@ export default function PlayerProgress() {
                       onClick={() => setSelectedSkill(skill)}
                       className={`p-3 rounded-lg text-left transition-all ${
                         selectedSkill?.name === skill.name && selectedSkill?.category === skill.category
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-50 text-gray-800 hover:bg-gray-100"
+                          ? "bg-primary text-white"
+                          : "bg-secondary-50 text-text-primary hover:bg-secondary-100"
                       }`}
                     >
                       <div className="font-medium">{skill.name}</div>

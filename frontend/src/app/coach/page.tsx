@@ -159,7 +159,7 @@ export default function CoachDashboard() {
                 <p className="text-gray-600 text-sm font-medium">My Groups</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.totalGroups}</p>
               </div>
-              <div className="p-3 bg-blue-500/20 rounded-full">
+              <div className="p-3 bg-primary/20 rounded-full">
                 <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                 </svg>
@@ -238,8 +238,8 @@ export default function CoachDashboard() {
                 className={`
                   flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200
                   ${activeTab === tab.key
-                    ? 'bg-blue-500 text-white shadow-lg'
-                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                    ? 'bg-primary text-white shadow-lg'
+                    : 'text-text-primary hover:text-text-primary hover:bg-secondary-100'
                   }
                 `}
               >
@@ -293,7 +293,7 @@ export default function CoachDashboard() {
                   <select
                     value={selectedGroup?.id || ''}
                     onChange={(e) => handleGroupSelect(Number(e.target.value))}
-                    className="w-full md:w-64 px-3 py-2 bg-white border border-gray-200 shadow-sm text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    className="w-full md:w-64 px-3 py-2 bg-white border border-border shadow-sm text-text-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
                   >
                     {assignedGroups.map((group) => (
                       <option key={group.id} value={group.id}>
@@ -343,7 +343,7 @@ export default function CoachDashboard() {
           <div className="mt-8 bg-white border border-gray-200 shadow-sm rounded-xl p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button className="flex items-center gap-3 p-3 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg transition-colors duration-200">
+              <button className="flex items-center gap-3 p-3 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-lg transition-colors duration-200">
                 <svg className="w-5 h-5 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                 </svg>
@@ -353,7 +353,7 @@ export default function CoachDashboard() {
                 </div>
               </button>
 
-              <button className="flex items-center gap-3 p-3 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg transition-colors duration-200">
+              <button className="flex items-center gap-3 p-3 bg-accent-teal/20 hover:bg-accent-teal/30 border border-accent-teal/30 rounded-lg transition-colors duration-200">
                 <svg className="w-5 h-5 text-accent-teal" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                 </svg>
@@ -363,7 +363,7 @@ export default function CoachDashboard() {
                 </div>
               </button>
 
-              <button className="flex items-center gap-3 p-3 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg transition-colors duration-200">
+              <button className="flex items-center gap-3 p-3 bg-secondary/20 hover:bg-secondary/30 border border-secondary/30 rounded-lg transition-colors duration-200">
                 <svg className="w-5 h-5 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
                   <path fillRule="evenodd" d="M4 5a2 2 0 012-2 1 1 0 000 2H6a2 2 0 100 4h2a2 2 0 100-4h-.5a1 1 0 000-2H8a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2h-2.5a1 1 0 000 2H14v11H8V5z" clipRule="evenodd" />

@@ -133,7 +133,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
   if (loading && viewMode === 'list') {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -172,7 +172,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
 
                 <button
                   onClick={handleCreateNew}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
                 >
                   <Plus size={16} />
                   New Assessment
@@ -231,7 +231,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">This Month</p>
-                  <p className="text-2xl font-bold text-blue-600">{stats.thisMonth}</p>
+                  <p className="text-2xl font-bold text-primary">{stats.thisMonth}</p>
                 </div>
                 <Calendar className="text-text-primary" size={24} />
               </div>

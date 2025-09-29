@@ -386,7 +386,7 @@ export default function EditPlayerModal({
                         type="checkbox"
                         checked={formData.isActive}
                         onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
-                        className="form-checkbox h-4 w-4 text-blue-600 bg-background border-border rounded focus:ring-blue-500"
+                        className="form-checkbox h-4 w-4 text-primary bg-background border-border rounded focus:ring-primary"
                       />
                       <span className="text-sm font-medium text-text-secondary">Active Player</span>
                     </label>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { chartColors } from "@/lib/chartColors";
 
 interface SkillScore {
   skillName: string;
@@ -53,15 +54,15 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
 
     const angleStep = (Math.PI * 2) / categories.length;
 
-    // Clear canvas and set light gray background
+    // Clear canvas and set light background
     ctx.clearRect(0, 0, size, size);
-    ctx.fillStyle = "#f9fafb";
+    ctx.fillStyle = chartColors.background.card;
     ctx.fillRect(0, 0, size, size);
 
     // Draw grid circles (representing scores 2, 4, 6, 8, 10)
     for (let i = 1; i <= 5; i++) {
       ctx.beginPath();
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.1)";
+      ctx.strokeStyle = chartColors.grid;
       ctx.lineWidth = 1;
       
       for (let j = 0; j <= categories.length; j++) {
@@ -88,14 +89,14 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
       ctx.beginPath();
       ctx.moveTo(centerX, centerY);
       ctx.lineTo(x, y);
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+      ctx.strokeStyle = chartColors.axis;
       ctx.stroke();
     });
 
     // Draw data polygon
     ctx.beginPath();
-    ctx.fillStyle = "rgba(59, 130, 246, 0.3)";
-    ctx.strokeStyle = "rgba(59, 130, 246, 0.8)";
+    ctx.fillStyle = `${chartColors.primary}33`; // 20% opacity
+    ctx.strokeStyle = chartColors.primary;
     ctx.lineWidth = 2;
 
     values.forEach((value, index) => {
@@ -122,16 +123,16 @@ export function SkillRadarChart({ skills }: SkillRadarChartProps) {
       
       ctx.beginPath();
       ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = "#3B82F6";
+      ctx.fillStyle = chartColors.primary;
       ctx.fill();
-      ctx.strokeStyle = "#1F2937";
+      ctx.strokeStyle = chartColors.background.primary;
       ctx.lineWidth = 2;
       ctx.stroke();
     });
 
     // Draw labels
     ctx.font = "13px sans-serif";
-    ctx.fillStyle = "#1F2937";
+    ctx.fillStyle = chartColors.text.primary;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 

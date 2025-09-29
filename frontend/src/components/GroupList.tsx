@@ -181,7 +181,7 @@ export default function GroupList({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-text-primary">Groups</h2>
-          <p className="text-blue-200">
+          <p className="text-text-secondary">
             {filteredGroups.length} of {groups.length} groups
           </p>
         </div>
@@ -189,7 +189,7 @@ export default function GroupList({
         {onCreateGroup && (
           <button
             onClick={onCreateGroup}
-            className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl text-text-primary font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="flex items-center px-4 py-2 bg-gradient-to-r from-primary to-accent-teal hover:from-primary-hover hover:to-accent-teal rounded-xl text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -364,7 +364,7 @@ export default function GroupList({
 
       {/* Selection Summary */}
       {isSelectable && selectedGroups.length > 0 && (
-        <div className="fixed bottom-4 right-4 bg-blue-600 text-text-primary px-4 py-2 rounded-lg shadow-lg">
+        <div className="fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-lg shadow-lg">
           {selectedGroups.length} group{selectedGroups.length > 1 ? 's' : ''} selected
         </div>
       )}
