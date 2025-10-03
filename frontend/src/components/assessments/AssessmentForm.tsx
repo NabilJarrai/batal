@@ -296,36 +296,36 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-accent-teal/5 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
           <div className="flex items-center justify-between">
-            <div className="text-white">
-              <h2 className="text-2xl font-bold">
+            <div>
+              <h2 className="text-3xl font-bold text-text-primary mb-2">
                 {isCreating ? 'New Assessment' : isEditing ? 'Edit Assessment' : 'View Assessment'}
               </h2>
               {selectedPlayer && (
-                <p className="text-blue-200 mt-1">
-                  {selectedPlayer.fullName} - {selectedPlayer.level} Level
+                <p className="text-text-secondary text-lg">
+                  {selectedPlayer.fullName} • {selectedPlayer.level} Level
                 </p>
               )}
             </div>
-            
-            <div className="flex items-center gap-2">
+
+            <div className="flex items-center gap-3">
               {isDraft && !isReadOnly && (
-                <span className="bg-yellow-500/20 text-yellow-200 px-3 py-1 rounded-full text-sm font-medium border border-yellow-400/30">
+                <span className="px-3 py-1 bg-accent-yellow/20 text-accent-yellow rounded-full text-sm font-medium">
                   Draft
                 </span>
               )}
               {assessment?.isFinalized && (
-                <span className="bg-green-500/20 text-green-200 px-3 py-1 rounded-full text-sm font-medium border border-green-400/30">
+                <span className="px-3 py-1 bg-accent-teal/20 text-accent-teal rounded-full text-sm font-medium">
                   Finalized
                 </span>
               )}
@@ -335,30 +335,34 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
         <div className="space-y-6">
         {error && (
-          <div className="bg-red-500/10 border border-red-400/30 rounded-xl p-4 flex items-center gap-2 backdrop-blur-sm">
-            <AlertCircle className="text-red-300" size={20} />
-            <span className="text-red-200">{error}</span>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+            <AlertCircle className="text-red-600" size={20} />
+            <span className="text-red-700 font-medium">{error}</span>
           </div>
         )}
 
         {/* Basic Information */}
-        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Basic Information</h3>
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <User className="w-5 h-5 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold text-text-primary">Basic Information</h3>
+          </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
-                <User size={16} className="inline mr-1" />
-                Player
+              <label className="block text-sm font-semibold text-text-primary mb-3">
+                Player Selection
               </label>
               <select
                 value={formData.playerId || ''}
                 onChange={(e) => handleInputChange('playerId', parseInt(e.target.value) || null)}
                 disabled={isReadOnly || isEditing}
-                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-blue-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent disabled:bg-white/5 disabled:text-blue-300"
+                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-text-primary focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors disabled:bg-gray-50 disabled:text-text-secondary"
               >
                 <option value="">Select a player...</option>
                 {players.map(player => (
-                  <option key={player.id} value={player.id} className="bg-blue-800 text-white">
+                  <option key={player.id} value={player.id} className="bg-white text-text-primary">
                     {player.fullName} ({player.level})
                   </option>
                 ))}
@@ -366,8 +370,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
-                <Calendar size={16} className="inline mr-1" />
+              <label className="block text-sm font-semibold text-text-primary mb-3">
                 Assessment Date
               </label>
               <input
@@ -375,23 +378,22 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 value={formData.assessmentDate}
                 onChange={(e) => handleInputChange('assessmentDate', e.target.value)}
                 disabled={isReadOnly}
-                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-blue-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent disabled:bg-white/5 disabled:text-blue-300"
+                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-text-primary focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors disabled:bg-gray-50 disabled:text-text-secondary"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
-                <Clock size={16} className="inline mr-1" />
-                Period
+              <label className="block text-sm font-semibold text-text-primary mb-3">
+                Assessment Period
               </label>
               <select
                 value={formData.period}
                 onChange={(e) => handleInputChange('period', e.target.value as AssessmentPeriod)}
                 disabled={isReadOnly}
-                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-blue-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent disabled:bg-white/5 disabled:text-blue-300"
+                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-text-primary focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors disabled:bg-gray-50 disabled:text-text-secondary"
               >
                 {ASSESSMENT_PERIODS.map(period => (
-                  <option key={period.key} value={period.key} className="bg-blue-800 text-white">
+                  <option key={period.key} value={period.key} className="bg-white text-text-primary">
                     {period.label}
                   </option>
                 ))}
@@ -401,19 +403,24 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
         </div>
 
         {/* Skill Ratings by Category */}
-        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-6">Skill Ratings</h3>
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div className="flex items-center gap-2 mb-8">
+            <div className="p-2 bg-accent-teal/10 rounded-lg">
+              <FileText className="w-5 h-5 text-accent-teal" />
+            </div>
+            <h3 className="text-xl font-semibold text-text-primary">Skill Ratings</h3>
+          </div>
 
           {!formData.playerId ? (
-            <div className="text-center py-12">
-              <User className="mx-auto h-12 w-12 text-blue-300 mb-4" />
-              <p className="text-blue-200 text-lg mb-2">Select a player to load skills</p>
-              <p className="text-blue-300 text-sm">Skills will be loaded based on the player's level</p>
+            <div className="text-center py-16 bg-gray-50 rounded-xl">
+              <User className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+              <p className="text-text-primary text-lg font-medium mb-2">Select a player to load skills</p>
+              <p className="text-text-secondary">Skills will be loaded based on the player's level</p>
             </div>
           ) : skills.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-300 mx-auto mb-4"></div>
-              <p className="text-blue-200">Loading skills...</p>
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-text-secondary text-lg">Loading skills...</p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -422,16 +429,18 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 if (categorySkills.length === 0) return null;
 
                 return (
-                  <div key={category.key} className="bg-white/5 border border-white/10 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className={`w-8 h-8 rounded-lg ${category.color} flex items-center justify-center text-white text-lg`}>
+                  <div key={category.key} className="bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-2xl p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className={`w-12 h-12 rounded-xl ${category.color} flex items-center justify-center text-white text-xl shadow-lg`}>
                         {category.icon}
                       </div>
-                      <h4 className="text-lg font-medium text-white">{category.label}</h4>
-                      <span className="text-sm text-blue-300">({categorySkills.length} skills)</span>
+                      <div>
+                        <h4 className="text-xl font-semibold text-text-primary">{category.label}</h4>
+                        <span className="text-sm text-text-secondary">{categorySkills.length} skills to evaluate</span>
+                      </div>
                     </div>
 
-                    <div className="grid gap-4">
+                    <div className="grid gap-2">
                       {categorySkills.map(skill => (
                         <SkillRatingInput
                           key={skill.id}
@@ -439,7 +448,8 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                           value={formData.skillScores[skill.id] || { skillId: skill.id, score: 0, notes: '' }}
                           onChange={handleSkillScoreChange}
                           disabled={isReadOnly}
-                          compact={categorySkills.length > 4}
+                          showDescription={false}
+                          compact={true}
                         />
                       ))}
                     </div>
@@ -451,36 +461,39 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
         </div>
 
         {/* Comments Section */}
-        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Comments</h3>
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="p-2 bg-accent-yellow/10 rounded-lg">
+              <FileText className="w-5 h-5 text-accent-yellow" />
+            </div>
+            <h3 className="text-xl font-semibold text-text-primary">Comments & Notes</h3>
+          </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
-                <FileText size={16} className="inline mr-1" />
+              <label className="block text-sm font-semibold text-text-primary mb-3">
                 General Comments
               </label>
               <textarea
                 value={formData.comments}
                 onChange={(e) => handleInputChange('comments', e.target.value)}
                 disabled={isReadOnly}
-                placeholder="Overall assessment comments..."
+                placeholder="Share your overall assessment of the player's performance..."
                 rows={4}
-                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-blue-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none disabled:bg-white/5 disabled:text-blue-300"
+                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-text-primary placeholder-text-secondary focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors resize-none disabled:bg-gray-50 disabled:text-text-secondary"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
-                <Tag size={16} className="inline mr-1" />
-                Coach Notes
+              <label className="block text-sm font-semibold text-text-primary mb-3">
+                Private Coach Notes
               </label>
               <textarea
                 value={formData.coachNotes}
                 onChange={(e) => handleInputChange('coachNotes', e.target.value)}
                 disabled={isReadOnly}
-                placeholder="Private coach notes and recommendations..."
+                placeholder="Add private notes, development recommendations, or areas for improvement..."
                 rows={4}
-                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-blue-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none disabled:bg-white/5 disabled:text-blue-300"
+                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-text-primary placeholder-text-secondary focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors resize-none disabled:bg-gray-50 disabled:text-text-secondary"
               />
             </div>
           </div>
@@ -488,37 +501,44 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
         {/* Actions */}
         {!isReadOnly && (
-          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-blue-200">
-                {hasChanges && 'Unsaved changes • '}
-                {saving ? 'Saving...' : 'Auto-saves every 30 seconds'}
-              </div>
-              
               <div className="flex items-center gap-2">
+                {hasChanges && (
+                  <div className="flex items-center gap-2 text-accent-yellow">
+                    <div className="w-2 h-2 bg-accent-yellow rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium">Unsaved changes</span>
+                  </div>
+                )}
+                <span className="text-sm text-text-secondary">
+                  {saving ? 'Saving...' : 'Auto-saves every 30 seconds'}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
                 <button
                   onClick={onCancel}
                   disabled={saving}
-                  className="px-4 py-2 text-blue-200 hover:text-white disabled:opacity-50 transition-colors"
+                  className="px-6 py-3 text-text-secondary hover:text-text-primary disabled:opacity-50 transition-colors font-medium"
                 >
                   Cancel
                 </button>
-                
+
                 <button
                   onClick={() => handleSave(false)}
                   disabled={saving || isAssessmentEmpty()}
-                  className="flex items-center gap-2 px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-text-primary rounded-xl hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
-                  <Save size={16} />
+                  <Save size={18} />
                   Save Draft
                 </button>
-                
+
                 <button
                   onClick={() => handleSave(true)}
                   disabled={saving || isAssessmentEmpty()}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-hover text-white rounded-xl hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-0.5 font-medium"
                 >
-                  <Send size={16} />
+                  <Send size={18} />
                   {saving ? 'Finalizing...' : 'Finalize Assessment'}
                 </button>
               </div>

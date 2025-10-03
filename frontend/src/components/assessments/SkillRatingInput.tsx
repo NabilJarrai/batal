@@ -50,103 +50,173 @@ export const SkillRatingInput: React.FC<SkillRatingInputProps> = ({
 
   if (compact) {
     return (
-      <div className="bg-white/5 border border-white/10 rounded-lg p-3 space-y-3">
-        <div className="flex items-center justify-between">
+      <div className="bg-white border border-gray-200 rounded-lg p-3 hover:border-gray-300 hover:shadow-sm transition-all">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex-1 min-w-0">
-            <div className="font-medium text-sm text-white">{skill.name}</div>
-            {skill.description && (
-              <div className="text-xs text-blue-300 mt-1">{skill.description}</div>
+            <h4 className="font-medium text-text-primary text-sm truncate">{skill.name}</h4>
+            {showDescription && skill.description && (
+              <p className="text-xs text-text-secondary mt-1 line-clamp-1">{skill.description}</p>
             )}
           </div>
-          <div className="text-white font-medium ml-4">
-            {currentScore > 0 ? `${currentScore}/10` : '-'}
+          <div className="ml-3 text-right flex-shrink-0">
+            <div className={`text-lg font-bold transition-all ${
+              currentScore > 0
+                ? currentScore >= 8
+                  ? 'text-accent-teal'
+                  : currentScore >= 6
+                    ? 'text-accent-yellow'
+                    : currentScore >= 4
+                      ? 'text-orange-500'
+                      : 'text-accent-red'
+                : 'text-gray-400'
+            }`}>
+              {currentScore > 0 ? `${currentScore}/10` : '—'}
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-blue-200">Rating</span>
-          <div className="flex items-center gap-1">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
-              <button
-                key={score}
-                type="button"
-                disabled={disabled}
-                onClick={() => handleScoreChange(score)}
-                onMouseEnter={() => setHoveredScore(score)}
-                onMouseLeave={() => setHoveredScore(0)}
-                className={`w-6 h-6 rounded-full text-xs font-medium transition-all ${
-                  disabled
-                    ? 'bg-white/10 text-blue-300 cursor-not-allowed'
-                    : score <= currentScore
-                      ? 'bg-blue-500 text-white hover:bg-blue-600'
-                      : 'bg-white/20 text-blue-200 hover:bg-white/30'
-                }`}
-              >
-                {score}
-              </button>
-            ))}
-          </div>
+        <div className="grid grid-cols-10 gap-1">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
+            <button
+              key={score}
+              type="button"
+              disabled={disabled}
+              onClick={() => handleScoreChange(score)}
+              onMouseEnter={() => setHoveredScore(score)}
+              onMouseLeave={() => setHoveredScore(0)}
+              className={`
+                h-8 w-full rounded text-xs font-semibold transition-all duration-200
+                flex items-center justify-center
+                ${disabled
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : score <= currentScore
+                    ? score >= 8
+                      ? 'bg-accent-teal text-white hover:bg-accent-teal/90'
+                      : score >= 6
+                        ? 'bg-accent-yellow text-white hover:bg-accent-yellow/90'
+                        : score >= 4
+                          ? 'bg-orange-500 text-white hover:bg-orange-400'
+                          : 'bg-accent-red text-white hover:bg-accent-red/90'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }
+              `}
+            >
+              {score}
+            </button>
+          ))}
         </div>
-
       </div>
     );
   }
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-4">
+    <div className="bg-white border-2 border-gray-100 rounded-xl p-6 hover:border-gray-200 hover:shadow-lg transition-all">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between mb-6">
         <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="font-medium text-white">{skill.name}</h3>
+          <div className="flex items-center gap-3 mb-2">
+            <h3 className="font-bold text-xl text-text-primary">{skill.name}</h3>
+            <div className={`
+              px-3 py-1 rounded-full text-xs font-semibold transition-all
+              ${currentScore > 0
+                ? currentScore >= 8
+                  ? 'bg-accent-teal/10 text-accent-teal border border-accent-teal/20'
+                  : currentScore >= 6
+                    ? 'bg-accent-yellow/10 text-accent-yellow border border-accent-yellow/20'
+                    : currentScore >= 4
+                      ? 'bg-orange-100 text-orange-600 border border-orange-200'
+                      : 'bg-red-100 text-accent-red border border-red-200'
+                : 'bg-gray-100 text-gray-500 border border-gray-200'
+              }
+            `}>
+              {currentScore > 0 ? getScoreLabel(currentScore) : 'Unrated'}
+            </div>
           </div>
-          
+
           {showDescription && skill.description && (
-            <p className="text-sm text-blue-200 mt-1">{skill.description}</p>
+            <p className="text-sm text-text-secondary leading-relaxed bg-gray-50 rounded-lg p-3">{skill.description}</p>
           )}
         </div>
-        
-        <div className={`text-right text-white`}>
-          <div className="font-bold text-lg">
-            {currentScore > 0 ? `${currentScore}/10` : '-'}
+
+        <div className="text-right ml-6">
+          <div className={`font-bold text-3xl transition-all ${
+            currentScore > 0
+              ? currentScore >= 8
+                ? 'text-accent-teal'
+                : currentScore >= 6
+                  ? 'text-accent-yellow'
+                  : currentScore >= 4
+                    ? 'text-orange-500'
+                    : 'text-accent-red'
+              : 'text-gray-400'
+          }`}>
+            {currentScore > 0 ? `${currentScore}/10` : '—'}
           </div>
-          <div className="text-sm text-blue-200">{scoreLabel}</div>
         </div>
       </div>
 
-      {/* Star Rating */}
-      <div className="space-y-2">
+      {/* Rating System */}
+      <div className="space-y-5">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-blue-200">Rating</span>
-          <div className="flex items-center gap-1">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
-              <button
-                key={score}
-                type="button"
-                disabled={disabled}
-                onClick={() => handleScoreChange(score)}
-                onMouseEnter={() => setHoveredScore(score)}
-                onMouseLeave={() => setHoveredScore(0)}
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
-                  disabled 
-                    ? 'bg-white/10 text-blue-300 cursor-not-allowed'
-                    : score <= currentScore
-                      ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-md'
-                      : 'bg-white/20 text-blue-200 hover:bg-white/30'
-                }`}
-              >
-                {score}
-              </button>
-            ))}
+          <span className="text-base font-semibold text-text-primary">Rate this skill</span>
+          <div className="text-sm text-text-secondary">
+            {currentScore > 0 ? `Current: ${getScoreLabel(currentScore)}` : 'Click a number to rate'}
           </div>
         </div>
-        
-        {/* Scale Labels */}
-        <div className="flex justify-between text-xs text-blue-300 px-1">
-          <span>Poor (1-3)</span>
-          <span>Needs Improvement (4-5)</span>
-          <span>Good (6-7)</span>
-          <span>Excellent (8-10)</span>
+
+        <div className="grid grid-cols-10 gap-2">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
+            <button
+              key={score}
+              type="button"
+              disabled={disabled}
+              onClick={() => handleScoreChange(score)}
+              onMouseEnter={() => setHoveredScore(score)}
+              onMouseLeave={() => setHoveredScore(0)}
+              className={`
+                aspect-square rounded-xl text-sm font-bold transition-all duration-200
+                flex items-center justify-center relative
+                ${disabled
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : score <= currentScore
+                    ? score >= 8
+                      ? 'bg-accent-teal text-white shadow-lg hover:shadow-xl transform hover:scale-110 ring-2 ring-accent-teal/20'
+                      : score >= 6
+                        ? 'bg-accent-yellow text-white shadow-lg hover:shadow-xl transform hover:scale-110 ring-2 ring-accent-yellow/20'
+                        : score >= 4
+                          ? 'bg-orange-500 text-white shadow-lg hover:shadow-xl transform hover:scale-110 ring-2 ring-orange-200'
+                          : 'bg-accent-red text-white shadow-lg hover:shadow-xl transform hover:scale-110 ring-2 ring-red-200'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-text-primary transform hover:scale-110'
+                }
+              `}
+            >
+              {score}
+            </button>
+          ))}
+        </div>
+
+        {/* Scale Guide */}
+        <div className="grid grid-cols-4 gap-3 mt-6 p-4 bg-gray-50 rounded-xl">
+          <div className="text-center">
+            <div className="w-4 h-4 bg-accent-red rounded-full mx-auto mb-2" />
+            <span className="text-xs font-medium text-gray-600">Poor</span>
+            <div className="text-xs text-gray-500">1-3</div>
+          </div>
+          <div className="text-center">
+            <div className="w-4 h-4 bg-orange-500 rounded-full mx-auto mb-2" />
+            <span className="text-xs font-medium text-gray-600">Needs Work</span>
+            <div className="text-xs text-gray-500">4-5</div>
+          </div>
+          <div className="text-center">
+            <div className="w-4 h-4 bg-accent-yellow rounded-full mx-auto mb-2" />
+            <span className="text-xs font-medium text-gray-600">Good</span>
+            <div className="text-xs text-gray-500">6-7</div>
+          </div>
+          <div className="text-center">
+            <div className="w-4 h-4 bg-accent-teal rounded-full mx-auto mb-2" />
+            <span className="text-xs font-medium text-gray-600">Excellent</span>
+            <div className="text-xs text-gray-500">8-10</div>
+          </div>
         </div>
       </div>
     </div>

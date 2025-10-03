@@ -3,6 +3,8 @@ package com.batal.service;
 import com.batal.dto.*;
 import com.batal.entity.*;
 import com.batal.entity.enums.*;
+import com.batal.exception.AccessDeniedException;
+import com.batal.exception.BusinessRuleException;
 import com.batal.exception.ValidationException;
 import com.batal.repository.*;
 import jakarta.persistence.EntityNotFoundException;
@@ -220,14 +222,21 @@ public class AssessmentService {
 
     // ===== DELETE OPERATIONS =====
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('COACH') or hasRole('ADMIN') or hasRole('MANAGER')")
     public void deleteAssessment(Long assessmentId) {
         Assessment assessment = findAssessmentById(assessmentId);
         User currentUser = getCurrentAuthenticatedUser();
 
+        // Check ownership - coaches can only delete their own assessments
+        if (hasRole(currentUser, "COACH") && !hasRole(currentUser, "ADMIN") && !hasRole(currentUser, "MANAGER")) {
+            if (!assessment.getAssessor().getId().equals(currentUser.getId())) {
+                throw new AccessDeniedException("delete", "assessment");
+            }
+        }
+
         // Only allow deletion of non-finalized assessments or by admins
         if (assessment.getIsFinalized() && !hasRole(currentUser, "ADMIN")) {
-            throw new IllegalStateException("Cannot delete finalized assessment");
+            throw new BusinessRuleException("Cannot delete finalized assessment");
         }
 
         assessmentRepository.delete(assessment);
@@ -393,13 +402,27 @@ public class AssessmentService {
     }
 
     private void validateCoachCanAssessPlayer(User coach, User player) {
-        if (!hasRole(coach, "ADMIN") && !hasRole(coach, "MANAGER")) {
-            // For coaches, ensure they can only assess players in their groups
-            if (hasRole(coach, "COACH")) {
-                if (player.getGroup() == null || !coach.equals(player.getGroup().getCoach())) {
-                    throw new SecurityException("Coach can only assess players in their assigned groups");
-                }
+        if (hasRole(coach, "ADMIN") || hasRole(coach, "MANAGER")) {
+            return; // Admins and managers can assess any player
+        }
+
+        if (hasRole(coach, "COACH")) {
+            // Check if player has a group assigned
+            if (player.getGroup() == null) {
+                throw new IllegalStateException("Cannot assess player: Player is not assigned to any group. Please assign the player to a group first.");
             }
+
+            // Check if group has a coach assigned
+            if (player.getGroup().getCoach() == null) {
+                throw new IllegalStateException("Cannot assess player: Player's group has no assigned coach. Please assign a coach to the group first.");
+            }
+
+            // Check if the current coach is authorized to assess this player
+            if (!coach.equals(player.getGroup().getCoach())) {
+                throw new SecurityException("Coach can only assess players in their assigned groups");
+            }
+        } else {
+            throw new SecurityException("User does not have permission to create assessments");
         }
     }
 
@@ -407,16 +430,23 @@ public class AssessmentService {
         if (hasRole(user, "ADMIN") || hasRole(user, "MANAGER")) {
             return; // Admins and managers can view all assessments
         }
-        
+
         if (hasRole(user, "COACH")) {
-            // Coaches can view assessments for players in their groups or assessments they created
-            if (user.equals(assessment.getAssessor()) || 
-                (assessment.getPlayer().getUser().getGroup() != null && 
-                 user.equals(assessment.getPlayer().getUser().getGroup().getCoach()))) {
+            // First check: Coach can view their own assessments regardless of group assignment
+            if (user.equals(assessment.getAssessor())) {
+                return;
+            }
+
+            // Second check: Coach can view assessments for players in their groups (if properly assigned)
+            if (assessment.getPlayer() != null &&
+                assessment.getPlayer().getUser() != null &&
+                assessment.getPlayer().getUser().getGroup() != null &&
+                assessment.getPlayer().getUser().getGroup().getCoach() != null &&
+                user.equals(assessment.getPlayer().getUser().getGroup().getCoach())) {
                 return;
             }
         }
-        
+
         throw new SecurityException("Access denied to view this assessment");
     }
 
@@ -438,17 +468,23 @@ public class AssessmentService {
         if (hasRole(user, "ADMIN") || hasRole(user, "MANAGER")) {
             return; // Admins and managers can edit all assessments
         }
-        
+
         if (hasRole(user, "COACH")) {
-            // Coaches can only edit their own assessments for players in their groups
-            if (user.getId().equals(assessment.getAssessor().getId()) && 
-                assessment.getPlayer().getUser().getGroup() != null && 
+            // First check: Coach can edit their own assessments regardless of group assignment
+            if (user.getId().equals(assessment.getAssessor().getId())) {
+                return;
+            }
+
+            // Second check: Coach can edit assessments for players in their groups (if properly assigned)
+            if (assessment.getPlayer() != null &&
+                assessment.getPlayer().getUser() != null &&
+                assessment.getPlayer().getUser().getGroup() != null &&
                 assessment.getPlayer().getUser().getGroup().getCoach() != null &&
                 user.getId().equals(assessment.getPlayer().getUser().getGroup().getCoach().getId())) {
                 return;
             }
         }
-        
+
         throw new SecurityException("Access denied to edit this assessment");
     }
 
@@ -550,13 +586,49 @@ public class AssessmentService {
     }
 
     private void updateSkillScores(Assessment assessment, List<SkillRatingRequest> skillRatings) {
-        // Remove existing skill scores
-        List<SkillScore> existingScores = new ArrayList<>(assessment.getSkillScores());
-        assessment.getSkillScores().clear();
-        skillScoreRepository.deleteAll(existingScores);
-        
-        // Create new skill scores
-        createSkillScores(assessment, skillRatings);
+        // Create a map of existing skill scores by skill ID for efficient lookup
+        Map<Long, SkillScore> existingScoresBySkillId = assessment.getSkillScores().stream()
+                .collect(Collectors.toMap(ss -> ss.getSkill().getId(), ss -> ss));
+
+        // Create a set to track which skill scores we've processed
+        Set<Long> processedSkillIds = new HashSet<>();
+
+        // Update or create skill scores
+        for (SkillRatingRequest rating : skillRatings) {
+            Skill skill = skillRepository.findById(rating.getSkillId())
+                    .orElseThrow(() -> new EntityNotFoundException("Skill not found with ID: " + rating.getSkillId()));
+
+            processedSkillIds.add(skill.getId());
+
+            if (existingScoresBySkillId.containsKey(skill.getId())) {
+                // Update existing skill score
+                SkillScore existingScore = existingScoresBySkillId.get(skill.getId());
+                existingScore.setScore(rating.getScore());
+                existingScore.setNotes(rating.getNotes());
+            } else {
+                // Create new skill score
+                Integer previousScore = getPreviousSkillScore(assessment.getPlayer().getUser(), skill);
+
+                SkillScore skillScore = new SkillScore();
+                skillScore.setAssessment(assessment);
+                skillScore.setSkill(skill);
+                skillScore.setScore(rating.getScore());
+                skillScore.setNotes(rating.getNotes());
+                skillScore.setPreviousScore(previousScore);
+
+                assessment.addSkillScore(skillScore);
+            }
+        }
+
+        // Remove skill scores that are no longer in the request
+        List<SkillScore> scoresToRemove = assessment.getSkillScores().stream()
+                .filter(ss -> !processedSkillIds.contains(ss.getSkill().getId()))
+                .collect(Collectors.toList());
+
+        for (SkillScore scoreToRemove : scoresToRemove) {
+            assessment.getSkillScores().remove(scoreToRemove);
+            skillScoreRepository.delete(scoreToRemove);
+        }
     }
 
     private Integer getPreviousSkillScore(User player, Skill skill) {

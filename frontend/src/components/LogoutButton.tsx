@@ -28,7 +28,7 @@ export default function LogoutButton({
     return (
       <button
         onClick={handleLogout}
-        className={`p-2 text-white hover:bg-white/10 rounded-lg transition-colors ${className}`}
+        className={`btn-icon btn-ghost ${className}`}
         title="Logout"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,7 +43,7 @@ export default function LogoutButton({
     return (
       <button
         onClick={handleLogout}
-        className={`w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 ${className}`}
+        className={`btn-ghost text-left w-full ${className}`}
       >
         <div className="flex items-center">
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +59,7 @@ export default function LogoutButton({
   return (
     <button
       onClick={handleLogout}
-      className={`px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-lg transition-colors duration-200 flex items-center ${className}`}
+      className={`btn-destructive btn-md ${className}`}
     >
       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 

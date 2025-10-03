@@ -153,6 +153,15 @@ public class SkillService {
     }
 
     @Transactional(readOnly = true)
+    public List<SkillResponse> getActiveSkillsByLevel(Level level) {
+        return skillRepository.findByApplicableLevelsContainingAndIsActiveTrue(level)
+                .stream()
+                .sorted(Comparator.comparing(Skill::getCategory).thenComparing(Skill::getDisplayOrder))
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<SkillResponse> getActiveSkills() {
         return skillRepository.findActiveSkillsOrderedByCategoryAndDisplay()
                 .stream()

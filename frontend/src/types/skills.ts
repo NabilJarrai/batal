@@ -66,17 +66,77 @@ export interface BulkSkillData {
   applicableLevels: SkillLevel[];
 }
 
-// Category display helpers
+// Category display helpers with enhanced visual design
 export const SKILL_CATEGORIES = [
-  { key: SkillCategory.ATHLETIC, label: 'Athletic', icon: '💪', color: 'bg-blue-500' },
-  { key: SkillCategory.TECHNICAL, label: 'Technical', icon: '⚽', color: 'bg-green-500' },
-  { key: SkillCategory.MENTALITY, label: 'Mentality', icon: '🧠', color: 'bg-purple-500' },
-  { key: SkillCategory.PERSONALITY, label: 'Personality', icon: '🌟', color: 'bg-yellow-500' }
+  {
+    key: SkillCategory.ATHLETIC,
+    label: 'Athletic',
+    icon: '⚡',
+    emoji: '🏃‍♂️',
+    color: 'bg-gradient-to-br from-blue-500 to-cyan-600',
+    bgColor: 'bg-blue-500/20',
+    borderColor: 'border-blue-400/30',
+    textColor: 'text-blue-300',
+    description: 'Physical abilities, strength, speed, agility'
+  },
+  {
+    key: SkillCategory.TECHNICAL,
+    label: 'Technical',
+    icon: '⚽',
+    emoji: '🎯',
+    color: 'bg-gradient-to-br from-green-500 to-emerald-600',
+    bgColor: 'bg-green-500/20',
+    borderColor: 'border-green-400/30',
+    textColor: 'text-green-300',
+    description: 'Ball control, passing, shooting, dribbling'
+  },
+  {
+    key: SkillCategory.MENTALITY,
+    label: 'Mentality',
+    icon: '🧠',
+    emoji: '🎭',
+    color: 'bg-gradient-to-br from-purple-500 to-violet-600',
+    bgColor: 'bg-purple-500/20',
+    borderColor: 'border-purple-400/30',
+    textColor: 'text-purple-300',
+    description: 'Tactical awareness, game intelligence, vision'
+  },
+  {
+    key: SkillCategory.PERSONALITY,
+    label: 'Personality',
+    icon: '✨',
+    emoji: '💎',
+    color: 'bg-gradient-to-br from-purple-700 to-purple-900',
+    bgColor: 'bg-purple-500/20',
+    borderColor: 'border-purple-400/30',
+    textColor: 'text-purple-300',
+    description: 'Character traits, leadership, creativity'
+  }
 ] as const;
 
 export const SKILL_LEVELS = [
-  { key: SkillLevel.DEVELOPMENT, label: 'Development', color: 'bg-cyan-500' },
-  { key: SkillLevel.ADVANCED, label: 'Advanced', color: 'bg-orange-500' }
+  {
+    key: SkillLevel.DEVELOPMENT,
+    label: 'Development',
+    shortLabel: 'Dev',
+    icon: '🌱',
+    color: 'bg-gradient-to-br from-cyan-500 to-teal-600',
+    bgColor: 'bg-cyan-500/20',
+    borderColor: 'border-cyan-400/30',
+    textColor: 'text-cyan-300',
+    description: 'Foundation skills for young players'
+  },
+  {
+    key: SkillLevel.ADVANCED,
+    label: 'Advanced',
+    shortLabel: 'Adv',
+    icon: '🏆',
+    color: 'bg-gradient-to-br from-orange-500 to-red-600',
+    bgColor: 'bg-orange-500/20',
+    borderColor: 'border-orange-400/30',
+    textColor: 'text-orange-300',
+    description: 'Advanced skills for experienced players'
+  }
 ] as const;
 
 // Utility functions

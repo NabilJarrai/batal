@@ -30,6 +30,7 @@ export interface LoginResponse {
   roles: string[];
   token: string;
   type: string;
+  firstLogin: boolean;
 }
 
 // User roles enum (matches backend roles)
@@ -87,4 +88,5 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  isFirstLogin: boolean;
 }

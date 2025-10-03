@@ -29,8 +29,8 @@ export function SkillProgressChart({ assessments, skillName, category }: SkillPr
 
   if (skillProgressData.length === 0) {
     return (
-      <div className="bg-white/5 rounded-lg p-4 text-center">
-        <p className="text-blue-200 text-sm">
+      <div className="card-base p-4 text-center">
+        <p className="text-text-secondary text-sm">
           No progress data available for {skillName}
         </p>
       </div>
@@ -38,8 +38,8 @@ export function SkillProgressChart({ assessments, skillName, category }: SkillPr
   }
 
   return (
-    <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-      <h3 className="text-lg font-semibold text-white mb-4">
+    <div className="card-base p-6">
+      <h3 className="text-lg font-semibold text-text-primary mb-4">
         {skillName} Progress ({category})
       </h3>
       <ProgressChart 
@@ -50,20 +50,20 @@ export function SkillProgressChart({ assessments, skillName, category }: SkillPr
       {/* Stats summary */}
       <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
         <div className="text-center">
-          <p className="text-blue-200">Current</p>
-          <p className="text-white font-bold text-lg">
+          <p className="text-text-secondary">Current</p>
+          <p className="text-text-primary font-bold text-lg">
             {skillProgressData[skillProgressData.length - 1]?.score.toFixed(1) || "N/A"}/10
           </p>
         </div>
         <div className="text-center">
-          <p className="text-blue-200">Best</p>
-          <p className="text-white font-bold text-lg">
+          <p className="text-text-secondary">Best</p>
+          <p className="text-text-primary font-bold text-lg">
             {Math.max(...skillProgressData.map(d => d.score)).toFixed(1)}/10
           </p>
         </div>
         <div className="text-center">
-          <p className="text-blue-200">Average</p>
-          <p className="text-white font-bold text-lg">
+          <p className="text-text-secondary">Average</p>
+          <p className="text-text-primary font-bold text-lg">
             {(skillProgressData.reduce((sum, d) => sum + d.score, 0) / skillProgressData.length).toFixed(1)}/10
           </p>
         </div>

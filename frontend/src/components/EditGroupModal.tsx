@@ -137,7 +137,7 @@ export default function EditGroupModal({
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-background-modal border border-border p-6 text-left align-middle shadow-xl transition-all">
                   <div className="flex items-center justify-center p-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
                   </div>
@@ -178,21 +178,21 @@ export default function EditGroupModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title as="h3" className="text-lg font-medium text-white mb-4">
+              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-background-modal border border-border p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Title as="h3" className="text-lg font-medium text-text-primary mb-4">
                   Edit Group
                 </Dialog.Title>
 
                 {error && (
                   <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                    <p className="text-sm text-red-300">{error}</p>
+                    <p className="text-sm text-accent-red">{error}</p>
                   </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* Group Name */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-text-secondary mb-1">
                       Group Name *
                     </label>
                     <input
@@ -200,14 +200,14 @@ export default function EditGroupModal({
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                       placeholder="Enter group name"
                     />
                   </div>
 
                   {/* Age Group Selection */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
                       Age Group *
                     </label>
                     <div className="grid grid-cols-2 gap-3">
@@ -222,7 +222,7 @@ export default function EditGroupModal({
                               p-3 rounded-lg border-2 transition-all duration-200 text-left
                               ${formData.ageGroup === ageGroup
                                 ? `border-current bg-gradient-to-br ${getAgeGroupColor(ageGroup)} text-white shadow-lg`
-                                : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500 hover:bg-gray-600'
+                                : 'border-border bg-background text-text-secondary hover:border-gray-500 hover:bg-gray-600'
                               }
                             `}
                           >
@@ -236,7 +236,7 @@ export default function EditGroupModal({
 
                   {/* Level Selection */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
                       Level *
                     </label>
                     <div className="grid grid-cols-2 gap-3">
@@ -249,7 +249,7 @@ export default function EditGroupModal({
                             p-3 rounded-lg border-2 transition-all duration-200 text-left
                             ${formData.level === level
                               ? `border-current bg-gradient-to-br ${getLevelColor(level)} text-white shadow-lg`
-                              : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500 hover:bg-gray-600'
+                              : 'border-border bg-background text-text-secondary hover:border-gray-500 hover:bg-gray-600'
                             }
                           `}
                         >
@@ -265,7 +265,7 @@ export default function EditGroupModal({
                   {/* Capacity and Zone */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Capacity *
                       </label>
                       <input
@@ -275,20 +275,20 @@ export default function EditGroupModal({
                         max={30}
                         value={formData.capacity}
                         onChange={(e) => setFormData({...formData, capacity: parseInt(e.target.value) || 20})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="20"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Zone/Location
                       </label>
                       <input
                         type="text"
                         value={formData.zone}
                         onChange={(e) => setFormData({...formData, zone: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="Field A, Pitch 1, etc."
                       />
                     </div>
@@ -296,14 +296,14 @@ export default function EditGroupModal({
 
                   {/* Description */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-text-secondary mb-1">
                       Description
                     </label>
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({...formData, description: e.target.value})}
                       rows={3}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                       placeholder="Optional description for this group..."
                     />
                   </div>
@@ -315,15 +315,15 @@ export default function EditGroupModal({
                         type="checkbox"
                         checked={formData.isActive}
                         onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
-                        className="form-checkbox h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                        className="form-checkbox h-4 w-4 text-blue-600 bg-background border border-border rounded focus:ring-blue-500"
                       />
-                      <span className="text-sm font-medium text-gray-300">Active Group</span>
+                      <span className="text-sm font-medium text-text-secondary">Active Group</span>
                     </label>
                   </div>
 
                   {/* Preview */}
-                  <div className="bg-gray-700/50 rounded-lg p-4">
-                    <h4 className="text-sm font-medium text-gray-300 mb-2">Preview</h4>
+                  <div className="bg-background rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-text-secondary mb-2">Preview</h4>
                     <div className={`
                       bg-gradient-to-br ${getAgeGroupColor(formData.ageGroup)} 
                       text-white p-3 rounded-lg
@@ -346,7 +346,7 @@ export default function EditGroupModal({
                       type="button"
                       onClick={handleClose}
                       disabled={isSubmitting}
-                      className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-600/50 text-white rounded-lg font-medium transition-colors duration-200"
+                      className="flex-1 px-4 py-2 bg-secondary-600 hover:bg-secondary-700 disabled:bg-secondary-600/50 text-white rounded-lg font-medium transition-colors duration-200"
                     >
                       Cancel
                     </button>

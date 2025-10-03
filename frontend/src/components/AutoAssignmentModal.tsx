@@ -185,15 +185,15 @@ export default function AutoAssignmentModal({
                     <div className="mb-4">
                       <div className="flex items-center justify-between bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
                         <div>
-                          <p className="text-sm text-blue-200">
+                          <p className="text-sm text-text-secondary">
                             {unassignedPlayers.length} unassigned active players found
                           </p>
-                          <p className="text-xs text-blue-300 mt-1">
+                          <p className="text-xs text-text-secondary mt-1">
                             Players will be assigned based on age group and level
                           </p>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <span className="text-sm text-blue-200">Assign All</span>
+                          <span className="text-sm text-text-secondary">Assign All</span>
                           <Switch
                             checked={assignAll}
                             onChange={setAssignAll}
@@ -245,7 +245,7 @@ export default function AutoAssignmentModal({
                                       {player.level}
                                     </span>
                                   </div>
-                                  <p className="text-xs text-gray-400">
+                                  <p className="text-xs text-text-secondary">
                                     {player.email}
                                   </p>
                                 </div>
@@ -253,17 +253,17 @@ export default function AutoAssignmentModal({
                               <div className="text-right">
                                 {playerRecs.length > 0 ? (
                                   <div>
-                                    <p className="text-xs text-green-400">
+                                    <p className="text-xs text-accent-teal">
                                       Recommended: {playerRecs[0].name}
                                     </p>
                                     {playerRecs.length > 1 && (
-                                      <p className="text-xs text-gray-400">
+                                      <p className="text-xs text-text-secondary">
                                         +{playerRecs.length - 1} alternatives
                                       </p>
                                     )}
                                   </div>
                                 ) : (
-                                  <p className="text-xs text-red-400">No available groups</p>
+                                  <p className="text-xs text-accent-red">No available groups</p>
                                 )}
                               </div>
                             </div>
@@ -273,13 +273,13 @@ export default function AutoAssignmentModal({
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-text-secondary">
                         {selectedPlayers.size} players selected
                       </p>
                       <div className="flex gap-3">
                         <button
                           onClick={handleClose}
-                          className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-white transition-colors"
+                          className="px-4 py-2 bg-secondary-600 hover:bg-secondary-700 rounded-lg text-white transition-colors"
                         >
                           Cancel
                         </button>
@@ -297,10 +297,10 @@ export default function AutoAssignmentModal({
                   <div className="space-y-4">
                     {results.success.length > 0 && (
                       <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-                        <h4 className="text-green-400 font-medium mb-2">
+                        <h4 className="text-accent-teal font-medium mb-2">
                           Successfully Assigned ({results.success.length})
                         </h4>
-                        <ul className="text-sm text-green-300 space-y-1">
+                        <ul className="text-sm text-accent-teal space-y-1">
                           {results.success.map((msg, idx) => (
                             <li key={idx}>✓ {msg}</li>
                           ))}
@@ -310,10 +310,10 @@ export default function AutoAssignmentModal({
 
                     {results.failed.length > 0 && (
                       <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-                        <h4 className="text-red-400 font-medium mb-2">
+                        <h4 className="text-accent-red font-medium mb-2">
                           Failed to Assign ({results.failed.length})
                         </h4>
-                        <ul className="text-sm text-red-300 space-y-1">
+                        <ul className="text-sm text-accent-red space-y-1">
                           {results.failed.map((msg, idx) => (
                             <li key={idx}>✗ {msg}</li>
                           ))}
@@ -324,7 +324,7 @@ export default function AutoAssignmentModal({
                     <div className="flex justify-end">
                       <button
                         onClick={handleClose}
-                        className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-white transition-colors"
+                        className="px-4 py-2 bg-secondary-600 hover:bg-secondary-700 rounded-lg text-white transition-colors"
                       >
                         Close
                       </button>

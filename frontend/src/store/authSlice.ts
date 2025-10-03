@@ -32,6 +32,7 @@ const initialState: AuthState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  isFirstLogin: false,
 };
 
 // Async thunks for authentication actions
@@ -58,7 +59,8 @@ export const loginUser = createAsyncThunk(
       
       return {
         user: userResponse,
-        token: response.token
+        token: response.token,
+        isFirstLogin: response.firstLogin
       };
     } catch (error) {
       // Log error for debugging
@@ -158,10 +160,14 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
+      state.isFirstLogin = false;
       tokenManager.removeToken();
     },
     clearError: (state) => {
       state.error = null;
+    },
+    setFirstLoginCompleted: (state) => {
+      state.isFirstLogin = false;
     },
     setCredentials: (
       state,
@@ -187,6 +193,7 @@ const authSlice = createSlice({
         state.token = action.payload.token;
         state.isAuthenticated = true;
         state.error = null;
+        state.isFirstLogin = action.payload.isFirstLogin;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -194,6 +201,7 @@ const authSlice = createSlice({
         state.token = null;
         state.isAuthenticated = false;
         state.error = action.payload as string;
+        state.isFirstLogin = false;
       })
 
       // Register cases
@@ -232,5 +240,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError, setCredentials } = authSlice.actions;
+export const { logout, clearError, setCredentials, setFirstLoginCompleted } = authSlice.actions;
 export default authSlice.reducer;

@@ -162,7 +162,7 @@ export default function EditPlayerModal({
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-background-modal border border-border p-6 text-left align-middle shadow-xl transition-all">
                   <div className="flex items-center justify-center p-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
                   </div>
@@ -201,14 +201,14 @@ export default function EditPlayerModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title as="h3" className="text-lg font-medium text-white mb-4">
+              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-background-modal border border-border p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Title as="h3" className="text-heading-4 mb-4">
                   Edit Player
                 </Dialog.Title>
 
                 {error && (
-                  <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                    <p className="text-sm text-red-300">{error}</p>
+                  <div className="alert-error mb-4">
+                    <p className="text-sm text-accent-red">{error}</p>
                   </div>
                 )}
 
@@ -216,7 +216,7 @@ export default function EditPlayerModal({
                   {/* Name Fields */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="text-caption mb-1">
                         First Name *
                       </label>
                       <input
@@ -224,13 +224,13 @@ export default function EditPlayerModal({
                         required
                         value={formData.firstName}
                         onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input-base"
                         placeholder="Enter first name"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="text-caption mb-1">
                         Last Name *
                       </label>
                       <input
@@ -238,7 +238,7 @@ export default function EditPlayerModal({
                         required
                         value={formData.lastName}
                         onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input-base"
                         placeholder="Enter last name"
                       />
                     </div>
@@ -247,7 +247,7 @@ export default function EditPlayerModal({
                   {/* Contact Information */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="text-caption mb-1">
                         Email *
                       </label>
                       <input
@@ -255,20 +255,20 @@ export default function EditPlayerModal({
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input-base"
                         placeholder="player@example.com"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="text-caption mb-1">
                         Phone
                       </label>
                       <input
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input-base"
                         placeholder="+1234567890"
                       />
                     </div>
@@ -276,7 +276,7 @@ export default function EditPlayerModal({
 
                   {/* Parent Information */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-text-secondary mb-1">
                       Parent/Guardian Name *
                     </label>
                     <input
@@ -284,7 +284,7 @@ export default function EditPlayerModal({
                       required
                       value={formData.parentName}
                       onChange={(e) => setFormData({...formData, parentName: e.target.value})}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
                       placeholder="Enter parent/guardian name"
                     />
                   </div>
@@ -292,7 +292,7 @@ export default function EditPlayerModal({
                   {/* Player Details */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="text-caption mb-1">
                         Date of Birth *
                       </label>
                       <DatePicker
@@ -310,21 +310,21 @@ export default function EditPlayerModal({
                         yearDropdownItemNumber={15}
                         scrollableYearDropdown
                         placeholderText="Select birth date"
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input-base"
                         wrapperClassName="w-full"
                         required
                         peekNextMonth
                         showPopperArrow={false}
                       />
                       {formData.dateOfBirth && (
-                        <p className="text-xs text-blue-300 mt-1">
+                        <p className="text-xs text-text-secondary mt-1">
                           Age Group: {calculateAgeGroup() || 'Outside age range'}
                         </p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="text-caption mb-1">
                         Level *
                       </label>
                       <Listbox 
@@ -332,15 +332,15 @@ export default function EditPlayerModal({
                         onChange={(value) => setFormData({...formData, level: value})}
                       >
                         <div className="relative">
-                          <Listbox.Button className="relative w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-blue-400">
+                          <Listbox.Button className="relative w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-primary">
                             {formData.level}
                           </Listbox.Button>
-                          <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
+                          <Listbox.Options className="absolute z-10 mt-1 w-full bg-background-modal border border-border rounded-lg shadow-lg max-h-40 overflow-auto">
                             {Object.values(Level).map((level) => (
                               <Listbox.Option
                                 key={level}
                                 value={level}
-                                className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                                className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-text-primary"
                               >
                                 {level}
                               </Listbox.Option>
@@ -353,7 +353,7 @@ export default function EditPlayerModal({
 
                   {/* Football Details */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-text-secondary mb-1">
                       Preferred Foot
                     </label>
                     <Listbox 
@@ -361,15 +361,15 @@ export default function EditPlayerModal({
                       onChange={(value) => setFormData({...formData, basicFoot: value})}
                     >
                       <div className="relative">
-                        <Listbox.Button className="relative w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <Listbox.Button className="relative w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-primary">
                           {formData.basicFoot}
                         </Listbox.Button>
-                        <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
+                        <Listbox.Options className="absolute z-10 mt-1 w-full bg-background-modal border border-border rounded-lg shadow-lg max-h-40 overflow-auto">
                           {Object.values(BasicFoot).map((foot) => (
                             <Listbox.Option
                               key={foot}
                               value={foot}
-                              className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                              className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-text-primary"
                             >
                               {foot}
                             </Listbox.Option>
@@ -386,9 +386,9 @@ export default function EditPlayerModal({
                         type="checkbox"
                         checked={formData.isActive}
                         onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
-                        className="form-checkbox h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                        className="form-checkbox h-4 w-4 text-primary bg-background border-border rounded focus:ring-primary"
                       />
-                      <span className="text-sm font-medium text-gray-300">Active Player</span>
+                      <span className="text-sm font-medium text-text-secondary">Active Player</span>
                     </label>
                   </div>
 
@@ -398,14 +398,14 @@ export default function EditPlayerModal({
                       type="button"
                       onClick={handleClose}
                       disabled={isSubmitting}
-                      className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-600/50 text-white rounded-lg font-medium transition-colors duration-200"
+                      className="btn-secondary btn-md flex-1"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
+                      className="btn-primary btn-md flex-1"
                     >
                       {isSubmitting ? (
                         <div className="flex items-center">

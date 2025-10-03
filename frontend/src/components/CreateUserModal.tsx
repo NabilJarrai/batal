@@ -88,10 +88,10 @@ export default function CreateUserModal({
 
   const getUserTypeColor = (type: UserType) => {
     switch (type) {
-      case UserType.ADMIN: return 'text-purple-400';
-      case UserType.MANAGER: return 'text-red-400';
-      case UserType.COACH: return 'text-blue-400';
-      default: return 'text-gray-400';
+      case UserType.ADMIN: return 'text-text-primary';
+      case UserType.MANAGER: return 'text-accent-red';
+      case UserType.COACH: return 'text-text-primary';
+      default: return 'text-text-secondary';
     }
   };
 
@@ -121,21 +121,24 @@ export default function CreateUserModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title as="h3" className="text-lg font-medium text-white mb-4">
+              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-background-modal border border-border p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Title as="h3" className="text-lg font-medium text-text-primary mb-4">
                   Add New Staff Member
                 </Dialog.Title>
 
                 {error && (
-                  <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                    <p className="text-sm text-red-300">{error}</p>
+                  <div className="alert-error mb-4">
+                    <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <p className="text-body">{error}</p>
                   </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* User Type Selection */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
                       User Type *
                     </label>
                     <div className="grid grid-cols-3 gap-3">
@@ -147,15 +150,15 @@ export default function CreateUserModal({
                           className={`p-3 rounded-lg border-2 transition-all ${
                             formData.userType === type
                               ? 'border-blue-500 bg-blue-500/20'
-                              : 'border-gray-600 bg-gray-700 hover:bg-gray-600'
+                              : 'border-border bg-background hover:bg-secondary-100'
                           }`}
                         >
                           <p className={`font-medium ${
-                            formData.userType === type ? getUserTypeColor(type) : 'text-gray-300'
+                            formData.userType === type ? getUserTypeColor(type) : 'text-text-secondary'
                           }`}>
                             {type}
                           </p>
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-xs text-text-secondary mt-1">
                             {type === UserType.ADMIN && 'Full system access'}
                             {type === UserType.MANAGER && 'Academy oversight'}
                             {type === UserType.COACH && 'Group management'}
@@ -168,7 +171,7 @@ export default function CreateUserModal({
                   {/* Personal Information */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         First Name *
                       </label>
                       <input
@@ -176,13 +179,13 @@ export default function CreateUserModal({
                         required
                         value={formData.firstName}
                         onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input-base"
                         placeholder="Enter first name"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Last Name *
                       </label>
                       <input
@@ -190,7 +193,7 @@ export default function CreateUserModal({
                         required
                         value={formData.lastName}
                         onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input-base"
                         placeholder="Enter last name"
                       />
                     </div>
@@ -199,7 +202,7 @@ export default function CreateUserModal({
                   {/* Account Information */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Email *
                       </label>
                       <input
@@ -207,20 +210,20 @@ export default function CreateUserModal({
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input-base"
                         placeholder="user@example.com"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Phone
                       </label>
                       <input
                         type="tel"
                         value={formData.phone || ''}
                         onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input-base"
                         placeholder="+1234567890"
                       />
                     </div>
@@ -229,7 +232,7 @@ export default function CreateUserModal({
                   {/* Password */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Password *
                       </label>
                       <input
@@ -237,13 +240,13 @@ export default function CreateUserModal({
                         required
                         value={formData.password}
                         onChange={(e) => setFormData({...formData, password: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input-base"
                         placeholder="Min 6 characters"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Confirm Password *
                       </label>
                       <input
@@ -251,7 +254,7 @@ export default function CreateUserModal({
                         required
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input-base"
                         placeholder="Re-enter password"
                       />
                     </div>
@@ -260,7 +263,7 @@ export default function CreateUserModal({
                   {/* Additional Information */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Gender
                       </label>
                       <Listbox 
@@ -268,10 +271,10 @@ export default function CreateUserModal({
                         onChange={(value) => setFormData({...formData, gender: value})}
                       >
                         <div className="relative">
-                          <Listbox.Button className="relative w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-blue-400">
+                          <Listbox.Button className="relative w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-blue-400">
                             <span className="block truncate">{formData.gender}</span>
                             <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                              <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                              <svg className="h-5 w-5 text-text-secondary" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                               </svg>
                             </span>
@@ -282,14 +285,14 @@ export default function CreateUserModal({
                             leaveFrom="opacity-100"
                             leaveTo="opacity-0"
                           >
-                            <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-700 border border-gray-600 rounded-lg shadow-lg">
+                            <Listbox.Options className="absolute z-10 mt-1 w-full bg-background border border-border rounded-lg shadow-lg">
                               {Object.values(Gender).map((gender) => (
                                 <Listbox.Option
                                   key={gender}
                                   value={gender}
                                   className={({ active }) =>
                                     `cursor-pointer px-3 py-2 ${
-                                      active ? 'bg-gray-600 text-white' : 'text-gray-300'
+                                      active ? 'bg-secondary text-text-primary' : 'text-text-secondary'
                                     }`
                                   }
                                 >
@@ -303,14 +306,14 @@ export default function CreateUserModal({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
                         Title/Position
                       </label>
                       <input
                         type="text"
                         value={formData.title || ''}
                         onChange={(e) => setFormData({...formData, title: e.target.value})}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input-base"
                         placeholder={
                           formData.userType === UserType.COACH ? 'Head Coach, Assistant Coach...' :
                           formData.userType === UserType.MANAGER ? 'Academy Director, Operations Manager...' :
@@ -322,14 +325,14 @@ export default function CreateUserModal({
 
                   {/* Address */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-text-secondary mb-1">
                       Address
                     </label>
                     <input
                       type="text"
                       value={formData.address || ''}
                       onChange={(e) => setFormData({...formData, address: e.target.value})}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                       placeholder="Enter address"
                     />
                   </div>
@@ -344,8 +347,8 @@ export default function CreateUserModal({
                         className="h-4 w-4 rounded text-blue-600"
                       />
                       <div>
-                        <p className="text-sm font-medium text-white">Active Account</p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-sm font-medium text-text-primary">Active Account</p>
+                        <p className="text-xs text-text-secondary">
                           User will be able to log in immediately
                         </p>
                       </div>
@@ -357,16 +360,23 @@ export default function CreateUserModal({
                     <button
                       type="button"
                       onClick={handleClose}
-                      className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-white transition-colors"
+                      className="btn-secondary btn-md flex-1"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 rounded-lg text-white font-medium transition-all disabled:opacity-50"
+                      className="btn-primary btn-md flex-1"
                     >
-                      {isSubmitting ? 'Creating...' : 'Create User'}
+                      {isSubmitting ? (
+                        <div className="flex items-center">
+                          <div className="loading-spinner mr-2"></div>
+                          Creating...
+                        </div>
+                      ) : (
+                        'Create User'
+                      )}
                     </button>
                   </div>
                 </form>

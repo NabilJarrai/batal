@@ -209,9 +209,9 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
   if (filteredAssessments.length === 0) {
     return (
       <div className="text-center py-12">
-        <FileText size={48} className="mx-auto text-gray-400 mb-4" />
+        <FileText size={48} className="mx-auto text-text-secondary mb-4" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">No assessments found</h3>
-        <p className="text-gray-500">
+        <p className="text-text-secondary">
           {searchTerm || Object.keys(filters).length > 0 
             ? 'Try adjusting your search or filters'
             : 'Create your first assessment to get started'
@@ -226,7 +226,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
       {/* Search and Filters */}
       <div className="flex items-center gap-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary" size={16} />
           <input
             type="text"
             placeholder="Search assessments..."
@@ -312,7 +312,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
       )}
 
       {/* Results Count */}
-      <div className="text-sm text-gray-500">
+      <div className="text-sm text-text-secondary">
         Showing {filteredAssessments.length} of {assessments.length} assessments
       </div>
 
@@ -338,7 +338,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
                       {showPlayerInfo && (
                         <div>
                           <h3 className="font-medium text-gray-900">{assessment.playerName}</h3>
-                          <p className="text-sm text-gray-500">{assessment.assessorName}</p>
+                          <p className="text-sm text-text-secondary">{assessment.assessorName}</p>
                         </div>
                       )}
                       
@@ -354,7 +354,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
                       <div className={`font-bold ${scoreColor}`}>
                         {averageScore > 0 ? `${averageScore}/10` : 'No scores'}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-text-secondary">
                         {averageScore > 0 ? scoreLabel : ''}
                       </div>
                     </div>
@@ -398,7 +398,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
                   <div className="flex items-center gap-1 ml-4">
                     <button
                       onClick={() => onView(assessment)}
-                      className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                      className="p-2 text-text-secondary hover:text-text-primary hover:bg-blue-50 rounded transition-colors"
                       title="View assessment"
                     >
                       <Eye size={16} />
@@ -408,7 +408,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
                       <>
                         <button
                           onClick={() => onEdit(assessment)}
-                          className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+                          className="p-2 text-text-secondary hover:text-accent-teal hover:bg-green-50 rounded transition-colors"
                           title="Edit assessment"
                         >
                           <Edit size={16} />
@@ -416,7 +416,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
 
                         <button
                           onClick={() => handleFinalize(assessment)}
-                          className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                          className="p-2 text-text-secondary hover:text-text-primary hover:bg-purple-50 rounded transition-colors"
                           title="Finalize assessment"
                         >
                           <Send size={16} />
@@ -429,7 +429,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
                         onClick={() => setSelectedAssessment(
                           selectedAssessment === assessment.id ? null : assessment.id
                         )}
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-colors"
+                        className="p-2 text-text-secondary hover:text-text-primary hover:bg-gray-50 rounded transition-colors"
                       >
                         <MoreVertical size={16} />
                       </button>

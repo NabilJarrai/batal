@@ -129,17 +129,17 @@ export default function PromotionModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title as="h3" className="text-lg font-medium text-white mb-4">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-background-modal border border-border p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Title as="h3" className="text-lg font-medium text-text-primary mb-4">
                   Promote Player to Advanced Level
                 </Dialog.Title>
 
                 {player && !result && (
                   <div className="space-y-4">
                     {/* Player Info */}
-                    <div className="bg-gray-700/50 rounded-lg p-4">
+                    <div className="bg-secondary-50 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-white font-medium">
+                        <h4 className="text-text-primary font-medium">
                           {player.firstName} {player.lastName}
                         </h4>
                         <span className="px-2 py-1 bg-blue-500 text-xs rounded-full text-white">
@@ -148,19 +148,19 @@ export default function PromotionModal({
                       </div>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Email:</span>
-                          <span className="text-gray-300">{player.email}</span>
+                          <span className="text-text-secondary">Email:</span>
+                          <span className="text-text-secondary">{player.email}</span>
                         </div>
                         {player.dateOfBirth && (
                           <div className="flex justify-between">
-                            <span className="text-gray-400">Age:</span>
-                            <span className="text-gray-300">{getAge(player.dateOfBirth)} years</span>
+                            <span className="text-text-secondary">Age:</span>
+                            <span className="text-text-secondary">{getAge(player.dateOfBirth)} years</span>
                           </div>
                         )}
                         {player.groupName && (
                           <div className="flex justify-between">
-                            <span className="text-gray-400">Current Group:</span>
-                            <span className="text-gray-300">{player.groupName}</span>
+                            <span className="text-text-secondary">Current Group:</span>
+                            <span className="text-text-secondary">{player.groupName}</span>
                           </div>
                         )}
                       </div>
@@ -176,17 +176,17 @@ export default function PromotionModal({
                         <div className="flex items-center space-x-2 mb-2">
                           {eligibility.eligible ? (
                             <>
-                              <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                              <svg className="w-5 h-5 text-accent-teal" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                               </svg>
-                              <span className="text-green-400 font-medium">Eligible for Promotion</span>
+                              <span className="text-accent-teal font-medium">Eligible for Promotion</span>
                             </>
                           ) : (
                             <>
-                              <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                              <svg className="w-5 h-5 text-accent-red" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                               </svg>
-                              <span className="text-red-400 font-medium">Not Eligible</span>
+                              <span className="text-accent-red font-medium">Not Eligible</span>
                             </>
                           )}
                         </div>
@@ -194,7 +194,7 @@ export default function PromotionModal({
                           <ul className="space-y-1">
                             {eligibility.reasons.map((reason, idx) => (
                               <li key={idx} className={`text-sm ${
-                                eligibility.eligible ? 'text-green-300' : 'text-red-300'
+                                eligibility.eligible ? 'text-accent-teal' : 'text-accent-red'
                               }`}>
                                 • {reason}
                               </li>
@@ -207,8 +207,8 @@ export default function PromotionModal({
                     {/* Promotion Details */}
                     {eligibility?.eligible && (
                       <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                        <h4 className="text-blue-400 font-medium mb-2">What happens next:</h4>
-                        <ul className="space-y-1 text-sm text-blue-300">
+                        <h4 className="text-text-primary font-medium mb-2">What happens next:</h4>
+                        <ul className="space-y-1 text-sm text-text-secondary">
                           <li>• Player will be promoted to Advanced level</li>
                           <li>• Current group assignment will be removed</li>
                           <li>• Player will be auto-assigned to an Advanced group</li>
@@ -221,7 +221,7 @@ export default function PromotionModal({
                     <div className="flex gap-3">
                       <button
                         onClick={handleClose}
-                        className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-white transition-colors"
+                        className="flex-1 px-4 py-2 bg-secondary-600 hover:bg-secondary-700 rounded-lg text-white transition-colors"
                       >
                         Cancel
                       </button>
@@ -247,16 +247,16 @@ export default function PromotionModal({
                         : 'bg-red-500/10 border border-red-500/20'
                     }`}>
                       {result.success ? (
-                        <svg className="w-16 h-16 text-green-400 mx-auto mb-3" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-16 h-16 text-accent-teal mx-auto mb-3" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                       ) : (
-                        <svg className="w-16 h-16 text-red-400 mx-auto mb-3" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-16 h-16 text-accent-red mx-auto mb-3" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                         </svg>
                       )}
                       <p className={`text-lg ${
-                        result.success ? 'text-green-400' : 'text-red-400'
+                        result.success ? 'text-accent-teal' : 'text-accent-red'
                       }`}>
                         {result.message}
                       </p>
@@ -264,7 +264,7 @@ export default function PromotionModal({
 
                     <button
                       onClick={handleClose}
-                      className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-white transition-colors"
+                      className="w-full px-4 py-2 bg-secondary-600 hover:bg-secondary-700 rounded-lg text-white transition-colors"
                     >
                       Close
                     </button>

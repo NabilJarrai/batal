@@ -11,7 +11,7 @@ const LoginFormClient = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     )
   }
@@ -20,31 +20,31 @@ const LoginFormClient = dynamic(
 export default function LoginPage() {
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Animated background elements */}
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Subtle background pattern */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-background to-secondary-50 opacity-50"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(30,64,175,0.05),transparent_50%)]"></div>
+        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(20,184,166,0.05),transparent_50%)]"></div>
       </div>
 
       <div className="max-w-md w-full space-y-8 relative z-10">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto mb-6 p-4 bg-white/10 backdrop-blur-lg rounded-2xl w-fit">
-            <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center mx-auto">
+          <div className="mx-auto mb-6 p-4 bg-background rounded-2xl shadow-lg w-fit border border-border">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-hover rounded-full flex items-center justify-center mx-auto">
               <span className="text-white font-bold text-2xl">⚽</span>
             </div>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-          <p className="text-blue-200">Sign in to your Batal Academy account</p>
+          <h2 className="text-3xl font-bold text-text-primary mb-2">Welcome Back</h2>
+          <p className="text-text-secondary">Sign in to your Batal Academy account</p>
         </div>
 
         {/* Login Form Container */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
+        <div className="bg-background rounded-2xl shadow-xl p-8 border border-border">
           <Suspense fallback={
             <div className="flex items-center justify-center p-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           }>
             <LoginFormClient />
@@ -53,14 +53,14 @@ export default function LoginPage() {
 
         {/* Links */}
         <div className="text-center space-y-2">
-          <p className="text-sm text-blue-200">
+          <p className="text-sm text-text-secondary">
             Don't have an account?{" "}
-            <Link href="/register" className="font-medium text-cyan-300 hover:text-cyan-100 transition-colors duration-200 underline underline-offset-4">
+            <Link href="/register" className="font-medium text-primary hover:text-primary-hover transition-colors duration-200 underline underline-offset-4">
               Create account
             </Link>
           </p>
-          <p className="text-sm text-blue-200">
-            <Link href="/" className="font-medium text-cyan-300 hover:text-cyan-100 transition-colors duration-200">
+          <p className="text-sm text-text-secondary">
+            <Link href="/" className="font-medium text-primary hover:text-primary-hover transition-colors duration-200">
               ← Back to Home
             </Link>
           </p>

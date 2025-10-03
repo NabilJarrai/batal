@@ -472,6 +472,30 @@ export const groupsAPI = {
   },
 };
 
+// Coaches API calls
+export const coachesAPI = {
+  getAll: async (): Promise<UserResponse[]> => {
+    return apiRequest<UserResponse[]>("/coaches");
+  },
+
+  getById: async (id: number): Promise<UserResponse> => {
+    return apiRequest<UserResponse>(`/coaches/${id}`);
+  },
+
+  update: async (id: number, userData: any): Promise<UserResponse> => {
+    return apiRequest<UserResponse>(`/coaches/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(userData),
+    });
+  },
+
+  delete: async (id: number): Promise<{ message: string }> => {
+    return apiRequest<{ message: string }>(`/coaches/${id}`, {
+      method: "DELETE",
+    });
+  },
+};
+
 // Export other API modules
 export { skillsAPI } from './api/skills';
 export { assessmentsAPI } from './api/assessments';

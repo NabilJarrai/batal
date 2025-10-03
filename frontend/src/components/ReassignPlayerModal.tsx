@@ -112,31 +112,31 @@ export default function ReassignPlayerModal({
             >
               <Dialog.Panel className="w-full max-w-md transform overflow-visible bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 text-left align-middle shadow-xl transition-all">
                 <Dialog.Title className="text-lg font-medium text-white mb-4 flex items-center">
-                  <svg className="w-6 h-6 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                   </svg>
                   Reassign Player
                 </Dialog.Title>
 
                 {error && (
-                  <div className="mb-4 bg-red-500/20 border border-red-500/30 rounded-xl p-3">
-                    <p className="text-sm text-red-200">{error}</p>
+                  <div className="alert-error mb-4">
+                    <p className="text-sm text-accent-red">{error}</p>
                   </div>
                 )}
 
                 <div className="mb-6">
-                  <p className="text-sm text-blue-200 mb-4">
+                  <p className="text-sm text-text-secondary mb-4">
                     Move <strong className="text-white">{player?.firstName} {player?.lastName}</strong> from <strong className="text-white">{currentGroupName}</strong> to a new group:
                   </p>
                   
                   {loadingGroups ? (
                     <div className="flex items-center justify-center py-4">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-400"></div>
-                      <span className="ml-2 text-sm text-blue-200">Loading groups...</span>
+                      <div className="loading-spinner w-6 h-6"></div>
+                      <span className="ml-2 text-sm text-text-secondary">Loading groups...</span>
                     </div>
                   ) : availableGroups.length > 0 ? (
                     <div>
-                      <label className="block text-sm font-medium text-blue-200 mb-2">
+                      <label className="block text-sm font-medium text-text-secondary mb-2">
                         Select New Group ({availableGroups.length} available)
                       </label>
                       <Listbox value={selectedGroup} onChange={setSelectedGroup}>
@@ -147,7 +147,7 @@ export default function ReassignPlayerModal({
                                 ? `${selectedGroup.name} - ${selectedGroup.level} (${selectedGroup.availableSpots} spots)`
                                 : 'Choose a group...'}
                             </span>
-                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                           </Listbox.Button>
@@ -160,7 +160,7 @@ export default function ReassignPlayerModal({
                               >
                                 <div>
                                   <div className="font-medium">{group.name}</div>
-                                  <div className="text-sm text-gray-300">
+                                  <div className="text-sm text-text-secondary">
                                     {group.level} • {group.availableSpots} spots available
                                   </div>
                                 </div>
@@ -172,11 +172,11 @@ export default function ReassignPlayerModal({
                     </div>
                   ) : (
                     <div className="text-center py-4">
-                      <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="mx-auto h-12 w-12 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v2m-2-6a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
-                      <h3 className="mt-2 text-sm font-medium text-gray-300">No available groups</h3>
-                      <p className="mt-1 text-sm text-gray-400">
+                      <h3 className="mt-2 text-sm font-medium text-text-secondary">No available groups</h3>
+                      <p className="mt-1 text-sm text-text-secondary">
                         All other groups are either full or inactive.
                       </p>
                     </div>
@@ -184,10 +184,10 @@ export default function ReassignPlayerModal({
                   
                   {selectedGroup && (
                     <div className="mt-4 bg-blue-500/20 border border-blue-500/30 rounded-lg p-3">
-                      <p className="text-sm text-blue-200">
+                      <p className="text-sm text-text-secondary">
                         <strong>Moving to:</strong> {selectedGroup.name}
                       </p>
-                      <p className="text-xs text-blue-300">
+                      <p className="text-xs text-text-secondary">
                         {selectedGroup.level} • {selectedGroup.availableSpots} spots available after assignment
                       </p>
                     </div>
@@ -199,7 +199,7 @@ export default function ReassignPlayerModal({
                     type="button"
                     onClick={handleClose}
                     disabled={isLoading}
-                    className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-colors duration-200"
+                    className="btn-secondary btn-md flex-1"
                   >
                     Cancel
                   </button>
@@ -208,14 +208,11 @@ export default function ReassignPlayerModal({
                     type="button"
                     onClick={handleConfirm}
                     disabled={isLoading || !selectedGroup}
-                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors duration-200 disabled:opacity-50 flex items-center justify-center"
+                    className="btn-primary btn-md flex-1"
                   >
                     {isLoading ? (
                       <div className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
+                        <div className="loading-spinner mr-2"></div>
                         Reassigning...
                       </div>
                     ) : (

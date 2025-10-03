@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { chartColors } from "@/lib/chartColors";
 
 interface AssessmentData {
   date: string;
@@ -64,7 +65,7 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
     ctx.clearRect(0, 0, width, height);
 
     // Draw grid lines
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+    ctx.strokeStyle = chartColors.grid;
     ctx.lineWidth = 1;
 
     // Horizontal grid lines
@@ -76,7 +77,7 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
       ctx.stroke();
 
       // Draw y-axis labels
-      ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+      ctx.fillStyle = chartColors.text.secondary;
       ctx.font = "12px sans-serif";
       ctx.textAlign = "right";
       ctx.textBaseline = "middle";
@@ -84,7 +85,7 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
     }
 
     // Draw axes
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+    ctx.strokeStyle = chartColors.axis;
     ctx.lineWidth = 2;
     
     // Y-axis
@@ -100,7 +101,7 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
     ctx.stroke();
 
     // Draw the progress line
-    ctx.strokeStyle = "#3B82F6";
+    ctx.strokeStyle = chartColors.primary;
     ctx.lineWidth = 3;
     ctx.beginPath();
 
@@ -161,7 +162,7 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
       // Draw point
       ctx.beginPath();
       ctx.arc(x, y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = "#3B82F6";
+      ctx.fillStyle = chartColors.primary;
       ctx.fill();
       ctx.strokeStyle = "white";
       ctx.lineWidth = 2;
@@ -183,7 +184,7 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
         ctx.save();
         ctx.translate(x, height - padding + 20);
         ctx.rotate(-Math.PI / 4);
-        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.fillStyle = chartColors.text.secondary;
         ctx.font = "10px sans-serif";
         ctx.textAlign = "right";
         ctx.textBaseline = "middle";
@@ -191,7 +192,7 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
         ctx.restore();
       } else if (index === 0) {
         // Label the baseline point
-        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.fillStyle = chartColors.text.secondary;
         ctx.font = "10px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
@@ -209,7 +210,7 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
       const textHeight = 12;
 
       // Draw background for the score label
-      ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+      ctx.fillStyle = chartColors.background.overlay;
       ctx.fillRect(
         x - textWidth/2 - 4,
         labelY - textHeight/2 - 2,
@@ -217,8 +218,8 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
         textHeight + 4
       );
 
-      // Draw white border for the background
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+      // Draw border for the background
+      ctx.strokeStyle = chartColors.grid;
       ctx.lineWidth = 1;
       ctx.strokeRect(
         x - textWidth/2 - 4,
@@ -228,14 +229,14 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
       );
 
       // Draw the score text
-      ctx.fillStyle = "white";
+      ctx.fillStyle = chartColors.text.primary;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(labelText, x, labelY);
     });
 
     // Draw title
-    ctx.fillStyle = "white";
+    ctx.fillStyle = chartColors.text.primary;
     ctx.font = "16px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
@@ -246,8 +247,8 @@ export function ProgressChart({ assessments, skillName = "Overall" }: ProgressCh
       const lastScore = dataWithBaseline[dataWithBaseline.length - 1].score;
       const prevScore = dataWithBaseline[dataWithBaseline.length - 2].score;
       const trend = lastScore - prevScore;
-      
-      ctx.fillStyle = trend >= 0 ? "#10B981" : "#EF4444";
+
+      ctx.fillStyle = trend >= 0 ? chartColors.accent.teal : chartColors.accent.red;
       ctx.font = "14px sans-serif";
       ctx.textAlign = "right";
       ctx.textBaseline = "top";

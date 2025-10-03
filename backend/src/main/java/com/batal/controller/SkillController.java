@@ -158,6 +158,8 @@ public class SkillController {
                 skills = skillService.getSkillsByCategoryAndLevel(category, level);
             } else if (category != null) {
                 skills = skillService.getSkillsByCategory(category);
+            } else if (level != null && activeOnly) {
+                skills = skillService.getActiveSkillsByLevel(level);
             } else if (level != null) {
                 skills = skillService.getSkillsByLevel(level);
             } else if (activeOnly) {

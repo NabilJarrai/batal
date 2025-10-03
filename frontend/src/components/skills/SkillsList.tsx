@@ -77,7 +77,7 @@ export default function SkillsList({ category, level, onSkillSelect }: SkillsLis
   if (loading && skills.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -149,7 +149,7 @@ export default function SkillsList({ category, level, onSkillSelect }: SkillsLis
                   setActiveOnly(e.target.checked);
                   setCurrentPage(0);
                 }}
-                className="rounded text-blue-600 focus:ring-blue-500"
+                className="rounded text-primary focus:ring-primary"
               />
               <span className="text-sm">Active Only</span>
             </label>
@@ -170,7 +170,7 @@ export default function SkillsList({ category, level, onSkillSelect }: SkillsLis
             <div className="flex justify-between items-start mb-2">
               <h3 className="font-semibold text-lg">{skill.name}</h3>
               <span className={`px-2 py-1 text-xs rounded-full ${
-                skill.category === 'ATHLETIC' ? 'bg-blue-100 text-blue-800' :
+                skill.category === 'ATHLETIC' ? 'bg-primary/10 text-primary' :
                 skill.category === 'TECHNICAL' ? 'bg-green-100 text-green-800' :
                 skill.category === 'MENTALITY' ? 'bg-purple-100 text-purple-800' :
                 'bg-yellow-100 text-yellow-800'
@@ -255,8 +255,8 @@ export default function SkillsList({ category, level, onSkillSelect }: SkillsLis
                       onClick={() => handlePageChange(pageNum)}
                       className={`px-3 py-1 rounded-lg ${
                         pageNum === currentPage
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                          ? 'bg-primary text-white'
+                          : 'bg-white border border-border text-text-primary hover:bg-secondary-50'
                       }`}
                     >
                       {pageNum + 1}
