@@ -3,6 +3,8 @@ package com.batal.service;
 import com.batal.dto.*;
 import com.batal.entity.*;
 import com.batal.entity.enums.*;
+import com.batal.exception.AccessDeniedException;
+import com.batal.exception.BusinessRuleException;
 import com.batal.exception.ValidationException;
 import com.batal.repository.*;
 import jakarta.persistence.EntityNotFoundException;
@@ -220,14 +222,21 @@ public class AssessmentService {
 
     // ===== DELETE OPERATIONS =====
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('COACH') or hasRole('ADMIN') or hasRole('MANAGER')")
     public void deleteAssessment(Long assessmentId) {
         Assessment assessment = findAssessmentById(assessmentId);
         User currentUser = getCurrentAuthenticatedUser();
 
+        // Check ownership - coaches can only delete their own assessments
+        if (hasRole(currentUser, "COACH") && !hasRole(currentUser, "ADMIN") && !hasRole(currentUser, "MANAGER")) {
+            if (!assessment.getAssessor().getId().equals(currentUser.getId())) {
+                throw new AccessDeniedException("delete", "assessment");
+            }
+        }
+
         // Only allow deletion of non-finalized assessments or by admins
         if (assessment.getIsFinalized() && !hasRole(currentUser, "ADMIN")) {
-            throw new IllegalStateException("Cannot delete finalized assessment");
+            throw new BusinessRuleException("Cannot delete finalized assessment");
         }
 
         assessmentRepository.delete(assessment);

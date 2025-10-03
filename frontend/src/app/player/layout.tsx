@@ -11,7 +11,7 @@ import {
   DocumentChartBarIcon,
   HomeIcon,
   ArrowRightOnRectangleIcon,
-  ChartBarIcon,
+  HeartIcon,
 } from "@heroicons/react/24/outline";
 
 interface PlayerLayoutProps {
@@ -41,9 +41,9 @@ export default function PlayerLayout({ children }: PlayerLayoutProps) {
       icon: DocumentChartBarIcon,
     },
     {
-      name: "Progress Analytics",
-      href: "/player/progress",
-      icon: ChartBarIcon,
+      name: "Nutrition Program",
+      href: "/player/nutrition",
+      icon: HeartIcon,
     },
     {
       name: "My Profile",
