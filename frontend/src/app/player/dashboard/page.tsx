@@ -114,21 +114,21 @@ export default function PlayerDashboard() {
   return (
     <div className="space-y-8">
       {/* Welcome Section with Progress Summary */}
-      <div className="bg-gradient-to-r from-primary/5 via-white to-accent-teal/5 rounded-2xl p-8 border border-gray-100 shadow-lg">
+      <div className="bg-gradient-to-r from-primary/5 via-white to-accent-teal/5 rounded-2xl p-6 border border-gray-100 shadow-lg">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-text-primary mb-2">
+            <h1 className="text-2xl font-bold text-text-primary mb-2">
               Welcome back, {profile?.firstName}!
             </h1>
-            <p className="text-lg text-text-secondary">
+            <p className="text-base text-text-secondary">
               Track your progress and view your performance assessments
             </p>
           </div>
 
           {stats && (
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+            <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-200">
               <div className="text-center">
-                <div className="text-4xl font-bold text-primary mb-2">
+                <div className="text-3xl font-bold text-primary mb-2">
                   {stats.current.toFixed(1)}/10
                 </div>
                 <div className={`text-sm font-medium mb-1 ${
@@ -146,43 +146,43 @@ export default function PlayerDashboard() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg hover:shadow-xl transition-all">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-primary/10 rounded-full">
-              <AcademicCapIcon className="h-8 w-8 text-primary" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-lg hover:shadow-xl transition-all">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-full">
+              <AcademicCapIcon className="h-6 w-6 text-primary" />
             </div>
             <div>
               <p className="text-sm font-medium text-text-secondary">Level</p>
-              <p className="text-2xl font-bold text-text-primary">
+              <p className="text-xl font-bold text-text-primary">
                 {profile?.level || "N/A"}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg hover:shadow-xl transition-all">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-accent-yellow/10 rounded-full">
-              <TrophyIcon className="h-8 w-8 text-accent-yellow" />
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-lg hover:shadow-xl transition-all">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-accent-yellow/10 rounded-full">
+              <TrophyIcon className="h-6 w-6 text-accent-yellow" />
             </div>
             <div>
               <p className="text-sm font-medium text-text-secondary">Group</p>
-              <p className="text-2xl font-bold text-text-primary">
+              <p className="text-xl font-bold text-text-primary">
                 {profile?.groupName || "Unassigned"}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg hover:shadow-xl transition-all">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-accent-teal/10 rounded-full">
-              <CalendarIcon className="h-8 w-8 text-accent-teal" />
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-lg hover:shadow-xl transition-all">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-accent-teal/10 rounded-full">
+              <CalendarIcon className="h-6 w-6 text-accent-teal" />
             </div>
             <div>
               <p className="text-sm font-medium text-text-secondary">Member Since</p>
-              <p className="text-xl font-bold text-text-primary">
+              <p className="text-lg font-bold text-text-primary">
                 {profile?.joiningDate
                   ? new Date(profile.joiningDate).toLocaleDateString('en-US', {
                       month: 'short',
@@ -194,14 +194,14 @@ export default function PlayerDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg hover:shadow-xl transition-all">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-secondary/10 rounded-full">
-              <ChartBarIcon className="h-8 w-8 text-secondary" />
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-lg hover:shadow-xl transition-all">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-secondary/10 rounded-full">
+              <ChartBarIcon className="h-6 w-6 text-secondary" />
             </div>
             <div>
               <p className="text-sm font-medium text-text-secondary">Assessments</p>
-              <p className="text-2xl font-bold text-text-primary">
+              <p className="text-xl font-bold text-text-primary">
                 {assessments.length}
               </p>
             </div>
@@ -211,13 +211,13 @@ export default function PlayerDashboard() {
 
       {/* Progress Analytics Section */}
       {assessments.length >= 2 ? (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Progress Analytics Header */}
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg">
-            <div className="flex items-center justify-between mb-6">
+          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-2xl font-bold text-text-primary mb-2">Progress Analytics</h2>
-                <p className="text-text-secondary">
+                <h2 className="text-xl font-bold text-text-primary mb-1">Progress Analytics</h2>
+                <p className="text-sm text-text-secondary">
                   Track your skill development and performance trends over time
                 </p>
               </div>
@@ -226,7 +226,7 @@ export default function PlayerDashboard() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setViewMode("overview")}
-                  className={`px-4 py-2 rounded-lg transition-all font-medium ${
+                  className={`px-3 py-2 text-sm rounded-lg transition-all font-medium ${
                     viewMode === "overview"
                       ? "bg-primary text-white shadow-lg"
                       : "bg-secondary-100 text-text-primary hover:bg-secondary-50"
@@ -236,7 +236,7 @@ export default function PlayerDashboard() {
                 </button>
                 <button
                   onClick={() => setViewMode("skills")}
-                  className={`px-4 py-2 rounded-lg transition-all font-medium ${
+                  className={`px-3 py-2 text-sm rounded-lg transition-all font-medium ${
                     viewMode === "skills"
                       ? "bg-primary text-white shadow-lg"
                       : "bg-secondary-100 text-text-primary hover:bg-secondary-50"
@@ -254,25 +254,25 @@ export default function PlayerDashboard() {
 
             {/* Skills Mode */}
             {viewMode === "skills" && (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {/* Skill Selector */}
                 <div>
-                  <h3 className="text-lg font-semibold text-text-primary mb-4">
+                  <h3 className="text-base font-semibold text-text-primary mb-3">
                     Select a Skill to View Progress
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                     {availableSkills.map((skill) => (
                       <button
                         key={`${skill.category}-${skill.name}`}
                         onClick={() => setSelectedSkill(skill)}
-                        className={`p-4 rounded-xl text-left transition-all ${
+                        className={`p-3 rounded-xl text-left transition-all ${
                           selectedSkill?.name === skill.name && selectedSkill?.category === skill.category
                             ? "bg-primary text-white shadow-lg"
                             : "bg-secondary-50 text-text-primary hover:bg-secondary-100 hover:shadow-md"
                         }`}
                       >
-                        <div className="font-medium">{skill.name}</div>
-                        <div className="text-sm opacity-70">{skill.category}</div>
+                        <div className="text-sm font-medium">{skill.name}</div>
+                        <div className="text-xs opacity-70">{skill.category}</div>
                       </button>
                     ))}
                   </div>
@@ -288,9 +288,9 @@ export default function PlayerDashboard() {
                 )}
 
                 {!selectedSkill && (
-                  <div className="bg-secondary-50 rounded-xl p-12 text-center">
-                    <ChartBarIcon className="h-16 w-16 text-text-primary mx-auto mb-4" />
-                    <p className="text-text-secondary text-lg">
+                  <div className="bg-secondary-50 rounded-xl p-8 text-center">
+                    <ChartBarIcon className="h-12 w-12 text-text-primary mx-auto mb-3" />
+                    <p className="text-text-secondary text-base">
                       Select a skill above to view its progress over time
                     </p>
                   </div>
@@ -300,20 +300,20 @@ export default function PlayerDashboard() {
           </div>
         </div>
       ) : assessments.length === 1 ? (
-        <div className="bg-white rounded-2xl p-12 border border-gray-100 shadow-lg text-center">
-          <ArrowTrendingUpIcon className="h-20 w-20 text-accent-yellow mx-auto mb-6" />
-          <h3 className="text-2xl font-bold text-text-primary mb-4">Need More Data</h3>
-          <p className="text-text-secondary text-lg">
+        <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-lg text-center">
+          <ArrowTrendingUpIcon className="h-16 w-16 text-accent-yellow mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-text-primary mb-3">Need More Data</h3>
+          <p className="text-text-secondary text-base">
             Complete at least 2 assessments to see your progress trends and analytics.
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl p-12 border border-gray-100 shadow-lg text-center">
-          <ChartBarIcon className="h-20 w-20 text-primary mx-auto mb-6" />
-          <h3 className="text-2xl font-bold text-text-primary mb-4">
+        <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-lg text-center">
+          <ChartBarIcon className="h-16 w-16 text-primary mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-text-primary mb-3">
             No Progress Data
           </h3>
-          <p className="text-text-secondary text-lg mb-6">
+          <p className="text-text-secondary text-base mb-4">
             Complete your first assessment to start tracking your progress.
           </p>
         </div>
@@ -321,14 +321,14 @@ export default function PlayerDashboard() {
 
       {/* Latest Assessment Section */}
       {latestAssessment && (
-        <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-lg">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-text-primary">
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-text-primary">
               Latest Assessment
             </h2>
             <Link
               href={`/player/assessments/${latestAssessment.id}`}
-              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors font-medium"
+              className="flex items-center gap-2 px-3 py-2 text-sm bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors font-medium"
             >
               View Details
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -342,26 +342,26 @@ export default function PlayerDashboard() {
 
       {/* Assessment History */}
       {assessments.length > 0 && (
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-text-primary">Recent Assessment History</h3>
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-text-primary">Recent Assessment History</h3>
             <Link
               href="/player/assessments"
-              className="text-primary hover:text-primary-hover transition-colors font-medium"
+              className="text-sm text-primary hover:text-primary-hover transition-colors font-medium"
             >
               View All →
             </Link>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {assessments.slice(0, 5).map((assessment, index) => (
-              <div key={assessment.id} className="flex items-center justify-between p-4 bg-secondary-50 rounded-xl hover:bg-secondary-100 transition-colors">
-                <div className="flex items-center gap-4">
+              <div key={assessment.id} className="flex items-center justify-between p-3 bg-secondary-50 rounded-xl hover:bg-secondary-100 transition-colors">
+                <div className="flex items-center gap-3">
                   <div className="p-2 bg-white rounded-lg shadow-sm">
-                    <CalendarIcon className="h-5 w-5 text-primary" />
+                    <CalendarIcon className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <div className="font-semibold text-text-primary">{assessment.period}</div>
-                    <div className="text-sm text-text-secondary">
+                    <div className="text-sm font-semibold text-text-primary">{assessment.period}</div>
+                    <div className="text-xs text-text-secondary">
                       {new Date(assessment.assessmentDate).toLocaleDateString('en-US', {
                         month: 'long',
                         day: 'numeric',
@@ -370,16 +370,16 @@ export default function PlayerDashboard() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-text-primary">
+                    <div className="text-xl font-bold text-text-primary">
                       {assessment.skillScores
                         ? (assessment.skillScores.reduce((sum, skill) => sum + skill.score, 0) / assessment.skillScores.length).toFixed(1)
                         : "N/A"
                       }/10
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                     assessment.isFinalized
                       ? "bg-accent-teal/20 text-accent-teal"
                       : "bg-accent-yellow/20 text-accent-yellow"
