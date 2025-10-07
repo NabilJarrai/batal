@@ -193,19 +193,19 @@ public class GroupService {
         }
         
         // Remove player from current group if assigned
-        if (player.getUser().getGroup() != null) {
-            Group currentGroup = player.getUser().getGroup();
-            currentGroup.removePlayer(player.getUser());
+        if (player.getGroup() != null) {
+            Group currentGroup = player.getGroup();
+            currentGroup.removePlayer(player);
             groupRepository.save(currentGroup);
         }
-        
+
         // Assign player to new group
-        group.addPlayer(player.getUser());
-        player.getUser().setGroup(group);
-        
+        group.addPlayer(player);
+        player.setGroup(group);
+
         playerRepository.save(player);
         Group savedGroup = groupRepository.save(group);
-        
+
         return new GroupResponse(savedGroup);
     }
 
@@ -217,13 +217,13 @@ public class GroupService {
         Player player = playerRepository.findById(playerId)
             .orElseThrow(() -> new RuntimeException("Player not found"));
         
-        if (player.getUser().getGroup() == null || !player.getUser().getGroup().getId().equals(groupId)) {
+        if (player.getGroup() == null || !player.getGroup().getId().equals(groupId)) {
             throw new RuntimeException("Player is not assigned to this group");
         }
-        
-        group.removePlayer(player.getUser());
-        player.getUser().setGroup(null);
-        
+
+        group.removePlayer(player);
+        player.setGroup(null);
+
         playerRepository.save(player);
         Group savedGroup = groupRepository.save(group);
         
@@ -330,15 +330,15 @@ public class GroupService {
             .orElseThrow(() -> new RuntimeException("Player not found"));
         
         // Calculate player age
-        int playerAge = LocalDate.now().getYear() - player.getUser().getDateOfBirth().getYear();
+        int playerAge = LocalDate.now().getYear() - player.getDateOfBirth().getYear();
         AgeGroup ageGroup = AgeGroup.getByAge(playerAge);
-        
+
         if (ageGroup == null) {
             throw new RuntimeException("Player age (" + playerAge + ") is not within supported age range");
         }
-        
+
         // Use the player's actual level, not hardcoded level
-        Level playerLevel = player.getUser().getLevel();
+        Level playerLevel = player.getLevel();
         
         // Find available group with matching level and age group
         List<Group> availableGroups = groupRepository.findAvailableGroupsByLevelAndAgeGroup(
@@ -375,26 +375,21 @@ public class GroupService {
     public List<GroupResponse> getAvailableGroupsForPlayer(Long playerId) {
         Player player = playerRepository.findByIdWithGroup(playerId)
             .orElseThrow(() -> new RuntimeException("Player not found with ID: " + playerId));
-        
-        User playerUser = player.getUser();
-        if (playerUser == null) {
-            throw new RuntimeException("Player user data not found");
-        }
-        
+
         // Calculate player age
-        int playerAge = calculatePlayerAge(playerUser.getDateOfBirth());
-        
+        int playerAge = calculatePlayerAge(player.getDateOfBirth());
+
         // Get player's current level (default to DEVELOPMENT if null)
-        Level playerLevel = playerUser.getLevel() != null ? playerUser.getLevel() : Level.DEVELOPMENT;
-        
+        Level playerLevel = player.getLevel() != null ? player.getLevel() : Level.DEVELOPMENT;
+
         // Find all active groups that can accommodate this player
         List<Group> availableGroups = groupRepository.findAll().stream()
             .filter(group -> {
                 // Group must be active
                 if (!group.getIsActive()) return false;
-                
+
                 // Group must have capacity (unless it's the player's current group)
-                if (group.isFull() && !group.equals(playerUser.getGroup())) return false;
+                if (group.isFull() && !group.equals(player.getGroup())) return false;
                 
                 // Age must be within group's age range (with some flexibility)
                 if (playerAge > 0) { // Only check if we have a valid age

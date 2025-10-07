@@ -30,11 +30,13 @@ public class PlayerDTO {
     
     @Size(max = 500, message = "Address must not exceed 500 characters")
     private String address;
-    
-    @NotBlank(message = "Parent name is required")
+
+    // Parent relationship (computed from parent User entity)
+    private Long parentId;
+
     @Size(max = 200, message = "Parent name must not exceed 200 characters")
-    private String parentName;
-    
+    private String parentName;  // Computed field for display only
+
     private LocalDate joiningDate;
     
     @NotNull(message = "Level is required")
@@ -59,7 +61,14 @@ public class PlayerDTO {
     // Group information
     private Long groupId;
     private String groupName;
-    
+
+    // Player-specific fields
+    @Size(max = 10, message = "Player number must not exceed 10 characters")
+    private String playerNumber;
+
+    @Size(max = 50, message = "Position must not exceed 50 characters")
+    private String position;
+
     // Constructors
     public PlayerDTO() {}
     
@@ -130,10 +139,19 @@ public class PlayerDTO {
     
     public Long getGroupId() { return groupId; }
     public void setGroupId(Long groupId) { this.groupId = groupId; }
-    
+
     public String getGroupName() { return groupName; }
     public void setGroupName(String groupName) { this.groupName = groupName; }
-    
+
+    public Long getParentId() { return parentId; }
+    public void setParentId(Long parentId) { this.parentId = parentId; }
+
+    public String getPlayerNumber() { return playerNumber; }
+    public void setPlayerNumber(String playerNumber) { this.playerNumber = playerNumber; }
+
+    public String getPosition() { return position; }
+    public void setPosition(String position) { this.position = position; }
+
     // Helper methods
     public String getFullName() {
         return firstName + " " + lastName;

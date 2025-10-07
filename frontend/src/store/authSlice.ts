@@ -33,6 +33,8 @@ const initialState: AuthState = {
   isLoading: false,
   error: null,
   isFirstLogin: false,
+  children: undefined,
+  selectedChildId: undefined,
 };
 
 // Async thunks for authentication actions
@@ -60,7 +62,8 @@ export const loginUser = createAsyncThunk(
       return {
         user: userResponse,
         token: response.token,
-        isFirstLogin: response.firstLogin
+        isFirstLogin: response.firstLogin,
+        children: response.children,
       };
     } catch (error) {
       // Log error for debugging
@@ -161,6 +164,8 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       state.isFirstLogin = false;
+      state.children = undefined;
+      state.selectedChildId = undefined;
       tokenManager.removeToken();
     },
     clearError: (state) => {
@@ -179,6 +184,9 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.error = null;
     },
+    selectChild: (state, action: PayloadAction<number>) => {
+      state.selectedChildId = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -194,6 +202,11 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.error = null;
         state.isFirstLogin = action.payload.isFirstLogin;
+        state.children = action.payload.children;
+        // Auto-select first child if parent has children
+        if (action.payload.children && action.payload.children.length > 0) {
+          state.selectedChildId = action.payload.children[0].id;
+        }
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -240,5 +253,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError, setCredentials, setFirstLoginCompleted } = authSlice.actions;
+export const { logout, clearError, setCredentials, setFirstLoginCompleted, selectChild } = authSlice.actions;
 export default authSlice.reducer;

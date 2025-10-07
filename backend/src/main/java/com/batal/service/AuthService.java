@@ -1,15 +1,18 @@
 package com.batal.service;
 
 import com.batal.dto.ChangeFirstLoginPasswordRequest;
+import com.batal.dto.ChildSummaryDTO;
 import com.batal.dto.LoginRequest;
 import com.batal.dto.LoginResponse;
 import com.batal.dto.RegisterRequest;
 import com.batal.dto.UserResponse;
+import com.batal.entity.Player;
 import com.batal.entity.Role;
 import com.batal.entity.User;
 import com.batal.exception.AuthenticationException;
 import com.batal.exception.ResourceAlreadyExistsException;
 import com.batal.exception.ResourceNotFoundException;
+import com.batal.repository.PlayerRepository;
 import com.batal.repository.RoleRepository;
 import com.batal.repository.UserRepository;
 import com.batal.security.JwtUtil;
@@ -24,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,16 +36,19 @@ public class AuthService {
     
     @Autowired
     private UserRepository userRepository;
-    
+
+    @Autowired
+    private PlayerRepository playerRepository;
+
     @Autowired
     private RoleRepository roleRepository;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
-    
+
     @Autowired
     private AuthenticationManager authenticationManager;
-    
+
     @Autowired
     private JwtUtil jwtUtil;
     
@@ -87,24 +94,60 @@ public class AuthService {
                         loginRequest.getEmail(),
                         loginRequest.getPassword())
         );
-        
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtil.generateJwtToken(authentication);
-        
-        UserDetailsServiceImpl.UserPrincipal userPrincipal = 
+
+        UserDetailsServiceImpl.UserPrincipal userPrincipal =
                 (UserDetailsServiceImpl.UserPrincipal) authentication.getPrincipal();
-        
+
         List<String> roles = userPrincipal.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .map(role -> role.replace("ROLE_", ""))
                 .collect(Collectors.toList());
-        
+
         // Get user details
         User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
-        
+
+        // If user is a parent, fetch their children
+        List<ChildSummaryDTO> children = null;
+        if (user.isParent()) {
+            children = fetchChildrenForParent(user.getId());
+        }
+
         return new LoginResponse(jwt, user.getId(), user.getEmail(),
-                user.getFirstName(), user.getLastName(), roles, user.isFirstLogin());
+                user.getFirstName(), user.getLastName(), roles, user.isFirstLogin(), children);
+    }
+
+    /**
+     * Fetch and convert children to ChildSummaryDTO for parent login
+     */
+    private List<ChildSummaryDTO> fetchChildrenForParent(Long parentUserId) {
+        List<Player> children = playerRepository.findByParentIdWithGroup(parentUserId);
+
+        if (children == null || children.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return children.stream()
+                .map(this::convertToChildSummary)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Convert Player entity to ChildSummaryDTO
+     */
+    private ChildSummaryDTO convertToChildSummary(Player player) {
+        return new ChildSummaryDTO(
+                player.getId(),
+                player.getFirstName(),
+                player.getLastName(),
+                player.getDateOfBirth(),
+                player.getGroup() != null ? player.getGroup().getName() : null,
+                player.getLevel() != null ? player.getLevel().toString() : null,
+                player.getIsActive()
+        );
     }
 
     @Transactional

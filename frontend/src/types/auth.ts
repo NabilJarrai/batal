@@ -21,6 +21,17 @@ export interface RegisterRequest {
   role: UserRole;
 }
 
+// Child Summary DTO (for parent login response)
+export interface ChildSummary {
+  id: number;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  groupName?: string;
+  level?: string;
+  isActive: boolean;
+}
+
 // Login Response DTO (matches backend LoginResponse.java)
 export interface LoginResponse {
   id: number;
@@ -31,6 +42,7 @@ export interface LoginResponse {
   token: string;
   type: string;
   firstLogin: boolean;
+  children?: ChildSummary[]; // For parents only
 }
 
 // User roles enum (matches backend roles)
@@ -38,7 +50,7 @@ export enum UserRole {
   ADMIN = "ADMIN",
   MANAGER = "MANAGER",
   COACH = "COACH",
-  PLAYER = "PLAYER",
+  PARENT = "PARENT", // Added PARENT, removed PLAYER
 }
 
 // Legacy types for backward compatibility
@@ -89,4 +101,6 @@ export interface AuthState {
   isLoading: boolean;
   error: string | null;
   isFirstLogin: boolean;
+  children?: ChildSummary[]; // For parents
+  selectedChildId?: number; // Currently selected child for parents
 }

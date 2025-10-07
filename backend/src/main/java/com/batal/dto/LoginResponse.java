@@ -3,7 +3,7 @@ package com.batal.dto;
 import java.util.List;
 
 public class LoginResponse {
-    
+
     private String token;
     private String type = "Bearer";
     private Long id;
@@ -12,9 +12,10 @@ public class LoginResponse {
     private String lastName;
     private List<String> roles;
     private boolean isFirstLogin;
-    
+    private List<ChildSummaryDTO> children; // For parents only
+
     public LoginResponse() {}
-    
+
     public LoginResponse(String token, Long id, String email, String firstName,
                         String lastName, List<String> roles, boolean isFirstLogin) {
         this.token = token;
@@ -24,6 +25,19 @@ public class LoginResponse {
         this.lastName = lastName;
         this.roles = roles;
         this.isFirstLogin = isFirstLogin;
+    }
+
+    public LoginResponse(String token, Long id, String email, String firstName,
+                        String lastName, List<String> roles, boolean isFirstLogin,
+                        List<ChildSummaryDTO> children) {
+        this.token = token;
+        this.id = id;
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.roles = roles;
+        this.isFirstLogin = isFirstLogin;
+        this.children = children;
     }
     
     public String getToken() {
@@ -88,5 +102,13 @@ public class LoginResponse {
 
     public void setFirstLogin(boolean firstLogin) {
         this.isFirstLogin = firstLogin;
+    }
+
+    public List<ChildSummaryDTO> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<ChildSummaryDTO> children) {
+        this.children = children;
     }
 }

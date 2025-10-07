@@ -1,6 +1,7 @@
 package com.batal.dto;
 
 import com.batal.entity.User;
+import com.batal.entity.enums.Gender;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,7 +14,7 @@ public class UserResponse {
     private String lastName;
     private String phone;
     private LocalDate dateOfBirth;
-    private User.Gender gender;
+    private Gender gender;
     private String address;
     private String emergencyContactName;
     private String emergencyContactPhone;
@@ -90,11 +91,11 @@ public class UserResponse {
         this.dateOfBirth = dateOfBirth;
     }
     
-    public User.Gender getGender() {
+    public Gender getGender() {
         return gender;
     }
     
-    public void setGender(User.Gender gender) {
+    public void setGender(Gender gender) {
         this.gender = gender;
     }
     

@@ -42,8 +42,10 @@ export default function LoginFormClient() {
         router.push('/manager');
       } else if (user.roles?.includes('COACH')) {
         router.push('/coach');
+      } else if (user.roles?.includes('PARENT')) {
+        router.push('/parent/dashboard');
       } else {
-        // Default to player dashboard for players or users without specific roles
+        // Default fallback
         router.push('/player/dashboard');
       }
     }
@@ -125,7 +127,7 @@ export default function LoginFormClient() {
   };
 
   // Demo credentials for quick access
-  const fillDemoCredentials = (role: 'admin' | 'manager' | 'coach') => {
+  const fillDemoCredentials = (role: 'admin' | 'manager' | 'coach' | 'parent') => {
     switch(role) {
       case 'admin':
         setFormData({ email: 'admin@batal.com', password: 'admin123' });
@@ -135,6 +137,9 @@ export default function LoginFormClient() {
         break;
       case 'coach':
         setFormData({ email: 'coach@batal.com', password: 'coach123' });
+        break;
+      case 'parent':
+        setFormData({ email: 'parent1@batal.com', password: 'parent123' });
         break;
     }
   };
@@ -301,7 +306,7 @@ export default function LoginFormClient() {
       {/* Demo Credentials */}
       <div className="mt-6 pt-6 divider">
         <p className="text-body-sm text-center mb-3">Quick demo access (for testing):</p>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           <button
             type="button"
             onClick={() => fillDemoCredentials('admin')}
@@ -325,6 +330,14 @@ export default function LoginFormClient() {
           >
             <div className="font-medium">Coach</div>
             <div className="text-[10px] opacity-75">Groups</div>
+          </button>
+          <button
+            type="button"
+            onClick={() => fillDemoCredentials('parent')}
+            className="btn-outline btn-sm flex flex-col items-center"
+          >
+            <div className="font-medium">Parent</div>
+            <div className="text-[10px] opacity-75">Children</div>
           </button>
         </div>
       </div>

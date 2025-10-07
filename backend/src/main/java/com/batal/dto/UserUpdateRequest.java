@@ -22,7 +22,7 @@ public class UserUpdateRequest {
     
     private LocalDate dateOfBirth;
     
-    private User.Gender gender;
+    private Gender gender;
     
     private String address;
     
@@ -84,11 +84,11 @@ public class UserUpdateRequest {
         this.dateOfBirth = dateOfBirth;
     }
     
-    public User.Gender getGender() {
+    public Gender getGender() {
         return gender;
     }
     
-    public void setGender(User.Gender gender) {
+    public void setGender(Gender gender) {
         this.gender = gender;
     }
     

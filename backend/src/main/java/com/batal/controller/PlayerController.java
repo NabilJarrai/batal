@@ -73,14 +73,14 @@ public class PlayerController {
     private String mapSortField(String sortBy) {
         switch (sortBy.toLowerCase()) {
             case "firstname":
-                return "user.firstName";
+                return "firstName";
             case "lastname":
-                return "user.lastName";
+                return "lastName";
             case "email":
-                return "user.email";
+                return "email";
             case "fullname":
                 // For full name, we'll use firstName as the primary sort
-                return "user.firstName";
+                return "firstName";
             default:
                 return sortBy;
         }

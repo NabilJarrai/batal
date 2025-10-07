@@ -54,9 +54,9 @@ public class Group {
     @JoinColumn(name = "coach_id")
     private User coach;
     
-    // Players are now managed through User entities with user_type = 'PLAYER'
+    // Players are now managed through Player entities
     @OneToMany(mappedBy = "group", fetch = FetchType.LAZY)
-    private Set<User> players = new HashSet<>();
+    private Set<Player> players = new HashSet<>();
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pitch_id")
@@ -165,11 +165,11 @@ public class Group {
         this.coach = coach;
     }
     
-    public Set<User> getPlayers() {
+    public Set<Player> getPlayers() {
         return players;
     }
-    
-    public void setPlayers(Set<User> players) {
+
+    public void setPlayers(Set<Player> players) {
         this.players = players;
     }
     
@@ -222,12 +222,12 @@ public class Group {
     }
     
     // Utility methods
-    public void addPlayer(User player) {
+    public void addPlayer(Player player) {
         players.add(player);
         player.setGroup(this);
     }
-    
-    public void removePlayer(User player) {
+
+    public void removePlayer(Player player) {
         players.remove(player);
         player.setGroup(null);
     }

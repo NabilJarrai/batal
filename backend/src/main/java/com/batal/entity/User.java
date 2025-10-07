@@ -1,6 +1,8 @@
 package com.batal.entity;
 
-import com.batal.entity.enums.*;
+import com.batal.entity.enums.AgeGroup;
+import com.batal.entity.enums.Gender;
+import com.batal.entity.enums.UserType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -51,31 +53,15 @@ public class User {
     
     @Column(columnDefinition = "TEXT")
     private String address;
-    
-    // Player-specific fields
-    @Size(max = 255)
-    @Column(name = "parent_name")
-    private String parentName;
-    
-    @Column(name = "joining_date")
-    private LocalDate joiningDate;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type", nullable = false)
-    private UserType userType; // No default - must be set explicitly
-    
+    private UserType userType; // PARENT, COACH, ADMIN, MANAGER only
+
     @Size(max = 100)
     @Column(length = 100)
-    private String title; // For Admin/Manager
-    
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20)
-    private Level level; // For Players
-    
-    @Enumerated(EnumType.STRING)
-    @Column(name = "basic_foot", length = 10)
-    private BasicFoot basicFoot; // For Players
-    
+    private String title; // For Admin/Manager/Coach
+
     @Column(columnDefinition = "TEXT")
     private String inactiveReason;
     
@@ -106,20 +92,11 @@ public class User {
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles = new HashSet<>();
-    
-    // Group relationship for players
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id")
-    private Group group;
-    
-    // TODO: Add normalized player relationship when migrations are enabled
-    // @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    // private PlayerNormalized playerInfo;
-    
-    public enum Gender {
-        MALE, FEMALE
-    }
-    
+
+    // Children relationship for parents
+    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
+    private Set<Player> children = new HashSet<>();
+
     public User() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
@@ -259,69 +236,36 @@ public class User {
         this.roles = roles;
     }
     
-    // New getters and setters for enhanced fields
-    public String getParentName() {
-        return parentName;
-    }
-    
-    public void setParentName(String parentName) {
-        this.parentName = parentName;
-    }
-    
-    public LocalDate getJoiningDate() {
-        return joiningDate;
-    }
-    
-    public void setJoiningDate(LocalDate joiningDate) {
-        this.joiningDate = joiningDate;
-    }
-    
     public UserType getUserType() {
         return userType;
     }
-    
+
     public void setUserType(UserType userType) {
         this.userType = userType;
     }
-    
+
     public String getTitle() {
         return title;
     }
-    
+
     public void setTitle(String title) {
         this.title = title;
     }
-    
-    public Level getLevel() {
-        return level;
-    }
-    
-    public void setLevel(Level level) {
-        this.level = level;
-    }
-    
-    public BasicFoot getBasicFoot() {
-        return basicFoot;
-    }
-    
-    public void setBasicFoot(BasicFoot basicFoot) {
-        this.basicFoot = basicFoot;
-    }
-    
+
     public String getInactiveReason() {
         return inactiveReason;
     }
-    
+
     public void setInactiveReason(String inactiveReason) {
         this.inactiveReason = inactiveReason;
     }
-    
-    public Group getGroup() {
-        return group;
+
+    public Set<Player> getChildren() {
+        return children;
     }
-    
-    public void setGroup(Group group) {
-        this.group = group;
+
+    public void setChildren(Set<Player> children) {
+        this.children = children;
     }
     
     // Utility methods
@@ -357,7 +301,11 @@ public class User {
     public boolean isManager() {
         return userType == UserType.MANAGER;
     }
-    
+
+    public boolean isParent() {
+        return userType == UserType.PARENT;
+    }
+
     public AgeGroup getAgeGroup() {
         if (dateOfBirth == null) return null;
         int age = LocalDate.now().getYear() - dateOfBirth.getYear();
@@ -365,17 +313,8 @@ public class User {
     }
 
     public boolean isFirstLogin() {
-        return firstLoginAt == null && (isCoach() || userType == UserType.PLAYER);
+        return firstLoginAt == null && (isCoach() || isParent());
     }
-    
-    // TODO: Uncomment when PlayerNormalized relationship is enabled
-    // public PlayerNormalized getPlayerInfo() {
-    //     return playerInfo;
-    // }
-    // 
-    // public void setPlayerInfo(PlayerNormalized playerInfo) {
-    //     this.playerInfo = playerInfo;
-    // }
     
     
     @Override

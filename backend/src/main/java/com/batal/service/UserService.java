@@ -57,11 +57,10 @@ public class UserService {
                 .collect(Collectors.toList())));
     }
     
-    // Get all users (legacy method - kept for backward compatibility)
+    // Get all users (only authenticated users: COACH, ADMIN, MANAGER, PARENT)
     public List<UserResponse> getAllUsers() {
         List<User> users = userRepository.findAllWithRoles();
         return users.stream()
-                .filter(user -> user.getUserType() != UserType.PLAYER) // Exclude players
                 .map(user -> new UserResponse(user, user.getRoles().stream()
                         .map(role -> role.getName())
                         .collect(Collectors.toList())))
@@ -107,7 +106,6 @@ public class UserService {
         user.setEmergencyContactName(request.getEmergencyContactName());
         user.setEmergencyContactPhone(request.getEmergencyContactPhone());
         user.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
-        user.setJoiningDate(java.time.LocalDate.now()); // Set joining date for coaches/staff
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
         
@@ -124,6 +122,9 @@ public class UserService {
                     break;
                 case MANAGER:
                     defaultRoleName = "MANAGER";
+                    break;
+                case PARENT:
+                    defaultRoleName = "PARENT";
                     break;
                 default:
                     defaultRoleName = "COACH"; // Default to COACH if no specific type

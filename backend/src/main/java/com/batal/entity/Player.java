@@ -1,253 +1,155 @@
 package com.batal.entity;
 
+import com.batal.entity.enums.Gender;
+import com.batal.entity.enums.Level;
+import com.batal.entity.enums.BasicFoot;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.HashSet;
 
 @Entity
 @Table(name = "players")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Player {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @NotNull
-    @Column(name = "user_id", nullable = false, unique = true)
-    private Long userId;
-    
-    // Player-specific fields only (personal data is in users table)
+
+    // ========== PERSONAL DATA ==========
+    @NotBlank
+    @Column(name = "first_name", nullable = false, length = 100)
+    private String firstName;
+
+    @NotBlank
+    @Column(name = "last_name", nullable = false, length = 100)
+    private String lastName;
+
+    @Email
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    private String phone;
+
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
+
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
+
+    private String address;
+
+    @Column(name = "joining_date")
+    private LocalDate joiningDate;
+
+    @Enumerated(EnumType.STRING)
+    private Level level;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "basic_foot")
+    private BasicFoot basicFoot;
+
+    @Column(name = "emergency_contact_name")
+    private String emergencyContactName;
+
+    @Column(name = "emergency_contact_phone")
+    private String emergencyContactPhone;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private Group group;
+
+    @Column(name = "is_active")
+    private Boolean isActive = true;
+
+    @Column(name = "inactive_reason", columnDefinition = "TEXT")
+    private String inactiveReason;
+
+    // ========== PARENT RELATIONSHIP ==========
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private User parent;
+
+    // ========== PLAYER-SPECIFIC FIELDS ==========
     @Size(max = 10)
     @Column(name = "player_number", unique = true, length = 10)
     private String playerNumber;
-    
+
     @Size(max = 50)
     @Column(length = 50)
     private String position;
-    
+
     @Column(name = "assessment_notes", columnDefinition = "TEXT")
     private String assessmentNotes;
-    
+
     @Column(name = "medical_notes", columnDefinition = "TEXT")
     private String medicalNotes;
-    
+
     @Size(max = 10)
     @Column(name = "jersey_size", length = 10)
     private String jerseySize;
-    
+
     @Column(name = "equipment_notes", columnDefinition = "TEXT")
     private String equipmentNotes;
-    
+
     @Size(max = 50)
     @Column(name = "preferred_training_time", length = 50)
     private String preferredTrainingTime;
-    
+
     @Column(name = "transportation_notes", columnDefinition = "TEXT")
     private String transportationNotes;
-    
+
     @Column(name = "additional_skills", columnDefinition = "TEXT")
     private String additionalSkills;
-    
+
     @Column(name = "development_goals", columnDefinition = "TEXT")
     private String developmentGoals;
-    
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-    
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-    
-    // User relationship (contains all personal data)
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    private User user;
-    
-    // Assessments relationship
+
+    // ========== RELATIONSHIPS ==========
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Assessment> assessments = new HashSet<>();
-    
-    // Memberships relationship
+
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Membership> memberships = new HashSet<>();
-    
-    public Player() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-    
-    public Player(Long userId) {
-        this();
-        this.userId = userId;
-    }
-    
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-    
-    public void setId(Long id) {
-        this.id = id;
-    }
-    
-    public Long getUserId() {
-        return userId;
-    }
-    
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-    
-    public String getPlayerNumber() {
-        return playerNumber;
-    }
-    
-    public void setPlayerNumber(String playerNumber) {
-        this.playerNumber = playerNumber;
-    }
-    
-    public String getPosition() {
-        return position;
-    }
-    
-    public void setPosition(String position) {
-        this.position = position;
-    }
-    
-    public String getAssessmentNotes() {
-        return assessmentNotes;
-    }
-    
-    public void setAssessmentNotes(String assessmentNotes) {
-        this.assessmentNotes = assessmentNotes;
-    }
-    
-    public String getMedicalNotes() {
-        return medicalNotes;
-    }
-    
-    public void setMedicalNotes(String medicalNotes) {
-        this.medicalNotes = medicalNotes;
-    }
-    
-    public String getJerseySize() {
-        return jerseySize;
-    }
-    
-    public void setJerseySize(String jerseySize) {
-        this.jerseySize = jerseySize;
-    }
-    
-    public String getEquipmentNotes() {
-        return equipmentNotes;
-    }
-    
-    public void setEquipmentNotes(String equipmentNotes) {
-        this.equipmentNotes = equipmentNotes;
-    }
-    
-    public String getPreferredTrainingTime() {
-        return preferredTrainingTime;
-    }
-    
-    public void setPreferredTrainingTime(String preferredTrainingTime) {
-        this.preferredTrainingTime = preferredTrainingTime;
-    }
-    
-    public String getTransportationNotes() {
-        return transportationNotes;
-    }
-    
-    public void setTransportationNotes(String transportationNotes) {
-        this.transportationNotes = transportationNotes;
-    }
-    
-    public String getAdditionalSkills() {
-        return additionalSkills;
-    }
-    
-    public void setAdditionalSkills(String additionalSkills) {
-        this.additionalSkills = additionalSkills;
-    }
-    
-    public String getDevelopmentGoals() {
-        return developmentGoals;
-    }
-    
-    public void setDevelopmentGoals(String developmentGoals) {
-        this.developmentGoals = developmentGoals;
-    }
-    
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-    
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-    
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-    
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-    
-    public User getUser() {
-        return user;
-    }
-    
-    public void setUser(User user) {
-        this.user = user;
-    }
-    
-    public Set<Assessment> getAssessments() {
-        return assessments;
-    }
-    
-    public void setAssessments(Set<Assessment> assessments) {
-        this.assessments = assessments;
-    }
-    
-    public Set<Membership> getMemberships() {
-        return memberships;
-    }
-    
-    public void setMemberships(Set<Membership> memberships) {
-        this.memberships = memberships;
-    }
-    
-    // Utility methods - delegate to user for personal data
-    public String getFirstName() {
-        return user != null ? user.getFirstName() : null;
-    }
-    
-    public String getLastName() {
-        return user != null ? user.getLastName() : null;
-    }
-    
-    public String getFullName() {
-        return user != null ? user.getFullName() : null;
-    }
-    
-    public String getEmail() {
-        return user != null ? user.getEmail() : null;
-    }
-    
+
+    // ========== LIFECYCLE CALLBACKS ==========
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
-    
+
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-    
+
+    // ========== UTILITY METHODS ==========
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
+    public String getParentFullName() {
+        return parent != null ? parent.getFullName() : null;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -255,17 +157,19 @@ public class Player {
         Player player = (Player) o;
         return id != null && id.equals(player.id);
     }
-    
+
     @Override
     public int hashCode() {
         return id != null ? id.hashCode() : 0;
     }
-    
+
     @Override
     public String toString() {
         return "Player{" +
                 "id=" + id +
-                ", userId=" + userId +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
                 ", playerNumber='" + playerNumber + '\'' +
                 ", position='" + position + '\'' +
                 '}';
