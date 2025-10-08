@@ -30,52 +30,52 @@ public interface SkillScoreRepository extends JpaRepository<SkillScore, Long> {
     
     Optional<SkillScore> findByAssessmentIdAndSkillId(Long assessmentId, Long skillId);
     
-    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player.user = :user")
-    List<SkillScore> findByAssessmentPlayer(@Param("user") User user);
-    
-    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player.user.id = :userId")
-    List<SkillScore> findByAssessmentPlayerId(@Param("userId") Long userId);
-    
-    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player.user = :user AND ss.skill.category = :category")
-    List<SkillScore> findByPlayerAndSkillCategory(@Param("user") User user, @Param("category") SkillCategory category);
-    
-    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player.user.id = :userId AND ss.skill.category = :category")
-    List<SkillScore> findByPlayerIdAndSkillCategory(@Param("userId") Long userId, @Param("category") SkillCategory category);
-    
-    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player.user = :user AND ss.assessment.assessmentDate BETWEEN :startDate AND :endDate")
-    List<SkillScore> findByPlayerAndDateRange(@Param("user") User user, 
-                                            @Param("startDate") LocalDate startDate, 
+    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player = :player")
+    List<SkillScore> findByAssessmentPlayer(@Param("player") Player player);
+
+    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player.id = :playerId")
+    List<SkillScore> findByAssessmentPlayerId(@Param("playerId") Long playerId);
+
+    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player = :player AND ss.skill.category = :category")
+    List<SkillScore> findByPlayerAndSkillCategory(@Param("player") Player player, @Param("category") SkillCategory category);
+
+    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player.id = :playerId AND ss.skill.category = :category")
+    List<SkillScore> findByPlayerIdAndSkillCategory(@Param("playerId") Long playerId, @Param("category") SkillCategory category);
+
+    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player = :player AND ss.assessment.assessmentDate BETWEEN :startDate AND :endDate")
+    List<SkillScore> findByPlayerAndDateRange(@Param("player") Player player,
+                                            @Param("startDate") LocalDate startDate,
                                             @Param("endDate") LocalDate endDate);
-    
-    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player.user = :user ORDER BY ss.assessment.assessmentDate DESC")
-    List<SkillScore> findByPlayerOrderByDateDesc(@Param("user") User user);
-    
-    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player.user.id = :userId ORDER BY ss.assessment.assessmentDate DESC")
-    List<SkillScore> findByPlayerIdOrderByDateDesc(@Param("userId") Long userId);
-    
-    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player.user = :user AND ss.skill = :skill ORDER BY ss.assessment.assessmentDate DESC")
-    List<SkillScore> findByPlayerAndSkillOrderByDateDesc(@Param("user") User user, @Param("skill") Skill skill);
-    
-    @Query("SELECT AVG(ss.score) FROM SkillScore ss WHERE ss.assessment.player.user = :user AND ss.skill.category = :category")
-    Double getAverageScoreByPlayerAndCategory(@Param("user") User user, @Param("category") SkillCategory category);
-    
-    @Query("SELECT AVG(ss.score) FROM SkillScore ss WHERE ss.assessment.player.user.id = :userId AND ss.skill.category = :category")
-    Double getAverageScoreByPlayerIdAndCategory(@Param("userId") Long userId, @Param("category") SkillCategory category);
-    
-    @Query("SELECT AVG(ss.score) FROM SkillScore ss WHERE ss.assessment.player.user = :user AND ss.skill = :skill")
-    Double getAverageScoreByPlayerAndSkill(@Param("user") User user, @Param("skill") Skill skill);
-    
-    @Query("SELECT MAX(ss.score) FROM SkillScore ss WHERE ss.assessment.player.user = :user AND ss.skill = :skill")
-    Integer getMaxScoreByPlayerAndSkill(@Param("user") User user, @Param("skill") Skill skill);
-    
-    @Query("SELECT MIN(ss.score) FROM SkillScore ss WHERE ss.assessment.player.user = :user AND ss.skill = :skill")
-    Integer getMinScoreByPlayerAndSkill(@Param("user") User user, @Param("skill") Skill skill);
-    
-    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player.user.group.coach = :coach")
+
+    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player = :player ORDER BY ss.assessment.assessmentDate DESC")
+    List<SkillScore> findByPlayerOrderByDateDesc(@Param("player") Player player);
+
+    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player.id = :playerId ORDER BY ss.assessment.assessmentDate DESC")
+    List<SkillScore> findByPlayerIdOrderByDateDesc(@Param("playerId") Long playerId);
+
+    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player = :player AND ss.skill = :skill ORDER BY ss.assessment.assessmentDate DESC")
+    List<SkillScore> findByPlayerAndSkillOrderByDateDesc(@Param("player") Player player, @Param("skill") Skill skill);
+
+    @Query("SELECT AVG(ss.score) FROM SkillScore ss WHERE ss.assessment.player = :player AND ss.skill.category = :category")
+    Double getAverageScoreByPlayerAndCategory(@Param("player") Player player, @Param("category") SkillCategory category);
+
+    @Query("SELECT AVG(ss.score) FROM SkillScore ss WHERE ss.assessment.player.id = :playerId AND ss.skill.category = :category")
+    Double getAverageScoreByPlayerIdAndCategory(@Param("playerId") Long playerId, @Param("category") SkillCategory category);
+
+    @Query("SELECT AVG(ss.score) FROM SkillScore ss WHERE ss.assessment.player = :player AND ss.skill = :skill")
+    Double getAverageScoreByPlayerAndSkill(@Param("player") Player player, @Param("skill") Skill skill);
+
+    @Query("SELECT MAX(ss.score) FROM SkillScore ss WHERE ss.assessment.player = :player AND ss.skill = :skill")
+    Integer getMaxScoreByPlayerAndSkill(@Param("player") Player player, @Param("skill") Skill skill);
+
+    @Query("SELECT MIN(ss.score) FROM SkillScore ss WHERE ss.assessment.player = :player AND ss.skill = :skill")
+    Integer getMinScoreByPlayerAndSkill(@Param("player") Player player, @Param("skill") Skill skill);
+
+    @Query("SELECT ss FROM SkillScore ss WHERE ss.assessment.player.group.coach = :coach")
     List<SkillScore> findByPlayerGroupCoach(@Param("coach") User coach);
-    
-    @Query("SELECT COUNT(ss) FROM SkillScore ss WHERE ss.assessment.player.user = :user")
-    long countByPlayer(@Param("user") User user);
+
+    @Query("SELECT COUNT(ss) FROM SkillScore ss WHERE ss.assessment.player = :player")
+    long countByPlayer(@Param("player") Player player);
     
     @Query("SELECT COUNT(ss) FROM SkillScore ss WHERE ss.skill = :skill")
     long countBySkill(@Param("skill") Skill skill);

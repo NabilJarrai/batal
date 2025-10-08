@@ -38,18 +38,18 @@ public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
     
     List<Assessment> findByIsFinalizedFalse();
     
-    @Query("SELECT a FROM Assessment a WHERE a.player.user.group.coach = :coach")
+    @Query("SELECT a FROM Assessment a WHERE a.player.group.coach = :coach")
     List<Assessment> findByPlayerGroupCoach(@Param("coach") User coach);
-    
-    @Query("SELECT a FROM Assessment a WHERE a.player.user.group.coach.id = :coachId")
+
+    @Query("SELECT a FROM Assessment a WHERE a.player.group.coach.id = :coachId")
     List<Assessment> findByPlayerGroupCoachId(@Param("coachId") Long coachId);
-    
-    @Query("SELECT a FROM Assessment a WHERE a.player.user.group.id = :groupId")
+
+    @Query("SELECT a FROM Assessment a WHERE a.player.group.id = :groupId")
     List<Assessment> findByPlayerGroupId(@Param("groupId") Long groupId);
-    
-    @Query("SELECT a FROM Assessment a WHERE a.assessmentDate BETWEEN :startDate AND :endDate AND a.player.user.group.coach = :coach")
-    List<Assessment> findByDateRangeAndCoach(@Param("startDate") LocalDate startDate, 
-                                           @Param("endDate") LocalDate endDate, 
+
+    @Query("SELECT a FROM Assessment a WHERE a.assessmentDate BETWEEN :startDate AND :endDate AND a.player.group.coach = :coach")
+    List<Assessment> findByDateRangeAndCoach(@Param("startDate") LocalDate startDate,
+                                           @Param("endDate") LocalDate endDate,
                                            @Param("coach") User coach);
     
     // Count queries

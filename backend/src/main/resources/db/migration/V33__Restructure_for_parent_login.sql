@@ -24,37 +24,64 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS emergency_contact_phone VARCHAR(20)
 -- PART 2: Add parent relationship to players table
 ALTER TABLE players ADD COLUMN IF NOT EXISTS parent_id BIGINT;
 
--- PART 3: Migrate data from users to players
+-- PART 3: Migrate data from users to players (only if user_id column still exists)
 -- Update existing player records with data from their linked user records
-UPDATE players p
-SET
-    first_name = COALESCE(p.first_name, u.first_name),
-    last_name = COALESCE(p.last_name, u.last_name),
-    email = COALESCE(p.email, u.email),
-    phone = COALESCE(p.phone, u.phone),
-    date_of_birth = COALESCE(p.date_of_birth, u.date_of_birth),
-    gender = COALESCE(p.gender, u.gender::varchar),
-    address = COALESCE(p.address, u.address),
-    joining_date = COALESCE(p.joining_date, u.joining_date),
-    level = COALESCE(p.level, u.level::varchar),
-    basic_foot = COALESCE(p.basic_foot, u.basic_foot::varchar),
-    group_id = COALESCE(p.group_id, u.group_id),
-    is_active = COALESCE(p.is_active, u.is_active),
-    inactive_reason = COALESCE(p.inactive_reason, u.inactive_reason),
-    emergency_contact_name = COALESCE(p.emergency_contact_name, u.emergency_contact_name),
-    emergency_contact_phone = COALESCE(p.emergency_contact_phone, u.emergency_contact_phone)
-FROM users u
-WHERE p.user_id = u.id AND u.user_type = 'PLAYER';
+DO $$
+BEGIN
+    -- Only run migration if user_id column exists (migration not already run)
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'players' AND column_name = 'user_id'
+    ) THEN
+        UPDATE players p
+        SET
+            first_name = COALESCE(p.first_name, u.first_name),
+            last_name = COALESCE(p.last_name, u.last_name),
+            email = COALESCE(p.email, u.email),
+            phone = COALESCE(p.phone, u.phone),
+            date_of_birth = COALESCE(p.date_of_birth, u.date_of_birth),
+            gender = COALESCE(p.gender, u.gender::varchar),
+            address = COALESCE(p.address, u.address),
+            joining_date = COALESCE(p.joining_date, u.joining_date),
+            level = COALESCE(p.level, u.level::varchar),
+            basic_foot = COALESCE(p.basic_foot, u.basic_foot::varchar),
+            group_id = COALESCE(p.group_id, u.group_id),
+            is_active = COALESCE(p.is_active, u.is_active),
+            inactive_reason = COALESCE(p.inactive_reason, u.inactive_reason),
+            emergency_contact_name = COALESCE(p.emergency_contact_name, u.emergency_contact_name),
+            emergency_contact_phone = COALESCE(p.emergency_contact_phone, u.emergency_contact_phone)
+        FROM users u
+        WHERE p.user_id = u.id AND u.user_type = 'PLAYER';
+
+        RAISE NOTICE 'Migrated player data from users table to players table';
+    ELSE
+        RAISE NOTICE 'Skipping player data migration - user_id column already removed (migration previously completed)';
+    END IF;
+END $$;
 
 -- PART 4: Add foreign key for group relationship
-ALTER TABLE players
-ADD CONSTRAINT IF NOT EXISTS fk_players_group
-FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_players_group'
+    ) THEN
+        ALTER TABLE players
+        ADD CONSTRAINT fk_players_group
+        FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE SET NULL;
+    END IF;
+END $$;
 
 -- PART 5: Add foreign key for parent relationship
-ALTER TABLE players
-ADD CONSTRAINT fk_players_parent
-FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_players_parent'
+    ) THEN
+        ALTER TABLE players
+        ADD CONSTRAINT fk_players_parent
+        FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE SET NULL;
+    END IF;
+END $$;
 
 -- PART 6: Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_players_parent_id ON players(parent_id);
@@ -93,8 +120,12 @@ BEGIN
 END $$;
 
 -- PART 9: Add PARENT role if not exists
-INSERT INTO roles (name) VALUES ('PARENT')
-ON CONFLICT (name) DO NOTHING;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM roles WHERE name = 'PARENT') THEN
+        INSERT INTO roles (name) VALUES ('PARENT');
+    END IF;
+END $$;
 
 -- PART 10: Remove player users from users table
 -- First remove from user_roles junction table
@@ -104,7 +135,10 @@ WHERE user_id IN (SELECT id FROM users WHERE user_type = 'PLAYER');
 -- Then remove from users table
 DELETE FROM users WHERE user_type = 'PLAYER';
 
--- PART 11: Remove user_id from players table (no longer needed)
+-- PART 11: Drop dependent views before removing user_id column
+DROP VIEW IF EXISTS player_full_info CASCADE;
+
+-- PART 11b: Remove user_id from players table (no longer needed)
 ALTER TABLE players DROP CONSTRAINT IF EXISTS players_user_id_key;
 ALTER TABLE players DROP COLUMN IF EXISTS user_id;
 
@@ -115,9 +149,14 @@ ALTER TABLE users DROP COLUMN IF EXISTS level;
 ALTER TABLE users DROP COLUMN IF EXISTS basic_foot;
 ALTER TABLE users DROP COLUMN IF EXISTS group_id;
 
--- PART 13: Remove PLAYER role (players don't authenticate)
+-- PART 13: Remove PLAYER role and update user_type constraint
 DELETE FROM user_roles WHERE role_id IN (SELECT id FROM roles WHERE name = 'PLAYER');
 DELETE FROM roles WHERE name = 'PLAYER';
+
+-- Update check constraint to remove PLAYER and add PARENT
+ALTER TABLE users DROP CONSTRAINT IF EXISTS chk_user_type;
+ALTER TABLE users ADD CONSTRAINT chk_user_type
+    CHECK (user_type IN ('COACH', 'ADMIN', 'MANAGER', 'PARENT'));
 
 -- PART 14: Add comments for documentation
 COMMENT ON TABLE users IS 'Authenticating accounts only: PARENT, COACH, ADMIN, MANAGER';
@@ -185,3 +224,45 @@ BEGIN
         RAISE NOTICE 'Players table contains all player data.';
     END IF;
 END $$;
+
+-- PART 16: Recreate player_full_info view with new structure
+CREATE OR REPLACE VIEW player_full_info AS
+SELECT
+    p.id,
+    p.first_name,
+    p.last_name,
+    p.email,
+    p.phone,
+    p.date_of_birth,
+    p.gender,
+    p.address,
+    p.joining_date,
+    p.level,
+    p.basic_foot,
+    p.group_id,
+    p.is_active,
+    p.inactive_reason,
+    p.emergency_contact_name,
+    p.emergency_contact_phone,
+    p.created_at,
+    p.updated_at,
+    p.player_number,
+    p.position,
+    p.assessment_notes,
+    p.medical_notes,
+    p.jersey_size,
+    p.equipment_notes,
+    p.development_goals,
+    p.parent_id,
+    g.name AS group_name,
+    g.level AS group_level,
+    g.age_group,
+    u.first_name AS parent_first_name,
+    u.last_name AS parent_last_name,
+    u.email AS parent_email,
+    u.phone AS parent_phone
+FROM players p
+LEFT JOIN groups g ON g.id = p.group_id
+LEFT JOIN users u ON u.id = p.parent_id AND u.user_type = 'PARENT';
+
+COMMENT ON VIEW player_full_info IS 'Comprehensive view of player data with group and parent information';
