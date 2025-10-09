@@ -37,8 +37,8 @@ export const rolePermissions = {
     canViewFinances: false,
     canManageRoles: false,
   },
-  [UserRole.PLAYER]: {
-    // Player has minimal permissions
+  [UserRole.PARENT]: {
+    // Parent can only view their children's information
     canManageUsers: false,
     canManageCoaches: false,
     canManagePlayers: false,
@@ -87,7 +87,7 @@ export const getHighestRole = (userRoles: string[]): UserRole | null => {
   if (!userRoles || userRoles.length === 0) return null;
 
   // Order of role hierarchy (highest to lowest)
-  const roleHierarchy = [UserRole.ADMIN, UserRole.MANAGER, UserRole.COACH, UserRole.PLAYER];
+  const roleHierarchy = [UserRole.ADMIN, UserRole.MANAGER, UserRole.COACH, UserRole.PARENT];
 
   for (const role of roleHierarchy) {
     if (userRoles.includes(role)) {
@@ -100,7 +100,7 @@ export const getHighestRole = (userRoles: string[]): UserRole | null => {
 
 // Route access control - define which roles can access which routes
 export const routeAccess = {
-  "/": ["ADMIN", "MANAGER", "COACH", "PLAYER"], // Landing page - all authenticated users
+  "/": ["ADMIN", "MANAGER", "COACH", "PARENT"], // Landing page - all authenticated users
   "/users": ["ADMIN"], // User management - admin only
   "/coaches": ["ADMIN", "MANAGER"], // Coach management - admin and manager
   "/players": ["ADMIN", "MANAGER", "COACH"], // Player management - all roles
@@ -108,11 +108,9 @@ export const routeAccess = {
   "/reports": ["ADMIN", "MANAGER"], // Reports - admin and manager
   "/finances": ["ADMIN", "MANAGER"], // Finances - admin and manager
   "/system": ["ADMIN"], // System settings - admin only
-  "/player": ["PLAYER"], // Player area - players only
-  "/player/dashboard": ["PLAYER"], // Player dashboard - players only
-  "/player/assessments": ["PLAYER"], // Player assessments - players only
-  "/player/progress": ["PLAYER"], // Player progress - players only
-  "/player/profile": ["PLAYER"], // Player profile - players only
+  "/parent": ["PARENT"], // Parent area - parents only
+  "/parent/dashboard": ["PARENT"], // Parent dashboard - parents only
+  "/parent/children": ["PARENT"], // Parent children view - parents only
 } as const;
 
 // Helper function to check route access

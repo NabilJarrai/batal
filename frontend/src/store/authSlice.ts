@@ -121,9 +121,39 @@ export const initializeAuth = createAsyncThunk(
       // Try to fetch current user data from API
       try {
         const currentUser = await usersAPI.getCurrentUser();
+
+        // If user is a parent, fetch their children
+        let children = undefined;
+        if (currentUser.children && currentUser.children.length > 0) {
+          children = currentUser.children;
+        }
+
+        // Restore selectedChildId from localStorage
+        let selectedChildId = undefined;
+        if (typeof window !== 'undefined') {
+          const storedChildId = localStorage.getItem('selectedChildId');
+          if (storedChildId && children && children.length > 0) {
+            const childId = parseInt(storedChildId, 10);
+            // Verify the stored child ID exists in the children array
+            if (children.some(child => child.id === childId)) {
+              selectedChildId = childId;
+            } else {
+              // If stored child doesn't exist, select first child
+              selectedChildId = children[0].id;
+              localStorage.setItem('selectedChildId', selectedChildId.toString());
+            }
+          } else if (children && children.length > 0) {
+            // Auto-select first child if no selection stored
+            selectedChildId = children[0].id;
+            localStorage.setItem('selectedChildId', selectedChildId.toString());
+          }
+        }
+
         return {
           token,
           user: currentUser,
+          children,
+          selectedChildId,
         };
       } catch {
         // If API call fails, use data from token
@@ -167,6 +197,10 @@ const authSlice = createSlice({
       state.children = undefined;
       state.selectedChildId = undefined;
       tokenManager.removeToken();
+      // Clear selectedChildId from localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('selectedChildId');
+      }
     },
     clearError: (state) => {
       state.error = null;
@@ -186,6 +220,10 @@ const authSlice = createSlice({
     },
     selectChild: (state, action: PayloadAction<number>) => {
       state.selectedChildId = action.payload;
+      // Persist to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('selectedChildId', action.payload.toString());
+      }
     },
   },
   extraReducers: (builder) => {
@@ -206,6 +244,10 @@ const authSlice = createSlice({
         // Auto-select first child if parent has children
         if (action.payload.children && action.payload.children.length > 0) {
           state.selectedChildId = action.payload.children[0].id;
+          // Persist to localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('selectedChildId', action.payload.children[0].id.toString());
+          }
         }
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -242,6 +284,8 @@ const authSlice = createSlice({
           state.token = action.payload.token;
           state.user = action.payload.user;
           state.isAuthenticated = true;
+          state.children = action.payload.children;
+          state.selectedChildId = action.payload.selectedChildId;
         }
       })
       .addCase(initializeAuth.rejected, (state) => {

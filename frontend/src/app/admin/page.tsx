@@ -15,6 +15,7 @@ import EditPlayerModal from '@/components/EditPlayerModal';
 import EditGroupModal from '@/components/EditGroupModal';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import ReassignPlayerModal from '@/components/ReassignPlayerModal';
+import AssignChildModal from '@/components/AssignChildModal';
 import SkillsManagement from '@/components/skills/SkillsManagement';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
@@ -117,6 +118,12 @@ export default function AdminDashboard() {
     name: string;
     isDeleting: boolean;
   }>({ isOpen: false, type: null, id: null, name: '', isDeleting: false });
+
+  // Assign child modal (for parents)
+  const [assignChildModal, setAssignChildModal] = useState<{
+    isOpen: boolean;
+    parent: UserResponse | null;
+  }>({ isOpen: false, parent: null });
 
   // Load initial data
   useEffect(() => {
@@ -483,6 +490,31 @@ export default function AdminDashboard() {
       name: group ? group.name : 'Group',
       isDeleting: false
     });
+  };
+
+  // Parent-child management handlers
+  const handleAssignChild = (userId: number) => {
+    const parent = users.find(u => u.id === userId);
+    if (parent) {
+      setAssignChildModal({ isOpen: true, parent });
+    }
+  };
+
+  const handleUnassignChild = async (parentId: number, playerId: number) => {
+    try {
+      await usersAPI.unassignChild(parentId, playerId);
+      showSuccess('Child unassigned successfully');
+      // Refresh the user data to update the children list
+      await loadUsersPage(usersPagination.page);
+    } catch (error: any) {
+      showError(error.message || 'Failed to unassign child');
+    }
+  };
+
+  const handleAssignChildComplete = async () => {
+    setAssignChildModal({ isOpen: false, parent: null });
+    // Refresh the user data to update the children list
+    await loadUsersPage(usersPagination.page);
   };
 
   // Helper function to get coach assignment info
@@ -971,6 +1003,8 @@ export default function AdminDashboard() {
                       onDelete={handleDeleteUser}
                       onDeactivate={(userId) => handleUserStatusUpdate(userId, false, 'Deactivated by admin')}
                       onActivate={(userId) => handleUserStatusUpdate(userId, true)}
+                      onAssignChild={handleAssignChild}
+                      onUnassignChild={handleUnassignChild}
                       showActions={true}
                       assignedGroupsCount={coachInfo.assignedGroupsCount}
                       assignedGroupNames={coachInfo.assignedGroupNames}
@@ -1250,6 +1284,16 @@ export default function AdminDashboard() {
           itemName={deleteModal.name}
           isLoading={deleteModal.isDeleting}
         />
+
+        {/* Assign Child Modal */}
+        {assignChildModal.parent && (
+          <AssignChildModal
+            isOpen={assignChildModal.isOpen}
+            onClose={() => setAssignChildModal({ isOpen: false, parent: null })}
+            parent={assignChildModal.parent}
+            onComplete={handleAssignChildComplete}
+          />
+        )}
       </div>
     </div>
     </ProtectedRoute>

@@ -22,7 +22,8 @@ public class UserResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<String> roles;
-    
+    private List<ChildSummaryDTO> children; // For PARENT user type
+
     public UserResponse() {}
     
     public UserResponse(User user, List<String> roles) {
@@ -157,5 +158,13 @@ public class UserResponse {
     
     public String getFullName() {
         return firstName + " " + lastName;
+    }
+
+    public List<ChildSummaryDTO> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<ChildSummaryDTO> children) {
+        this.children = children;
     }
 }

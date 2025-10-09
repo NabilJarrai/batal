@@ -254,6 +254,24 @@ export const usersAPI = {
   getCurrentUser: async (): Promise<UserResponse> => {
     return apiRequest<UserResponse>("/users/me");
   },
+
+  // Parent-child management endpoints
+  getParentChildren: async (parentId: number): Promise<any[]> => {
+    return apiRequest<any[]>(`/users/${parentId}/children`);
+  },
+
+  assignChild: async (parentId: number, playerId: number): Promise<UserResponse> => {
+    return apiRequest<UserResponse>(`/users/${parentId}/children`, {
+      method: "POST",
+      body: JSON.stringify({ playerId }),
+    });
+  },
+
+  unassignChild: async (parentId: number, playerId: number): Promise<UserResponse> => {
+    return apiRequest<UserResponse>(`/users/${parentId}/children/${playerId}`, {
+      method: "DELETE",
+    });
+  },
 };
 
 // Players API calls
@@ -493,6 +511,25 @@ export const coachesAPI = {
     return apiRequest<{ message: string }>(`/coaches/${id}`, {
       method: "DELETE",
     });
+  },
+};
+
+// Parent self-service API calls
+export const parentAPI = {
+  getMyChildren: async (): Promise<any[]> => {
+    return apiRequest<any[]>("/parents/me/children");
+  },
+
+  getChild: async (playerId: number): Promise<any> => {
+    return apiRequest<any>(`/parents/me/children/${playerId}`);
+  },
+
+  getChildAssessments: async (playerId: number): Promise<any[]> => {
+    return apiRequest<any[]>(`/parents/me/children/${playerId}/assessments`);
+  },
+
+  getChildAssessment: async (playerId: number, assessmentId: number): Promise<any> => {
+    return apiRequest<any>(`/parents/me/children/${playerId}/assessments/${assessmentId}`);
   },
 };
 

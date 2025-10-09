@@ -4,8 +4,10 @@ import com.batal.dto.UserCreateRequest;
 import com.batal.dto.UserResponse;
 import com.batal.dto.UserUpdateRequest;
 import com.batal.dto.UserStatusUpdateRequest;
+import com.batal.dto.ChildSummaryDTO;
 import com.batal.entity.User;
 import com.batal.entity.Role;
+import com.batal.entity.Player;
 import com.batal.entity.enums.UserType;
 import com.batal.exception.ResourceAlreadyExistsException;
 import com.batal.exception.ResourceNotFoundException;
@@ -13,6 +15,7 @@ import com.batal.exception.SelfDeletionException;
 import com.batal.exception.BusinessRuleException;
 import com.batal.repository.UserRepository;
 import com.batal.repository.RoleRepository;
+import com.batal.repository.PlayerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,10 +38,13 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
-    
+
     @Autowired
     private RoleRepository roleRepository;
-    
+
+    @Autowired
+    private PlayerRepository playerRepository;
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -82,7 +88,19 @@ public class UserService {
         List<String> roles = user.getRoles().stream()
                 .map(role -> role.getName())
                 .collect(Collectors.toList());
-        return new UserResponse(user, roles);
+
+        UserResponse response = new UserResponse(user, roles);
+
+        // If user is a parent, populate children
+        if (user.getUserType() == UserType.PARENT) {
+            List<Player> children = playerRepository.findByParentIdWithGroup(id);
+            List<ChildSummaryDTO> childSummaries = children.stream()
+                    .map(this::mapPlayerToChildSummary)
+                    .collect(Collectors.toList());
+            response.setChildren(childSummaries);
+        }
+
+        return response;
     }
     
     // Create new user
@@ -265,5 +283,94 @@ public class UserService {
         user.setIsActive(false);
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
+    }
+
+    // ========== PARENT-CHILD MANAGEMENT ==========
+
+    /**
+     * Assign a child (player) to a parent
+     */
+    public UserResponse assignChildToParent(Long parentId, Long playerId) {
+        // Verify parent exists and is of type PARENT
+        User parent = userRepository.findById(parentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Parent", parentId));
+
+        if (parent.getUserType() != UserType.PARENT) {
+            throw new BusinessRuleException("User with ID " + parentId + " is not a parent");
+        }
+
+        // Verify player exists
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Player", playerId));
+
+        // Check if player already has this parent
+        if (player.hasParent(parent)) {
+            throw new BusinessRuleException("Player " + player.getFullName() +
+                    " is already assigned to parent " + parent.getFullName());
+        }
+
+        // Assign parent to player (now supports multiple parents)
+        player.addParent(parent);
+        playerRepository.save(player);
+
+        // Return updated parent response with children
+        return getUserById(parentId);
+    }
+
+    /**
+     * Unassign a child (player) from a parent
+     */
+    public UserResponse unassignChildFromParent(Long parentId, Long playerId) {
+        // Verify parent exists
+        User parent = userRepository.findById(parentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Parent", parentId));
+
+        // Verify player exists and is assigned to this parent
+        Player player = playerRepository.findByIdAndParentId(playerId, parentId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Player with ID " + playerId + " not found or not assigned to parent " + parentId));
+
+        // Remove parent assignment (now supports multiple parents)
+        player.removeParent(parent);
+        playerRepository.save(player);
+
+        // Return updated parent response with children
+        return getUserById(parentId);
+    }
+
+    /**
+     * Get all children (players) for a parent
+     */
+    public List<ChildSummaryDTO> getParentChildren(Long parentId) {
+        // Verify parent exists and is of type PARENT
+        User parent = userRepository.findById(parentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Parent", parentId));
+
+        if (parent.getUserType() != UserType.PARENT) {
+            throw new BusinessRuleException("User with ID " + parentId + " is not a parent");
+        }
+
+        List<Player> children = playerRepository.findByParentIdWithGroup(parentId);
+        return children.stream()
+                .map(this::mapPlayerToChildSummary)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Helper method to map Player entity to ChildSummaryDTO
+     */
+    private ChildSummaryDTO mapPlayerToChildSummary(Player player) {
+        String groupName = player.getGroup() != null ? player.getGroup().getName() : null;
+        String level = player.getLevel() != null ? player.getLevel().toString() : null;
+
+        return new ChildSummaryDTO(
+                player.getId(),
+                player.getFirstName(),
+                player.getLastName(),
+                player.getDateOfBirth(),
+                groupName,
+                level,
+                player.getIsActive()
+        );
     }
 }

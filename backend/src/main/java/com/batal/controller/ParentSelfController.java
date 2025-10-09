@@ -17,7 +17,7 @@ import java.util.List;
  * Allows parents to view their children's data
  */
 @RestController
-@RequestMapping("/api/parents/me")
+@RequestMapping("/parents/me")
 @CrossOrigin(origins = "*", maxAge = 3600)
 @PreAuthorize("hasRole('PARENT')")
 public class ParentSelfController {

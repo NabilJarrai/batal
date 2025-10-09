@@ -25,7 +25,7 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     @Query("SELECT p FROM Player p LEFT JOIN FETCH p.group WHERE p.id = :id")
     Optional<Player> findByIdWithGroup(@Param("id") Long id);
 
-    @Query("SELECT p FROM Player p LEFT JOIN FETCH p.parent WHERE p.id = :id")
+    @Query("SELECT p FROM Player p LEFT JOIN FETCH p.parents WHERE p.id = :id")
     Optional<Player> findByIdWithParent(@Param("id") Long id);
 
     @Query("SELECT p FROM Player p LEFT JOIN FETCH p.assessments WHERE p.id = :id")
@@ -34,23 +34,23 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     @Query("SELECT p FROM Player p LEFT JOIN FETCH p.memberships WHERE p.id = :id")
     Optional<Player> findByIdWithMemberships(@Param("id") Long id);
 
-    @Query("SELECT p FROM Player p LEFT JOIN FETCH p.group LEFT JOIN FETCH p.parent WHERE p.id = :id")
+    @Query("SELECT p FROM Player p LEFT JOIN FETCH p.group LEFT JOIN FETCH p.parents WHERE p.id = :id")
     Optional<Player> findByIdWithGroupAndParent(@Param("id") Long id);
 
     @Query("SELECT p FROM Player p LEFT JOIN FETCH p.assessments LEFT JOIN FETCH p.memberships WHERE p.id = :id")
     Optional<Player> findByIdWithAll(@Param("id") Long id);
 
     // ========== PARENT-CHILD QUERIES ==========
-    @Query("SELECT p FROM Player p WHERE p.parent.id = :parentId")
+    @Query("SELECT p FROM Player p JOIN p.parents parent WHERE parent.id = :parentId")
     List<Player> findByParentId(@Param("parentId") Long parentId);
 
-    @Query("SELECT p FROM Player p LEFT JOIN FETCH p.group WHERE p.parent.id = :parentId")
+    @Query("SELECT p FROM Player p JOIN p.parents parent LEFT JOIN FETCH p.group WHERE parent.id = :parentId")
     List<Player> findByParentIdWithGroup(@Param("parentId") Long parentId);
 
-    @Query("SELECT p FROM Player p WHERE p.id = :playerId AND p.parent.id = :parentId")
+    @Query("SELECT p FROM Player p JOIN p.parents parent WHERE p.id = :playerId AND parent.id = :parentId")
     Optional<Player> findByIdAndParentId(@Param("playerId") Long playerId, @Param("parentId") Long parentId);
 
-    @Query("SELECT p FROM Player p LEFT JOIN FETCH p.group WHERE p.id = :playerId AND p.parent.id = :parentId")
+    @Query("SELECT p FROM Player p JOIN p.parents parent LEFT JOIN FETCH p.group WHERE p.id = :playerId AND parent.id = :parentId")
     Optional<Player> findByIdAndParentIdWithGroup(@Param("playerId") Long playerId, @Param("parentId") Long parentId);
 
     // ========== ACTIVE STATUS QUERIES ==========
@@ -105,6 +105,6 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     @Query("SELECT COUNT(p) FROM Player p WHERE p.group.id = :groupId AND p.isActive = true")
     long countActivePlayersByGroupId(@Param("groupId") Long groupId);
 
-    @Query("SELECT COUNT(p) FROM Player p WHERE p.parent.id = :parentId")
+    @Query("SELECT COUNT(p) FROM Player p JOIN p.parents parent WHERE parent.id = :parentId")
     long countByParentId(@Param("parentId") Long parentId);
 }

@@ -8,8 +8,20 @@ export enum Gender {
 
 export enum UserType {
   COACH = "COACH",
-  ADMIN = "ADMIN", 
-  MANAGER = "MANAGER"
+  ADMIN = "ADMIN",
+  MANAGER = "MANAGER",
+  PARENT = "PARENT"
+}
+
+// Child Summary DTO (for parent views)
+export interface ChildSummaryDTO {
+  id: number;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string; // ISO date string
+  groupName?: string;
+  level?: string;
+  isActive: boolean;
 }
 
 // Enhanced User Response (matches backend UserResponse.java)
@@ -32,6 +44,7 @@ export interface UserResponse {
   createdAt: string; // ISO datetime string
   updatedAt: string; // ISO datetime string
   roles: string[];
+  children?: ChildSummaryDTO[]; // For PARENT user type
 }
 
 // User Create Request (matches backend UserCreateRequest.java)
@@ -98,4 +111,5 @@ export interface UserStats {
   coaches: number;
   admins: number;
   managers: number;
+  parents: number;
 }

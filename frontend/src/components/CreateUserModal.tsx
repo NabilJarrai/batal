@@ -91,6 +91,7 @@ export default function CreateUserModal({
       case UserType.ADMIN: return 'text-text-primary';
       case UserType.MANAGER: return 'text-accent-red';
       case UserType.COACH: return 'text-text-primary';
+      case UserType.PARENT: return 'text-blue-400';
       default: return 'text-text-secondary';
     }
   };
@@ -141,7 +142,7 @@ export default function CreateUserModal({
                     <label className="block text-sm font-medium text-text-secondary mb-2">
                       User Type *
                     </label>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                       {Object.values(UserType).map((type) => (
                         <button
                           key={type}
@@ -162,6 +163,7 @@ export default function CreateUserModal({
                             {type === UserType.ADMIN && 'Full system access'}
                             {type === UserType.MANAGER && 'Academy oversight'}
                             {type === UserType.COACH && 'Group management'}
+                            {type === UserType.PARENT && 'View children progress'}
                           </p>
                         </button>
                       ))}
@@ -317,6 +319,7 @@ export default function CreateUserModal({
                         placeholder={
                           formData.userType === UserType.COACH ? 'Head Coach, Assistant Coach...' :
                           formData.userType === UserType.MANAGER ? 'Academy Director, Operations Manager...' :
+                          formData.userType === UserType.PARENT ? 'Parent/Guardian' :
                           'System Administrator'
                         }
                       />

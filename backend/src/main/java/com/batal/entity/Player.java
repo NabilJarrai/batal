@@ -76,9 +76,19 @@ public class Player {
     @Column(name = "inactive_reason", columnDefinition = "TEXT")
     private String inactiveReason;
 
-    // ========== PARENT RELATIONSHIP ==========
+    // ========== PARENT RELATIONSHIP (MANY-TO-MANY) ==========
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "player_parents",
+        joinColumns = @JoinColumn(name = "player_id"),
+        inverseJoinColumns = @JoinColumn(name = "parent_id")
+    )
+    private Set<User> parents = new HashSet<>();
+
+    // Deprecated: Old single parent relationship (kept for backwards compatibility)
+    @Deprecated
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
+    @JoinColumn(name = "parent_id", insertable = false, updatable = false)
     private User parent;
 
     // ========== PLAYER-SPECIFIC FIELDS ==========
@@ -148,6 +158,37 @@ public class Player {
 
     public String getParentFullName() {
         return parent != null ? parent.getFullName() : null;
+    }
+
+    // ========== PARENT MANAGEMENT METHODS ==========
+    /**
+     * Add a parent to this player
+     */
+    public void addParent(User parent) {
+        if (parent != null && parent.getUserType() == com.batal.entity.enums.UserType.PARENT) {
+            this.parents.add(parent);
+        }
+    }
+
+    /**
+     * Remove a parent from this player
+     */
+    public void removeParent(User parent) {
+        this.parents.remove(parent);
+    }
+
+    /**
+     * Check if this player has any parents
+     */
+    public boolean hasParents() {
+        return parents != null && !parents.isEmpty();
+    }
+
+    /**
+     * Check if a specific user is a parent of this player
+     */
+    public boolean hasParent(User parent) {
+        return parents != null && parents.contains(parent);
     }
 
     @Override

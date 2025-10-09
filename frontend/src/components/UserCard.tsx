@@ -10,6 +10,8 @@ interface UserCardProps {
   onActivate?: (userId: number) => void;
   onDelete?: (userId: number) => void;
   onViewDetails?: (userId: number) => void;
+  onAssignChild?: (userId: number) => void;
+  onUnassignChild?: (userId: number, playerId: number) => void;
   showActions?: boolean;
   isSelectable?: boolean;
   isSelected?: boolean;
@@ -25,6 +27,8 @@ export default function UserCard({
   onActivate,
   onDelete,
   onViewDetails,
+  onAssignChild,
+  onUnassignChild,
   showActions = true,
   isSelectable = false,
   isSelected = false,
@@ -42,6 +46,8 @@ export default function UserCard({
         return 'from-secondary to-secondary-600';
       case UserType.COACH:
         return 'from-primary to-primary-hover';
+      case UserType.PARENT:
+        return 'from-blue-500 to-blue-600';
       default:
         return 'from-secondary to-secondary-600';
     }
@@ -132,6 +138,70 @@ export default function UserCard({
               <p className="text-xs text-primary">
                 Groups: {assignedGroupNames.join(', ')}
               </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Parent Children Indicator */}
+      {(user.userType === UserType.PARENT || user.roles?.includes('PARENT')) && (
+        <div className="mb-4">
+          <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                </svg>
+                <span className="text-sm font-medium text-blue-400">
+                  Children ({user.children?.length || 0})
+                </span>
+              </div>
+              {onAssignChild && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAssignChild(user.id);
+                  }}
+                  className="text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-2 py-1 rounded transition-colors"
+                >
+                  + Assign
+                </button>
+              )}
+            </div>
+            {user.children && user.children.length > 0 ? (
+              <div className="space-y-2 mt-2">
+                {user.children.map((child) => (
+                  <div key={child.id} className="flex items-center justify-between bg-background/50 rounded p-2">
+                    <div className="flex-1">
+                      <p className="text-sm text-text-primary">
+                        {child.firstName} {child.lastName}
+                      </p>
+                      <div className="flex gap-2 text-xs text-text-secondary">
+                        {child.groupName && <span>Group: {child.groupName}</span>}
+                        {child.level && <span>Level: {child.level}</span>}
+                      </div>
+                    </div>
+                    {onUnassignChild && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Remove ${child.firstName} ${child.lastName} from this parent?`)) {
+                            onUnassignChild(user.id, child.id);
+                          }
+                        }}
+                        className="text-red-400 hover:text-red-300 transition-colors"
+                        title="Remove child"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-blue-400/60 mt-1">No children assigned</p>
             )}
           </div>
         </div>

@@ -4,6 +4,8 @@ import com.batal.dto.UserCreateRequest;
 import com.batal.dto.UserResponse;
 import com.batal.dto.UserUpdateRequest;
 import com.batal.dto.UserStatusUpdateRequest;
+import com.batal.dto.ChildSummaryDTO;
+import com.batal.dto.AssignChildRequest;
 import com.batal.entity.User;
 import com.batal.repository.UserRepository;
 import com.batal.service.UserService;
@@ -148,11 +150,41 @@ public class UserController {
         return ResponseEntity.ok(availableCoaches);
     }
 
+    // ========== PARENT-CHILD MANAGEMENT ENDPOINTS ==========
+
+    // GET /api/users/{parentId}/children - Get all children for a parent
+    @GetMapping("/{parentId}/children")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<List<ChildSummaryDTO>> getParentChildren(@PathVariable Long parentId) {
+        List<ChildSummaryDTO> children = userService.getParentChildren(parentId);
+        return ResponseEntity.ok(children);
+    }
+
+    // POST /api/users/{parentId}/children - Assign a child to a parent
+    @PostMapping("/{parentId}/children")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<UserResponse> assignChildToParent(
+            @PathVariable Long parentId,
+            @Valid @RequestBody AssignChildRequest request) {
+        UserResponse updatedParent = userService.assignChildToParent(parentId, request.getPlayerId());
+        return ResponseEntity.ok(updatedParent);
+    }
+
+    // DELETE /api/users/{parentId}/children/{playerId} - Unassign a child from a parent
+    @DeleteMapping("/{parentId}/children/{playerId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<UserResponse> unassignChildFromParent(
+            @PathVariable Long parentId,
+            @PathVariable Long playerId) {
+        UserResponse updatedParent = userService.unassignChildFromParent(parentId, playerId);
+        return ResponseEntity.ok(updatedParent);
+    }
+
     // Helper method for security expression
     public boolean isCurrentUser(Long userId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
-        
+
         Optional<User> userOpt = userRepository.findByEmail(email);
         return userOpt.isPresent() && userOpt.get().getId().equals(userId);
     }

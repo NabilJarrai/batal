@@ -7,7 +7,7 @@ import { useAppSelector } from "@/store/hooks";
 import { AssessmentCard } from "@/components/player/AssessmentCard";
 import { CategoryProgressChart } from "@/components/player/CategoryProgressChart";
 import { SkillProgressChart } from "@/components/player/SkillProgressChart";
-import ChildSelector from "@/components/parent/ChildSelector";
+import { parentAPI } from "@/lib/api";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 import {
@@ -19,7 +19,7 @@ import {
   AcademicCapIcon,
 } from "@heroicons/react/24/outline";
 import { AppDispatch, RootState } from "@/store";
-import type { AssessmentResponse } from "@/types/auth";
+import type { Assessment } from "@/types/assessments";
 
 interface ChildProfile {
   id: number;
@@ -37,7 +37,7 @@ export default function ParentDashboard() {
   const dispatch = useDispatch<AppDispatch>();
 
   const [childProfile, setChildProfile] = useState<ChildProfile | null>(null);
-  const [assessments, setAssessments] = useState<AssessmentResponse[]>([]);
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [assessmentLoading, setAssessmentLoading] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<{ name: string; category: string } | null>(null);
@@ -75,21 +75,9 @@ export default function ParentDashboard() {
         setChildProfile(profileData);
       }
 
-      // Fetch child assessments
-      const assessmentResponse = await fetch(
-        `${API_BASE_URL}/parents/me/children/${selectedChildId}/assessments`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (assessmentResponse.ok) {
-        const assessmentData = await assessmentResponse.json();
-        setAssessments(assessmentData);
-      }
+      // Fetch child assessments using parentAPI
+      const assessmentData = await parentAPI.getChildAssessments(selectedChildId);
+      setAssessments(assessmentData as Assessment[]);
     } catch (error) {
       console.error("Error fetching child data:", error);
     } finally {
@@ -140,12 +128,11 @@ export default function ParentDashboard() {
   if (!selectedChildId) {
     return (
       <div className="space-y-6">
-        <ChildSelector />
         <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-lg text-center">
           <UserCircleIcon className="h-16 w-16 text-primary mx-auto mb-4" />
           <h3 className="text-xl font-bold text-text-primary mb-3">No Child Selected</h3>
           <p className="text-text-secondary text-base">
-            Please select a child profile above to view their performance data.
+            Please select a child from the sidebar to view their performance data.
           </p>
         </div>
       </div>
@@ -155,7 +142,6 @@ export default function ParentDashboard() {
   if (loading || assessmentLoading) {
     return (
       <div className="space-y-6">
-        <ChildSelector />
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
@@ -165,9 +151,6 @@ export default function ParentDashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Child Selector */}
-      <ChildSelector />
-
       {/* Welcome Section with Progress Summary */}
       <div className="bg-gradient-to-r from-primary/5 via-white to-accent-teal/5 rounded-2xl p-6 border border-gray-100 shadow-lg">
         <div className="flex items-center justify-between">
