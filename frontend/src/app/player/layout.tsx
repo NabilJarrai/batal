@@ -55,7 +55,7 @@ export default function PlayerLayout({ children }: PlayerLayoutProps) {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <RoleGuard allowedRoles={[UserRole.PLAYER]}>
+    <RoleGuard allowedRoles={[UserRole.PARENT]}>
       <div className="min-h-screen bg-background">
         {/* Top Navigation Bar */}
         <nav className="bg-background border-b border-border shadow-sm">

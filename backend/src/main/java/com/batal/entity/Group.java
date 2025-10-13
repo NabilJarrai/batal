@@ -57,11 +57,7 @@ public class Group {
     // Players are now managed through Player entities
     @OneToMany(mappedBy = "group", fetch = FetchType.LAZY)
     private Set<Player> players = new HashSet<>();
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pitch_id")
-    private Pitch pitch;
-    
+
     @Size(max = 50)
     @Column(length = 50)
     private String zone;
@@ -172,15 +168,7 @@ public class Group {
     public void setPlayers(Set<Player> players) {
         this.players = players;
     }
-    
-    public Pitch getPitch() {
-        return pitch;
-    }
-    
-    public void setPitch(Pitch pitch) {
-        this.pitch = pitch;
-    }
-    
+
     public String getZone() {
         return zone;
     }

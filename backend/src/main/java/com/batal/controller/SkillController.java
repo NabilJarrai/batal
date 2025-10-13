@@ -1,7 +1,6 @@
 package com.batal.controller;
 
 import com.batal.dto.SkillCreateRequest;
-import com.batal.dto.SkillOrderRequest;
 import com.batal.dto.SkillResponse;
 import com.batal.dto.SkillUpdateRequest;
 import com.batal.entity.User;
@@ -38,21 +37,28 @@ public class SkillController {
     // Admin-only endpoints
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<SkillResponse> createSkill(
+    public ResponseEntity<?> createSkill(
             @Valid @RequestBody SkillCreateRequest request,
             Authentication authentication) {
         try {
             Long adminId = getUserIdFromAuth(authentication);
             SkillResponse skill = skillService.createSkill(request, adminId);
             return ResponseEntity.status(HttpStatus.CREATED).body(skill);
+        } catch (com.batal.exception.ResourceAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(java.util.Map.of("error", "Duplicate skill", "message", e.getMessage()));
+        } catch (com.batal.exception.ValidationException e) {
+            return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("error", "Validation error", "message", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("error", "Failed to create skill", "message", e.getMessage()));
         }
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<SkillResponse> updateSkill(
+    public ResponseEntity<?> updateSkill(
             @PathVariable Long id,
             @Valid @RequestBody SkillUpdateRequest request,
             Authentication authentication) {
@@ -60,8 +66,15 @@ public class SkillController {
             Long adminId = getUserIdFromAuth(authentication);
             SkillResponse skill = skillService.updateSkill(id, request, adminId);
             return ResponseEntity.ok(skill);
+        } catch (com.batal.exception.ResourceAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(java.util.Map.of("error", "Duplicate skill", "message", e.getMessage()));
+        } catch (com.batal.exception.ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("error", "Skill not found", "message", e.getMessage()));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("error", "Failed to update skill", "message", e.getMessage()));
         }
     }
 
@@ -81,7 +94,7 @@ public class SkillController {
 
     @PostMapping("/bulk")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<SkillResponse>> bulkCreateSkills(
+    public ResponseEntity<?> bulkCreateSkills(
             @Valid @RequestBody List<SkillCreateRequest> requests,
             Authentication authentication) {
         try {
@@ -89,21 +102,8 @@ public class SkillController {
             List<SkillResponse> skills = skillService.bulkCreateSkills(requests, adminId);
             return ResponseEntity.status(HttpStatus.CREATED).body(skills);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @PutMapping("/reorder")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> reorderSkills(
-            @Valid @RequestBody List<SkillOrderRequest> reorderRequests,
-            Authentication authentication) {
-        try {
-            Long adminId = getUserIdFromAuth(authentication);
-            skillService.reorderSkills(reorderRequests, adminId);
-            return ResponseEntity.ok("Skills reordered successfully");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("error", "Failed to create skills", "message", e.getMessage()));
         }
     }
 
@@ -122,7 +122,7 @@ public class SkillController {
     // Public read-only endpoints (accessible to all authenticated users)
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Page<SkillResponse>> getAllSkills(
+    public ResponseEntity<?> getAllSkills(
             @RequestParam(required = false) SkillCategory category,
             @RequestParam(required = false) Level level,
             @RequestParam(required = false, defaultValue = "false") boolean activeOnly,
@@ -133,27 +133,28 @@ public class SkillController {
         try {
             Sort.Direction direction = sortDirection.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
             Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-            
+
             Page<SkillResponse> skills = skillService.getAllSkillsPaginated(
                 category, level, activeOnly, pageable
             );
-            
+
             return ResponseEntity.ok(skills);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", "Failed to retrieve skills", "message", e.getMessage()));
         }
     }
     
     // Non-paginated endpoint for backward compatibility
     @GetMapping("/list")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<SkillResponse>> getAllSkillsList(
+    public ResponseEntity<?> getAllSkillsList(
             @RequestParam(required = false) SkillCategory category,
             @RequestParam(required = false) Level level,
             @RequestParam(required = false, defaultValue = "false") boolean activeOnly) {
         try {
             List<SkillResponse> skills;
-            
+
             if (category != null && level != null) {
                 skills = skillService.getSkillsByCategoryAndLevel(category, level);
             } else if (category != null) {
@@ -167,68 +168,11 @@ public class SkillController {
             } else {
                 skills = skillService.getAllSkills();
             }
-            
+
             return ResponseEntity.ok(skills);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<SkillResponse> getSkillById(@PathVariable Long id) {
-        try {
-            SkillResponse skill = skillService.getSkillById(id);
-            return ResponseEntity.ok(skill);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @GetMapping("/category/{category}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<SkillResponse>> getSkillsByCategory(
-            @PathVariable SkillCategory category,
-            @RequestParam(required = false) Level level,
-            @RequestParam(required = false, defaultValue = "false") boolean activeOnly) {
-        try {
-            List<SkillResponse> skills;
-            
-            if (level != null) {
-                if (activeOnly) {
-                    skills = skillService.getSkillsByCategoryAndLevel(category, level);
-                } else {
-                    skills = skillService.getSkillsByCategoryAndLevel(category, level);
-                }
-            } else {
-                skills = skillService.getSkillsByCategory(category);
-            }
-            
-            return ResponseEntity.ok(skills);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @GetMapping("/level/{level}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<SkillResponse>> getSkillsByLevel(@PathVariable Level level) {
-        try {
-            List<SkillResponse> skills = skillService.getSkillsByLevel(level);
-            return ResponseEntity.ok(skills);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @GetMapping("/active")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<SkillResponse>> getActiveSkills() {
-        try {
-            List<SkillResponse> skills = skillService.getActiveSkills();
-            return ResponseEntity.ok(skills);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", "Failed to retrieve skills", "message", e.getMessage()));
         }
     }
 

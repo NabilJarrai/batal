@@ -21,7 +21,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
 import { useAuth } from '@/store/hooks';
 import { useNotification } from '@/contexts/NotificationContext';
-import { groupsAPI, usersAPI, playersAPI, coachesAPI } from '@/lib/api';
+import { groupsAPI, usersAPI, playersAPI } from '@/lib/api';
 import {
   GroupResponse,
   UserResponse,
@@ -505,7 +505,7 @@ export default function AdminDashboard() {
       await usersAPI.unassignChild(parentId, playerId);
       showSuccess('Child unassigned successfully');
       // Refresh the user data to update the children list
-      await loadUsersPage(usersPagination.page);
+      await loadUsersData();
     } catch (error: any) {
       showError(error.message || 'Failed to unassign child');
     }
@@ -514,7 +514,7 @@ export default function AdminDashboard() {
   const handleAssignChildComplete = async () => {
     setAssignChildModal({ isOpen: false, parent: null });
     // Refresh the user data to update the children list
-    await loadUsersPage(usersPagination.page);
+    await loadUsersData();
   };
 
   // Helper function to get coach assignment info
@@ -534,23 +534,19 @@ export default function AdminDashboard() {
     try {
       switch (deleteModal.type) {
         case 'user':
-          // Check if user is a coach and use appropriate API
+          // Use usersAPI.delete for all users (including coaches)
+          await usersAPI.delete(deleteModal.id);
+
+          // Remove user from state
+          setUsers(prev => prev.filter(user => user.id !== deleteModal.id));
+
+          // Check if user was a coach and refresh groups to update coach assignments
           const userToDelete = users.find(u => u.id === deleteModal.id);
           const isCoach = userToDelete && (
             userToDelete.userType === UserType.COACH ||
             userToDelete.roles.includes('COACH')
           );
 
-          if (isCoach) {
-            await coachesAPI.delete(deleteModal.id);
-          } else {
-            await usersAPI.delete(deleteModal.id);
-          }
-
-          // Remove user from state
-          setUsers(prev => prev.filter(user => user.id !== deleteModal.id));
-
-          // If it was a coach, also refresh groups to update coach assignments
           if (isCoach) {
             const updatedGroups = await groupsAPI.getAll();
             setGroups(updatedGroups);

@@ -136,9 +136,6 @@ public class Player {
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Assessment> assessments = new HashSet<>();
 
-    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Membership> memberships = new HashSet<>();
-
     // ========== LIFECYCLE CALLBACKS ==========
     @PrePersist
     protected void onCreate() {

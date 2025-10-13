@@ -82,7 +82,7 @@ export default function AssessmentDetailPage() {
     return grouped;
   };
 
-  const getCategoryAverage = (skills: typeof assessment.skillScores) => {
+  const getCategoryAverage = (skills: AssessmentResponse['skillScores']) => {
     if (!skills || skills.length === 0) return "0.0";
     const sum = skills.reduce((acc, skill) => acc + skill.score, 0);
     return (sum / skills.length).toFixed(1);

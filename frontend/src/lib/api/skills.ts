@@ -69,18 +69,8 @@ class SkillsAPI {
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(skills),
     });
-    
-    return this.handleResponse<Skill[]>(response);
-  }
 
-  async reorder(reorderData: SkillOrderRequest[]): Promise<string> {
-    const response = await fetch(`${API_BASE}/skills/reorder`, {
-      method: 'PUT',
-      headers: await this.getAuthHeaders(),
-      body: JSON.stringify(reorderData),
-    });
-    
-    return this.handleResponse<string>(response);
+    return this.handleResponse<Skill[]>(response);
   }
 
   async initializeDefaults(): Promise<string> {
@@ -133,60 +123,6 @@ class SkillsAPI {
     }
     
     return result;
-  }
-
-  async getById(id: number): Promise<Skill> {
-    const response = await fetch(`${API_BASE}/skills/${id}`, {
-      method: 'GET',
-      headers: await this.getAuthHeaders(),
-    });
-    
-    return this.handleResponse<Skill>(response);
-  }
-
-  async getByCategory(category: SkillCategory, level?: SkillLevel, activeOnly = false): Promise<Skill[]> {
-    const params = new URLSearchParams();
-    
-    if (level) {
-      params.append('level', level);
-    }
-    if (activeOnly) {
-      params.append('activeOnly', 'true');
-    }
-    
-    const queryString = params.toString();
-    const url = `${API_BASE}/skills/category/${category}${queryString ? `?${queryString}` : ''}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: await this.getAuthHeaders(),
-    });
-    
-    return this.handleResponse<Skill[]>(response);
-  }
-
-  async getByLevel(level: SkillLevel): Promise<Skill[]> {
-    const response = await fetch(`${API_BASE}/skills/level/${level}`, {
-      method: 'GET',
-      headers: await this.getAuthHeaders(),
-    });
-    
-    return this.handleResponse<Skill[]>(response);
-  }
-
-  async getActive(): Promise<Skill[]> {
-    const response = await fetch(`${API_BASE}/skills/active`, {
-      method: 'GET',
-      headers: await this.getAuthHeaders(),
-    });
-    
-    return this.handleResponse<Skill[]>(response);
-  }
-
-  // Convenience methods
-  async getByCategoryAndLevel(category: SkillCategory, level: SkillLevel): Promise<Skill[]> {
-    const result = await this.getAll({ category, level, activeOnly: true });
-    return result.content;
   }
 
   async getSkillsForAssessment(playerLevel: SkillLevel): Promise<Skill[]> {

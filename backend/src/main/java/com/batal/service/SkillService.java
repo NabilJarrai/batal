@@ -1,7 +1,6 @@
 package com.batal.service;
 
 import com.batal.dto.SkillCreateRequest;
-import com.batal.dto.SkillOrderRequest;
 import com.batal.dto.SkillResponse;
 import com.batal.dto.SkillUpdateRequest;
 import com.batal.entity.Skill;
@@ -211,18 +210,6 @@ public class SkillService {
             }
         }
         return results;
-    }
-
-    public void reorderSkills(List<SkillOrderRequest> reorderRequests, Long adminId) {
-        validateAdminPermission(adminId);
-        
-        for (SkillOrderRequest request : reorderRequests) {
-            Skill skill = skillRepository.findById(request.getSkillId())
-                    .orElseThrow(() -> new RuntimeException("Skill not found with id: " + request.getSkillId()));
-            
-            skill.setDisplayOrder(request.getNewOrder());
-            skillRepository.save(skill);
-        }
     }
 
     public void initializeDefaultSkills(Long adminId) {

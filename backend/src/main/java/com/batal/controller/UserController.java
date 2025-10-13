@@ -130,14 +130,6 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
     
-    // GET /api/users/coaches - Get all coaches
-    @GetMapping("/coaches")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-    public ResponseEntity<List<UserResponse>> getAllCoaches() {
-        List<UserResponse> coaches = userService.getUsersByRole("COACH");
-        return ResponseEntity.ok(coaches);
-    }
-    
     // GET /api/users/coaches/available - Get available coaches (coaches without full group load)
     @GetMapping("/coaches/available") 
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
@@ -151,14 +143,6 @@ public class UserController {
     }
 
     // ========== PARENT-CHILD MANAGEMENT ENDPOINTS ==========
-
-    // GET /api/users/{parentId}/children - Get all children for a parent
-    @GetMapping("/{parentId}/children")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-    public ResponseEntity<List<ChildSummaryDTO>> getParentChildren(@PathVariable Long parentId) {
-        List<ChildSummaryDTO> children = userService.getParentChildren(parentId);
-        return ResponseEntity.ok(children);
-    }
 
     // POST /api/users/{parentId}/children - Assign a child to a parent
     @PostMapping("/{parentId}/children")

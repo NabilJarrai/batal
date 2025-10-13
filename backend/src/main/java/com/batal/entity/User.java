@@ -93,8 +93,8 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
-    // Children relationship for parents
-    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
+    // Children relationship for parents (many-to-many)
+    @ManyToMany(mappedBy = "parents", fetch = FetchType.LAZY)
     private Set<Player> children = new HashSet<>();
 
     public User() {

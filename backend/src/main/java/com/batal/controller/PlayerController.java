@@ -87,17 +87,6 @@ public class PlayerController {
     }
     
     /**
-     * Get all active players
-     * All authenticated users can view active players
-     */
-    @GetMapping("/active")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('COACH')")
-    public ResponseEntity<List<PlayerDTO>> getActivePlayers() {
-        List<PlayerDTO> players = playerService.getActivePlayers();
-        return ResponseEntity.ok(players);
-    }
-    
-    /**
      * Get player by ID
      * All authenticated users can view player details
      */
@@ -112,23 +101,7 @@ public class PlayerController {
             return ResponseEntity.notFound().build();
         }
     }
-    
-    /**
-     * Get player by email
-     * All authenticated users can search by email
-     */
-    @GetMapping("/email/{email}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('COACH')")
-    public ResponseEntity<?> getPlayerByEmail(@PathVariable String email) {
-        Optional<PlayerDTO> player = playerService.getPlayerByEmail(email);
-        
-        if (player.isPresent()) {
-            return ResponseEntity.ok(player.get());
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-    
+
     /**
      * Update player
      * Only ADMIN and MANAGER can update players
@@ -194,18 +167,7 @@ public class PlayerController {
                 .body(Map.of("error", "Failed to delete player", "message", e.getMessage()));
         }
     }
-    
-    /**
-     * Search players by name
-     * All authenticated users can search players
-     */
-    @GetMapping("/search")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('COACH')")
-    public ResponseEntity<List<PlayerDTO>> searchPlayers(@RequestParam String q) {
-        List<PlayerDTO> players = playerService.searchPlayersByName(q);
-        return ResponseEntity.ok(players);
-    }
-    
+
     /**
      * Get players by group
      * All authenticated users can view players by group
@@ -279,22 +241,6 @@ public class PlayerController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", "Failed to auto-assign player to group", "message", e.getMessage()));
-        }
-    }
-    
-    /**
-     * Promote player to Advanced level and reassign to appropriate group
-     * Only ADMIN and MANAGER can promote players
-     */
-    @PostMapping("/{id}/promote")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-    public ResponseEntity<?> promotePlayerToAdvanced(@PathVariable Long id) {
-        try {
-            PlayerDTO promotedPlayer = playerService.promotePlayerToAdvanced(id);
-            return ResponseEntity.ok(promotedPlayer);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                .body(Map.of("error", "Failed to promote player", "message", e.getMessage()));
         }
     }
 }

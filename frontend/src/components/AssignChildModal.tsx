@@ -62,10 +62,10 @@ export default function AssignChildModal({
     setIsLoading(true);
     setError(null);
     try {
-      // Get all players and filter those without a parent
+      // Get all active players (now supports multiple parents per player)
       const allPlayers = await playersAPI.getAllList();
-      // Filter for players without a parent_id (those available for assignment)
-      const availablePlayers = allPlayers.filter((p: any) => !p.parentId && p.isActive);
+      // Filter for active players only - players can have multiple parents
+      const availablePlayers = allPlayers.filter((p: any) => p.isActive);
       setPlayers(availablePlayers);
       setFilteredPlayers(availablePlayers);
     } catch (err) {
@@ -186,7 +186,7 @@ export default function AssignChildModal({
                       </div>
                     ) : filteredPlayers.length === 0 ? (
                       <div className="text-center py-8 text-text-secondary">
-                        {searchTerm ? 'No players match your search' : 'No available players without parents'}
+                        {searchTerm ? 'No players match your search' : 'No active players available'}
                       </div>
                     ) : (
                       <div className="border border-border rounded-lg max-h-96 overflow-y-auto">

@@ -28,11 +28,7 @@ public class GroupResponse {
     
     // Coach information
     private UserResponse coach;
-    
-    // Pitch information
-    private Long pitchId;
-    private String pitchName;
-    
+
     // Player information
     private List<PlayerDTO> players;
     
@@ -58,18 +54,12 @@ public class GroupResponse {
         
         // Set coach information if present
         if (group.getCoach() != null) {
-            this.coach = new UserResponse(group.getCoach(), 
+            this.coach = new UserResponse(group.getCoach(),
                 group.getCoach().getRoles().stream()
                     .map(role -> role.getName())
                     .collect(Collectors.toList()));
         }
-        
-        // Set pitch information if present
-        if (group.getPitch() != null) {
-            this.pitchId = group.getPitch().getId();
-            this.pitchName = group.getPitch().getName();
-        }
-        
+
         // Set players information - we'll need to convert players to DTOs manually
         // For now, we'll set this to empty list and let the service layer handle player details
         this.players = List.of();
@@ -204,23 +194,7 @@ public class GroupResponse {
     public void setCoach(UserResponse coach) {
         this.coach = coach;
     }
-    
-    public Long getPitchId() {
-        return pitchId;
-    }
-    
-    public void setPitchId(Long pitchId) {
-        this.pitchId = pitchId;
-    }
-    
-    public String getPitchName() {
-        return pitchName;
-    }
-    
-    public void setPitchName(String pitchName) {
-        this.pitchName = pitchName;
-    }
-    
+
     public List<PlayerDTO> getPlayers() {
         return players;
     }

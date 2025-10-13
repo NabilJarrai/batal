@@ -268,23 +268,6 @@ public class UserService {
         return new UserResponse(savedUser, roles);
     }
 
-    public void activateUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", id));
-        user.setIsActive(true);
-        user.setInactiveReason(null);
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
-    }
-
-    public void deactivateUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", id));
-        user.setIsActive(false);
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
-    }
-
     // ========== PARENT-CHILD MANAGEMENT ==========
 
     /**

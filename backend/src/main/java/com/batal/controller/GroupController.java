@@ -115,34 +115,6 @@ public class GroupController {
         }
     }
 
-    // GET /api/groups/by-level/{level} - Get groups by level
-    @GetMapping("/by-level/{level}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('COACH')")
-    public ResponseEntity<?> getGroupsByLevel(@PathVariable Level level) {
-        try {
-            List<GroupResponse> groups = groupService.getGroupsByLevel(level);
-            return ResponseEntity.ok(groups);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", "Error fetching groups by level: " + e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
-    }
-
-    // GET /api/groups/by-age-group/{ageGroup} - Get groups by age group
-    @GetMapping("/by-age-group/{ageGroup}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('COACH')")
-    public ResponseEntity<?> getGroupsByAgeGroup(@PathVariable AgeGroup ageGroup) {
-        try {
-            List<GroupResponse> groups = groupService.getGroupsByAgeGroup(ageGroup);
-            return ResponseEntity.ok(groups);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", "Error fetching groups by age group: " + e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
-    }
-
     // POST /api/groups/assign-player - Assign player to group
     @PostMapping("/assign-player")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
@@ -261,20 +233,6 @@ public class GroupController {
         try {
             GroupResponse updatedGroup = groupService.deactivateGroup(id);
             return ResponseEntity.ok(updatedGroup);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
-    }
-
-    // POST /api/groups/auto-assign-player/{playerId} - Auto-assign player to appropriate group
-    @PostMapping("/auto-assign-player/{playerId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-    public ResponseEntity<?> autoAssignPlayerToGroup(@PathVariable Long playerId) {
-        try {
-            GroupResponse assignedGroup = groupService.autoAssignPlayerToGroup(playerId);
-            return ResponseEntity.ok(assignedGroup);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("message", e.getMessage());

@@ -144,7 +144,7 @@ public class AssessmentService {
     @PreAuthorize("hasRole('COACH') or hasRole('ADMIN') or hasRole('MANAGER')")
     public List<AssessmentResponse> getMyAssessments() {
         User currentUser = getCurrentAuthenticatedUser();
-        
+
         if (hasRole(currentUser, "COACH")) {
             List<Assessment> assessments = assessmentRepository.findByPlayerGroupCoach(currentUser);
             return assessments.stream()
@@ -176,7 +176,7 @@ public class AssessmentService {
 
         // Validate no duplicate if date is being changed
         if (request.getAssessmentDate() != null &&
-            !request.getAssessmentDate().equals(assessment.getAssessmentDate())) {
+                !request.getAssessmentDate().equals(assessment.getAssessmentDate())) {
             validateNoDuplicateAssessment(assessment.getPlayer(), request.getAssessmentDate(), assessmentId);
         }
 
@@ -208,10 +208,10 @@ public class AssessmentService {
         // Allow partial assessments - just log a warning if incomplete
         if (!isAssessmentComplete(assessment)) {
             // Log warning but don't block finalization
-            System.out.println("Warning: Finalizing partial assessment for player " + 
-                              assessment.getPlayer().getFirstName() + " " + 
-                              assessment.getPlayer().getLastName() + 
-                              " - Not all skills have been assessed");
+            System.out.println("Warning: Finalizing partial assessment for player " +
+                    assessment.getPlayer().getFirstName() + " " +
+                    assessment.getPlayer().getLastName() +
+                    " - Not all skills have been assessed");
         }
 
         assessment.setIsFinalized(true);
@@ -253,9 +253,9 @@ public class AssessmentService {
         validateCanViewPlayerAssessments(currentUser, player);
 
         List<Assessment> assessments = assessmentRepository.findByPlayerIdOrderByAssessmentDateDesc(playerId);
-        
+
         Map<String, Object> analytics = new HashMap<>();
-        
+
         if (assessments.isEmpty()) {
             analytics.put("totalAssessments", 0);
             analytics.put("averageScore", 0.0);
@@ -273,12 +273,12 @@ public class AssessmentService {
         // Calculate category averages
         Map<SkillCategory, Double> categoryAverages = Arrays.stream(SkillCategory.values())
                 .collect(Collectors.toMap(
-                    category -> category,
-                    category -> assessments.stream()
-                        .mapToDouble(a -> a.getCategoryAverageScore(category))
-                        .filter(score -> score > 0)
-                        .average()
-                        .orElse(0.0)
+                        category -> category,
+                        category -> assessments.stream()
+                                .mapToDouble(a -> a.getCategoryAverageScore(category))
+                                .filter(score -> score > 0)
+                                .average()
+                                .orElse(0.0)
                 ));
 
         // Calculate improvement trend (comparing latest vs earliest)
@@ -287,7 +287,7 @@ public class AssessmentService {
             double latestAverage = assessments.get(0).getAverageScore();
             double earliestAverage = assessments.get(assessments.size() - 1).getAverageScore();
             double improvement = latestAverage - earliestAverage;
-            
+
             if (improvement > 0.5) {
                 progressTrend = "Improving";
             } else if (improvement < -0.5) {
@@ -300,18 +300,18 @@ public class AssessmentService {
         analytics.put("categoryAverages", categoryAverages);
         analytics.put("progressTrend", progressTrend);
         analytics.put("latestAssessmentDate", assessments.get(0).getAssessmentDate());
-        
+
         return analytics;
     }
 
     @PreAuthorize("hasRole('COACH') or hasRole('ADMIN') or hasRole('MANAGER')")
-    public AssessmentSummaryResponse getAssessmentSummary(Long playerId, Long groupId, String period, 
+    public AssessmentSummaryResponse getAssessmentSummary(Long playerId, Long groupId, String period,
                                                           LocalDate dateFrom, LocalDate dateTo) {
         User currentUser = getCurrentAuthenticatedUser();
-        
+
         // Build query based on filters
         List<Assessment> assessments;
-        
+
         if (hasRole(currentUser, "COACH")) {
             // Coaches can only see assessments for players in their groups
             assessments = assessmentRepository.findByPlayerGroupCoach(currentUser);
@@ -319,49 +319,49 @@ public class AssessmentService {
             // Admins/Managers see all assessments
             assessments = assessmentRepository.findAll();
         }
-        
+
         // Apply filters
         if (playerId != null) {
             assessments = assessments.stream()
                     .filter(a -> a.getPlayer().getId().equals(playerId))
                     .collect(Collectors.toList());
         }
-        
+
         if (groupId != null) {
             assessments = assessments.stream()
                     .filter(a -> a.getPlayer().getGroup() != null &&
-                                 a.getPlayer().getGroup().getId().equals(groupId))
+                            a.getPlayer().getGroup().getId().equals(groupId))
                     .collect(Collectors.toList());
         }
-        
+
         if (period != null) {
             AssessmentPeriod assessmentPeriod = AssessmentPeriod.valueOf(period.toUpperCase());
             assessments = assessments.stream()
                     .filter(a -> a.getPeriod() == assessmentPeriod)
                     .collect(Collectors.toList());
         }
-        
+
         if (dateFrom != null) {
             assessments = assessments.stream()
                     .filter(a -> !a.getAssessmentDate().isBefore(dateFrom))
                     .collect(Collectors.toList());
         }
-        
+
         if (dateTo != null) {
             assessments = assessments.stream()
                     .filter(a -> !a.getAssessmentDate().isAfter(dateTo))
                     .collect(Collectors.toList());
         }
-        
+
         // Calculate summary statistics
         int totalAssessments = assessments.size();
-        
+
         long completedCount = assessments.stream()
                 .filter(Assessment::getIsFinalized)
                 .count();
         int completedAssessments = (int) completedCount;
         int pendingAssessments = totalAssessments - completedAssessments;
-        
+
         // Calculate average score by category
         Map<SkillCategory, Double> categoryAverages = new HashMap<>();
         for (SkillCategory category : SkillCategory.values()) {
@@ -373,12 +373,12 @@ public class AssessmentService {
                     .orElse(0.0);
             categoryAverages.put(category, Math.round(average * 100.0) / 100.0);
         }
-        
+
         return new AssessmentSummaryResponse(
-            totalAssessments,
-            completedAssessments,
-            pendingAssessments,
-            categoryAverages
+                totalAssessments,
+                completedAssessments,
+                pendingAssessments,
+                categoryAverages
         );
     }
 
@@ -439,9 +439,9 @@ public class AssessmentService {
 
             // Second check: Coach can view assessments for players in their groups (if properly assigned)
             if (assessment.getPlayer() != null &&
-                assessment.getPlayer().getGroup() != null &&
-                assessment.getPlayer().getGroup().getCoach() != null &&
-                user.equals(assessment.getPlayer().getGroup().getCoach())) {
+                    assessment.getPlayer().getGroup() != null &&
+                    assessment.getPlayer().getGroup().getCoach() != null &&
+                    user.equals(assessment.getPlayer().getGroup().getCoach())) {
                 return;
             }
         }
@@ -476,9 +476,9 @@ public class AssessmentService {
 
             // Second check: Coach can edit assessments for players in their groups (if properly assigned)
             if (assessment.getPlayer() != null &&
-                assessment.getPlayer().getGroup() != null &&
-                assessment.getPlayer().getGroup().getCoach() != null &&
-                user.getId().equals(assessment.getPlayer().getGroup().getCoach().getId())) {
+                    assessment.getPlayer().getGroup() != null &&
+                    assessment.getPlayer().getGroup().getCoach() != null &&
+                    user.getId().equals(assessment.getPlayer().getGroup().getCoach().getId())) {
                 return;
             }
         }
@@ -493,16 +493,16 @@ public class AssessmentService {
         boolean exists;
         if (excludeAssessmentId != null) {
             exists = assessmentRepository.existsByPlayerIdAndYearAndMonthAndIdNot(
-                player.getId(), year, month, excludeAssessmentId);
+                    player.getId(), year, month, excludeAssessmentId);
         } else {
             exists = assessmentRepository.existsByPlayerIdAndYearAndMonth(
-                player.getId(), year, month);
+                    player.getId(), year, month);
         }
-        
+
         if (exists) {
             throw new IllegalStateException(
-                "An assessment already exists for this player in " + 
-                assessmentDate.getMonth() + " " + year);
+                    "An assessment already exists for this player in " +
+                            assessmentDate.getMonth() + " " + year);
         }
     }
 
@@ -512,7 +512,7 @@ public class AssessmentService {
                 .collect(Collectors.toList());
 
         List<Skill> skills = skillRepository.findAllById(skillIds);
-        
+
         if (skills.size() != skillIds.size()) {
             throw new EntityNotFoundException("One or more skills not found");
         }
@@ -520,11 +520,11 @@ public class AssessmentService {
         for (Skill skill : skills) {
             if (!skill.isApplicableForLevel(playerLevel)) {
                 throw new ValidationException(
-                    "Skill '" + skill.getName() + "' is not applicable for " + playerLevel + " level");
+                        "Skill '" + skill.getName() + "' is not applicable for " + playerLevel + " level");
             }
             if (!skill.getIsActive()) {
                 throw new ValidationException(
-                    "Skill '" + skill.getName() + "' is not active");
+                        "Skill '" + skill.getName() + "' is not active");
             }
         }
     }
@@ -532,7 +532,7 @@ public class AssessmentService {
     private boolean isAssessmentComplete(Assessment assessment) {
         Level playerLevel = assessment.getPlayer().getLevel();
         List<Skill> requiredSkills = skillRepository.findByApplicableLevelsContainingAndIsActiveTrue(playerLevel);
-        
+
         Set<Long> assessedSkillIds = assessment.getSkillScores().stream()
                 .map(ss -> ss.getSkill().getId())
                 .collect(Collectors.toSet());
@@ -544,12 +544,12 @@ public class AssessmentService {
 
         return missingSkills.isEmpty();
     }
-    
+
     private void validateAssessmentComplete(Assessment assessment) {
         if (!isAssessmentComplete(assessment)) {
             Level playerLevel = assessment.getPlayer().getLevel();
             List<Skill> requiredSkills = skillRepository.findByApplicableLevelsContainingAndIsActiveTrue(playerLevel);
-            
+
             Set<Long> assessedSkillIds = assessment.getSkillScores().stream()
                     .map(ss -> ss.getSkill().getId())
                     .collect(Collectors.toSet());
@@ -558,9 +558,9 @@ public class AssessmentService {
                     .filter(skill -> !assessedSkillIds.contains(skill.getId()))
                     .map(Skill::getName)
                     .collect(Collectors.toList());
-                    
+
             throw new IllegalStateException(
-                "Assessment is incomplete. Missing skills: " + String.join(", ", missingSkills));
+                    "Assessment is incomplete. Missing skills: " + String.join(", ", missingSkills));
         }
     }
 
@@ -687,11 +687,11 @@ public class AssessmentService {
         // Calculate category averages
         Map<SkillCategory, Double> categoryAverages = Arrays.stream(SkillCategory.values())
                 .collect(Collectors.toMap(
-                    category -> category,
-                    category -> assessment.getCategoryAverageScore(category)
+                        category -> category,
+                        category -> assessment.getCategoryAverageScore(category)
                 ));
         response.setCategoryAverages(categoryAverages);
-        
+
         // Check if assessment is partial
         response.setIsPartialAssessment(!isAssessmentComplete(assessment));
 

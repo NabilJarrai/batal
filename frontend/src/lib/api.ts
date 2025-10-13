@@ -205,11 +205,6 @@ export const usersAPI = {
     return apiRequest(`/users?${params.toString()}`);
   },
 
-  // Legacy method for backward compatibility
-  getAllLegacy: async (): Promise<UserResponse[]> => {
-    const response = await usersAPI.getAll(0, 1000); // Get all users with large page size
-    return response.content;
-  },
 
   getById: async (id: number): Promise<UserResponse> => {
     return apiRequest<UserResponse>(`/users/${id}`);
@@ -243,10 +238,6 @@ export const usersAPI = {
   },
 
   // Coach-specific endpoints
-  getCoaches: async (): Promise<UserResponse[]> => {
-    return apiRequest<UserResponse[]>("/users/coaches");
-  },
-
   getAvailableCoaches: async (): Promise<UserResponse[]> => {
     return apiRequest<UserResponse[]>("/users/coaches/available");
   },
@@ -256,10 +247,6 @@ export const usersAPI = {
   },
 
   // Parent-child management endpoints
-  getParentChildren: async (parentId: number): Promise<any[]> => {
-    return apiRequest<any[]>(`/users/${parentId}/children`);
-  },
-
   assignChild: async (parentId: number, playerId: number): Promise<UserResponse> => {
     return apiRequest<UserResponse>(`/users/${parentId}/children`, {
       method: "POST",
@@ -297,30 +284,14 @@ export const playersAPI = {
     return apiRequest(`/players?${params.toString()}`);
   },
 
-  // Legacy method for backward compatibility
-  getAllLegacy: async (params?: any): Promise<any> => {
-    const queryParams = params ? `?${new URLSearchParams(params)}` : '';
-    const response = await apiRequest<any>(`/players${queryParams}`);
-    // Handle paginated response - return just the content array if it's a Page object
-    return response.content || response;
-  },
-
   getAllList: async (): Promise<any[]> => {
     // Get unpaginated list of all players
     const response = await apiRequest<any>(`/players?size=1000`);
     return response.content || response || [];
   },
-  
-  getActive: async (): Promise<any[]> => {
-    return apiRequest<any[]>("/players/active");
-  },
 
   getById: async (id: number): Promise<any> => {
     return apiRequest<any>(`/players/${id}`);
-  },
-
-  getByEmail: async (email: string): Promise<any> => {
-    return apiRequest<any>(`/players/email/${email}`);
   },
 
   create: async (playerData: any): Promise<any> => {
@@ -356,10 +327,6 @@ export const playersAPI = {
     });
   },
 
-  searchByName: async (searchTerm: string): Promise<any[]> => {
-    return apiRequest<any[]>(`/players/search?name=${encodeURIComponent(searchTerm)}`);
-  },
-
   getByGroup: async (groupId: number): Promise<any[]> => {
     return apiRequest<any[]>(`/players/group/${groupId}`);
   },
@@ -375,12 +342,6 @@ export const playersAPI = {
 
   autoAssignGroup: async (id: number): Promise<any> => {
     return apiRequest<any>(`/players/${id}/auto-assign-group`, {
-      method: "POST",
-    });
-  },
-
-  promote: async (id: number): Promise<any> => {
-    return apiRequest<any>(`/players/${id}/promote`, {
       method: "POST",
     });
   },
@@ -420,22 +381,8 @@ export const groupsAPI = {
   },
 
   // Specialized group queries
-  getAllList: async (): Promise<any[]> => {
-    // Get unpaginated list of all groups
-    const response = await apiRequest<any>(`/groups?size=1000`);
-    return response.content || response || [];
-  },
-  
   getAvailable: async (): Promise<any[]> => {
     return apiRequest<any[]>("/groups/available");
-  },
-
-  getByLevel: async (level: string): Promise<any[]> => {
-    return apiRequest<any[]>(`/groups/by-level/${level}`);
-  },
-
-  getByAgeGroup: async (ageGroup: string): Promise<any[]> => {
-    return apiRequest<any[]>(`/groups/by-age-group/${ageGroup}`);
   },
 
   getCoachGroups: async (coachId: number): Promise<any[]> => {
@@ -470,12 +417,6 @@ export const groupsAPI = {
     });
   },
 
-  autoAssignPlayer: async (playerId: number): Promise<any> => {
-    return apiRequest<any>(`/groups/auto-assign-player/${playerId}`, {
-      method: "POST",
-    });
-  },
-
   // Group status operations
   activate: async (id: number): Promise<any> => {
     return apiRequest<any>(`/groups/${id}/activate`, {
@@ -486,30 +427,6 @@ export const groupsAPI = {
   deactivate: async (id: number): Promise<any> => {
     return apiRequest<any>(`/groups/${id}/deactivate`, {
       method: "PATCH",
-    });
-  },
-};
-
-// Coaches API calls
-export const coachesAPI = {
-  getAll: async (): Promise<UserResponse[]> => {
-    return apiRequest<UserResponse[]>("/coaches");
-  },
-
-  getById: async (id: number): Promise<UserResponse> => {
-    return apiRequest<UserResponse>(`/coaches/${id}`);
-  },
-
-  update: async (id: number, userData: any): Promise<UserResponse> => {
-    return apiRequest<UserResponse>(`/coaches/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(userData),
-    });
-  },
-
-  delete: async (id: number): Promise<{ message: string }> => {
-    return apiRequest<{ message: string }>(`/coaches/${id}`, {
-      method: "DELETE",
     });
   },
 };
