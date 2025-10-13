@@ -40,7 +40,6 @@ export interface UserResponse {
   emergencyContactPhone?: string;
   isActive: boolean;
   inactiveReason?: string;
-  joiningDate?: string; // ISO date string
   createdAt: string; // ISO datetime string
   updatedAt: string; // ISO datetime string
   roles: string[];

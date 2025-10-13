@@ -2,6 +2,7 @@ package com.batal.dto;
 
 import com.batal.entity.User;
 import com.batal.entity.enums.Gender;
+import com.batal.entity.enums.UserType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,9 +17,12 @@ public class UserResponse {
     private LocalDate dateOfBirth;
     private Gender gender;
     private String address;
+    private UserType userType;
+    private String title;
     private String emergencyContactName;
     private String emergencyContactPhone;
     private Boolean isActive;
+    private String inactiveReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<String> roles;
@@ -35,9 +39,12 @@ public class UserResponse {
         this.dateOfBirth = user.getDateOfBirth();
         this.gender = user.getGender();
         this.address = user.getAddress();
+        this.userType = user.getUserType();
+        this.title = user.getTitle();
         this.emergencyContactName = user.getEmergencyContactName();
         this.emergencyContactPhone = user.getEmergencyContactPhone();
         this.isActive = user.getIsActive();
+        this.inactiveReason = user.getInactiveReason();
         this.createdAt = user.getCreatedAt();
         this.updatedAt = user.getUpdatedAt();
         this.roles = roles;
@@ -107,7 +114,23 @@ public class UserResponse {
     public void setAddress(String address) {
         this.address = address;
     }
-    
+
+    public UserType getUserType() {
+        return userType;
+    }
+
+    public void setUserType(UserType userType) {
+        this.userType = userType;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public String getEmergencyContactName() {
         return emergencyContactName;
     }
@@ -131,7 +154,15 @@ public class UserResponse {
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
     }
-    
+
+    public String getInactiveReason() {
+        return inactiveReason;
+    }
+
+    public void setInactiveReason(String inactiveReason) {
+        this.inactiveReason = inactiveReason;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }

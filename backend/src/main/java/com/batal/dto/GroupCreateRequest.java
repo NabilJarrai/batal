@@ -31,7 +31,9 @@ public class GroupCreateRequest {
     
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;
-    
+
+    private Boolean isActive = true;
+
     // Optional: Override default age range from AgeGroup
     @Min(value = 4, message = "Minimum age must be at least 4")
     private Integer minAge;
@@ -133,5 +135,13 @@ public class GroupCreateRequest {
     
     public void setMaxAge(Integer maxAge) {
         this.maxAge = maxAge;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 }
