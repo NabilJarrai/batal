@@ -21,7 +21,7 @@ export default function CreateUserModal({
     firstName: '',
     lastName: '',
     email: '',
-    password: '',
+    // password removed - users set via email
     phone: '',
     gender: Gender.MALE,
     userType: UserType.COACH,
@@ -30,27 +30,12 @@ export default function CreateUserModal({
     isActive: true
   });
 
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const validateForm = () => {
-    if (formData.password !== confirmPassword) {
-      setError('Passwords do not match');
-      return false;
-    }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return false;
-    }
-    return true;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
-    
+
     setIsSubmitting(true);
     setError(null);
 
@@ -73,7 +58,7 @@ export default function CreateUserModal({
       firstName: '',
       lastName: '',
       email: '',
-      password: '',
+      // password removed - users set via email
       phone: '',
       gender: Gender.MALE,
       userType: UserType.COACH,
@@ -81,7 +66,6 @@ export default function CreateUserModal({
       address: '',
       isActive: true
     });
-    setConfirmPassword('');
     setError(null);
     onClose();
   };
@@ -231,34 +215,18 @@ export default function CreateUserModal({
                     </div>
                   </div>
 
-                  {/* Password */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-secondary mb-1">
-                        Password *
-                      </label>
-                      <input
-                        type="password"
-                        required
-                        value={formData.password}
-                        onChange={(e) => setFormData({...formData, password: e.target.value})}
-                        className="input-base"
-                        placeholder="Min 6 characters"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-text-secondary mb-1">
-                        Confirm Password *
-                      </label>
-                      <input
-                        type="password"
-                        required
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="input-base"
-                        placeholder="Re-enter password"
-                      />
+                  {/* Password Setup Info */}
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                    <div className="flex items-start space-x-3">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-text-primary">📧 Password Setup via Email</p>
+                        <p className="text-xs text-text-secondary mt-1">
+                          User will receive an email with a secure link to set their password. The link expires in 48 hours.
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -340,23 +308,7 @@ export default function CreateUserModal({
                     />
                   </div>
 
-                  {/* Status */}
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                    <label className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        checked={formData.isActive}
-                        onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
-                        className="h-4 w-4 rounded text-blue-600"
-                      />
-                      <div>
-                        <p className="text-sm font-medium text-text-primary">Active Account</p>
-                        <p className="text-xs text-text-secondary">
-                          User will be able to log in immediately
-                        </p>
-                      </div>
-                    </label>
-                  </div>
+                  {/* Note: isActive is set to false by backend until password is set */}
 
                   {/* Actions */}
                   <div className="flex gap-3 pt-4">

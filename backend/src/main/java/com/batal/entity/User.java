@@ -25,9 +25,8 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
     
-    @NotBlank
     @Size(min = 8, message = "Password must be at least 8 characters")
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
     
     @NotBlank
@@ -84,7 +83,10 @@ public class User {
 
     @Column(name = "first_login_at")
     private LocalDateTime firstLoginAt;
-    
+
+    @Column(name = "password_set_at")
+    private LocalDateTime passwordSetAt;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_roles",
@@ -227,7 +229,15 @@ public class User {
     public void setFirstLoginAt(LocalDateTime firstLoginAt) {
         this.firstLoginAt = firstLoginAt;
     }
-    
+
+    public LocalDateTime getPasswordSetAt() {
+        return passwordSetAt;
+    }
+
+    public void setPasswordSetAt(LocalDateTime passwordSetAt) {
+        this.passwordSetAt = passwordSetAt;
+    }
+
     public Set<Role> getRoles() {
         return roles;
     }

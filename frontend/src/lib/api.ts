@@ -180,6 +180,33 @@ export const authAPI = {
       body: JSON.stringify(userData),
     });
   },
+
+  // Password setup via email
+  validateSetupToken: async (token: string): Promise<{
+    valid: boolean;
+    message: string;
+    userEmail?: string;
+    userName?: string;
+  }> => {
+    return apiRequest(`/auth/validate-setup-token?token=${encodeURIComponent(token)}`);
+  },
+
+  setupPassword: async (data: {
+    token: string;
+    password: string;
+    confirmPassword: string;
+  }): Promise<LoginResponse> => {
+    return apiRequest<LoginResponse>("/auth/setup-password", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  resendSetupEmail: async (userId: number): Promise<{ message: string; userId: number }> => {
+    return apiRequest(`/auth/resend-setup-email/${userId}`, {
+      method: "POST",
+    });
+  },
 };
 
 // Users API calls  

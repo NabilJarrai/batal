@@ -12,11 +12,9 @@ public class UserCreateRequest {
     @Email
     @NotBlank
     private String email;
-    
-    @NotBlank
-    @Size(min = 8, message = "Password must be at least 8 characters")
-    private String password;
-    
+
+    // Password field removed - users set password via email link
+
     @NotBlank
     @Size(max = 100)
     private String firstName;
@@ -59,15 +57,9 @@ public class UserCreateRequest {
     public void setEmail(String email) {
         this.email = email;
     }
-    
-    public String getPassword() {
-        return password;
-    }
-    
-    public void setPassword(String password) {
-        this.password = password;
-    }
-    
+
+    // Password getter/setter removed - users set password via email link
+
     public String getFirstName() {
         return firstName;
     }

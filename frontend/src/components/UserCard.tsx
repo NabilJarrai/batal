@@ -243,7 +243,7 @@ export default function UserCard({
       )}
 
       {/* Joining Date */}
-      {user.joiningDate && (
+      {user.createdAt && (
         <div className="mb-4">
           <div className="flex items-center text-primary mb-1">
             <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -252,7 +252,7 @@ export default function UserCard({
             <span className="text-sm font-medium">Joined</span>
           </div>
           <p className="text-sm text-text-primary">
-            {new Date(user.joiningDate).toLocaleDateString()}
+            {new Date(user.createdAt).toLocaleDateString()}
           </p>
         </div>
       )}

@@ -48,7 +48,10 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    
+    @Autowired
+    private AuthService authService;
+
+
     // Get all staff users (excluding PLAYERs) with pagination and search
     public Page<UserResponse> getAllStaffUsers(Pageable pageable, String search) {
         Page<User> users;
@@ -112,7 +115,8 @@ public class UserService {
         
         User user = new User();
         user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        // Don't set password - user will set it via email link
+        // user.setPassword() is NOT called here
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setPhone(request.getPhone());
@@ -123,7 +127,7 @@ public class UserService {
         user.setTitle(request.getTitle());
         user.setEmergencyContactName(request.getEmergencyContactName());
         user.setEmergencyContactPhone(request.getEmergencyContactPhone());
-        user.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+        user.setIsActive(false); // Inactive until password is set via email
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
         
@@ -157,8 +161,18 @@ public class UserService {
             }
         }
         user.setRoles(roles);
-        
+
         User savedUser = userRepository.save(user);
+
+        // Send password setup email
+        try {
+            authService.sendPasswordSetupEmail(savedUser.getId());
+        } catch (Exception e) {
+            // Log error but don't fail user creation
+            // Admin can resend the email later
+            System.err.println("Failed to send password setup email to " + savedUser.getEmail() + ": " + e.getMessage());
+        }
+
         List<String> roleNames = savedUser.getRoles().stream()
                 .map(role -> role.getName())
                 .collect(Collectors.toList());

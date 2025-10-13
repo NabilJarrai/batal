@@ -47,9 +47,9 @@ export interface UserResponse {
 }
 
 // User Create Request (matches backend UserCreateRequest.java)
+// Password removed - users set password via email link
 export interface UserCreateRequest {
   email: string;
-  password: string;
   firstName: string;
   lastName: string;
   phone?: string;
