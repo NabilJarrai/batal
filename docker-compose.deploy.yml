@@ -23,10 +23,9 @@ services:
     container_name: batal-backend
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
-      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
-      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
-      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      FRONTEND_URL: https://${DOMAIN:-batal-academy.com}
     ports:
       - "8080:8080"
     networks:
