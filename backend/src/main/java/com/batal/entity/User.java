@@ -81,9 +81,6 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "first_login_at")
-    private LocalDateTime firstLoginAt;
-
     @Column(name = "password_set_at")
     private LocalDateTime passwordSetAt;
 
@@ -220,14 +217,6 @@ public class User {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public LocalDateTime getFirstLoginAt() {
-        return firstLoginAt;
-    }
-
-    public void setFirstLoginAt(LocalDateTime firstLoginAt) {
-        this.firstLoginAt = firstLoginAt;
     }
 
     public LocalDateTime getPasswordSetAt() {
