@@ -21,8 +21,8 @@ fi
 
 # Variables
 PROJECT_NAME="batal"
-DOMAIN="batal.dev.nabiljarrai.com"
-PROJECT_DIR="/opt/batal-dev"
+DOMAIN="batal-academy.com"
+PROJECT_DIR="/opt/batal-production"
 NGINX_SITES_AVAILABLE="/etc/nginx/sites-available"
 NGINX_SITES_ENABLED="/etc/nginx/sites-enabled"
 

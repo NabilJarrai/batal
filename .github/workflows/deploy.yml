@@ -2,7 +2,7 @@ name: Deploy Batal Academy
 
 on:
   push:
-    branches: [develop]
+    branches: [master]
   workflow_dispatch:
 
 env:
@@ -61,7 +61,7 @@ jobs:
           push: true
           no-cache: true
           build-args: |
-            NEXT_PUBLIC_API_URL=https://batal.dev.nabiljarrai.com/api
+            NEXT_PUBLIC_API_URL=https://batal-academy.com/api
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
 
@@ -80,9 +80,9 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            ENV="dev"
-            DOMAIN="batal.dev.nabiljarrai.com"
-            PROJECT_DIR="/opt/batal-dev"
+            ENV="production"
+            DOMAIN="batal-academy.com"
+            PROJECT_DIR="/opt/batal-production"
 
             echo "Deploying to $DOMAIN"
 
@@ -96,9 +96,9 @@ jobs:
             fi
 
             sudo git fetch origin
-            sudo git checkout develop
-            sudo git reset --hard origin/develop
-            sudo git pull origin develop
+            sudo git checkout master
+            sudo git reset --hard origin/master
+            sudo git pull origin master
 
             # Verify required files exist
             if [ ! -f "docker-compose.deploy.yml" ]; then
@@ -109,7 +109,7 @@ jobs:
 
             # Use deployment configuration
             COMPOSE_FILES="-f docker-compose.yml -f docker-compose.deploy.yml"
-            IMAGE_TAG="develop"
+            IMAGE_TAG="master"
 
             # Create environment file from secrets
             sudo tee .env > /dev/null << EOF
@@ -146,7 +146,7 @@ jobs:
 
             # Verify deployment
             echo "Verifying deployment..."
-            
+
             # Check container status
             for i in {1..6}; do
               NOT_RUNNING=$(sudo docker compose $COMPOSE_FILES ps --format "table {{.Name}}\t{{.Status}}" | grep -v "STATUS" | grep -v "Up" | head -5)

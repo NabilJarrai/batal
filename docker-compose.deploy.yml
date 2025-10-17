@@ -19,7 +19,7 @@ services:
       - "9001:9001"
 
   backend:
-    image: ${BACKEND_IMAGE:-ghcr.io/nabiljarrai/batal-backend:develop}
+    image: ${BACKEND_IMAGE:-ghcr.io/nabiljarrai/batal-backend:master}
     container_name: batal-backend
     environment:
       SPRING_PROFILES_ACTIVE: dev
@@ -33,10 +33,10 @@ services:
       - batal-network
 
   frontend:
-    image: ${FRONTEND_IMAGE:-ghcr.io/nabiljarrai/batal-frontend:develop}
+    image: ${FRONTEND_IMAGE:-ghcr.io/nabiljarrai/batal-frontend:master}
     container_name: batal-frontend
     environment:
-      NEXT_PUBLIC_API_URL: https://${DOMAIN:-batal.dev.nabiljarrai.com}/api
+      NEXT_PUBLIC_API_URL: https://${DOMAIN:-batal-academy.com}/api
     ports:
       - "3000:3000"
     networks:
