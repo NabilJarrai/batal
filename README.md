@@ -1,6 +1,8 @@
-# Batal Football Academy Management System
+# Batal Academy - Full Stack Application
 
-A comprehensive management system for football academies built with modern technologies. This system helps academies track player progress, manage assessments, handle communications, and generate insightful reports.
+A modern, comprehensive learning management system built with Next.js and Spring Boot.
+
+<!-- Deployment trigger: Updated with modern login page --> This system helps academies track player progress, manage assessments, handle communications, and generate insightful reports.
 
 ## 🏗️ Architecture
 

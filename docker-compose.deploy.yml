@@ -1,0 +1,53 @@
+services:
+  postgres:
+    container_name: batal-postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - batal-network
+    ports:
+      - "5432:5432"
+
+  minio:
+    container_name: batal-minio
+    volumes:
+      - minio_data:/data
+    networks:
+      - batal-network
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/nabiljarrai/batal-backend:master}
+    container_name: batal-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+    ports:
+      - "8080:8080"
+    networks:
+      - batal-network
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/nabiljarrai/batal-frontend:master}
+    container_name: batal-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: https://${DOMAIN:-batal-academy.com}/api
+    ports:
+      - "3000:3000"
+    networks:
+      - batal-network
+
+volumes:
+  postgres_data:
+    driver: local
+  minio_data:
+    driver: local
+
+networks:
+  batal-network:
+    driver: bridge

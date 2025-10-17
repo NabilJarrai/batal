@@ -3,16 +3,40 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Background colors */
+  --background: #FFFFFF;
+  --background-modal: #F3F4F6;
+
+  /* Text colors */
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --foreground: #111827;
+
+  /* Button colors */
+  --primary: #1E40AF;
+  --primary-hover: #1E3A8A;
+  --secondary: #6B7280;
+  --secondary-hover: #4B5563;
+
+  /* Border colors */
+  --border: #D1D5DB;
+
+  /* Accent colors */
+  --accent-teal: #14B8A6;
+  --accent-red: #EF4444;
+  --accent-yellow: #F59E0B;
+
+  /* UI state colors */
+  --disabled: #9CA3AF;
 }
 
-@media (prefers-color-scheme: dark) {
+/* Force light theme - disable dark mode preference */
+/* @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
+} */
 
 body {
   color: var(--foreground);
@@ -30,4 +54,209 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Custom animations for login page */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Notification progress bar animation */
+@keyframes shrink {
+  0% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+  }
+}
+
+.animate-shrink {
+  animation: shrink linear;
+}
+
+/* Comprehensive Design System */
+@layer components {
+  /* Typography Scale */
+  .text-heading-1 { @apply text-3xl font-bold text-text-primary; }
+  .text-heading-2 { @apply text-2xl font-semibold text-text-primary; }
+  .text-heading-3 { @apply text-xl font-semibold text-text-primary; }
+  .text-heading-4 { @apply text-lg font-medium text-text-primary; }
+  .text-body-lg { @apply text-base text-text-primary; }
+  .text-body { @apply text-sm text-text-primary; }
+  .text-body-sm { @apply text-xs text-text-secondary; }
+  .text-caption { @apply text-xs font-medium text-text-secondary; }
+
+  /* Card System */
+  .card-base {
+    @apply bg-background border border-border rounded-xl shadow-sm transition-all duration-200;
+  }
+
+  .card-hover {
+    @apply card-base hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  .card-interactive {
+    @apply card-hover cursor-pointer hover:border-primary/20;
+  }
+
+  .card-selected {
+    @apply ring-2 ring-primary border-primary/30 bg-primary/5;
+  }
+
+  /* Form Elements */
+  .input-base {
+    @apply w-full px-4 py-2.5 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+  }
+
+  .input-error {
+    @apply input-base border-accent-red focus:ring-accent-red;
+  }
+
+  .input-success {
+    @apply input-base border-accent-teal focus:ring-accent-teal;
+  }
+
+  /* Button System */
+  .btn-base {
+    @apply inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Button Sizes */
+  .btn-xs { @apply px-2 py-1 text-xs; }
+  .btn-sm { @apply px-3 py-2 text-sm; }
+  .btn-md { @apply px-4 py-2.5 text-sm; }
+  .btn-lg { @apply px-6 py-3 text-base; }
+  .btn-xl { @apply px-8 py-4 text-lg; }
+
+  /* Button Variants */
+  .btn-primary {
+    @apply btn-base bg-primary hover:bg-primary-hover text-white shadow-sm hover:shadow-md focus:ring-primary;
+  }
+
+  .btn-secondary {
+    @apply btn-base bg-white border border-border text-text-primary hover:bg-secondary-50 hover:border-secondary focus:ring-primary;
+  }
+
+  .btn-outline {
+    @apply btn-base border-2 border-primary text-primary bg-transparent hover:bg-primary hover:text-white focus:ring-primary;
+  }
+
+  .btn-ghost {
+    @apply btn-base text-text-primary hover:bg-secondary-100 focus:ring-primary;
+  }
+
+  .btn-destructive {
+    @apply btn-base bg-accent-red hover:bg-red-700 text-white shadow-sm hover:shadow-md focus:ring-accent-red;
+  }
+
+  .btn-success {
+    @apply btn-base bg-accent-teal hover:bg-teal-700 text-white shadow-sm hover:shadow-md focus:ring-accent-teal;
+  }
+
+  .btn-warning {
+    @apply btn-base bg-accent-yellow hover:bg-yellow-600 text-white shadow-sm hover:shadow-md focus:ring-accent-yellow;
+  }
+
+  .btn-disabled {
+    @apply btn-base bg-gray-300 text-gray-500 cursor-not-allowed shadow-none;
+    pointer-events: none;
+  }
+
+  /* Icon Button */
+  .btn-icon {
+    @apply btn-base w-10 h-10 p-0;
+  }
+
+  /* Status Badges */
+  .badge-base {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply badge-base bg-primary/10 text-primary border border-primary/20;
+  }
+
+  .badge-success {
+    @apply badge-base bg-accent-teal/10 text-accent-teal border border-accent-teal/20;
+  }
+
+  .badge-warning {
+    @apply badge-base bg-accent-yellow/10 text-accent-yellow border border-accent-yellow/20;
+  }
+
+  .badge-error {
+    @apply badge-base bg-accent-red/10 text-accent-red border border-accent-red/20;
+  }
+
+  .badge-secondary {
+    @apply badge-base bg-secondary/10 text-secondary border border-secondary/20;
+  }
+
+  /* Alert System */
+  .alert-base {
+    @apply p-4 rounded-lg border flex items-start space-x-3;
+  }
+
+  .alert-info {
+    @apply alert-base bg-primary/5 border-primary/20 text-primary;
+  }
+
+  .alert-success {
+    @apply alert-base bg-accent-teal/5 border-accent-teal/20 text-accent-teal;
+  }
+
+  .alert-warning {
+    @apply alert-base bg-accent-yellow/5 border-accent-yellow/20 text-accent-yellow;
+  }
+
+  .alert-error {
+    @apply alert-base bg-accent-red/5 border-accent-red/20 text-accent-red;
+  }
+
+  /* Loading States */
+  .loading-spinner {
+    @apply inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin;
+  }
+
+  .loading-overlay {
+    @apply absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center;
+  }
+
+  /* Utility Classes */
+  .divider {
+    @apply border-t border-border;
+  }
+
+  .glass-effect {
+    @apply bg-white/10 backdrop-blur-lg border border-white/20;
+  }
+
+  .elevation-1 { @apply shadow-sm; }
+  .elevation-2 { @apply shadow-md; }
+  .elevation-3 { @apply shadow-lg; }
+  .elevation-4 { @apply shadow-xl; }
 }

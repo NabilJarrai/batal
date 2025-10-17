@@ -1,0 +1,436 @@
+"use client";
+
+import { useState } from 'react';
+import { GroupResponse, AGE_GROUP_METADATA } from '@/types/groups';
+import { Level } from '@/types/players';
+import { PlayerDTO } from '@/types/players';
+import UnassignPlayerModal from './UnassignPlayerModal';
+import ReassignPlayerModal from './ReassignPlayerModal';
+
+interface GroupCardProps {
+  group: GroupResponse;
+  onAssignCoach?: (groupId: number) => void;
+  onAssignPlayer?: (groupId: number) => void;
+  onRemoveCoach?: (groupId: number) => void;
+  onRemovePlayer?: (groupId: number, playerId: number) => void;
+  onUnassignPlayer?: (groupId: number, playerId: number) => void;
+  onReassignPlayer?: (playerId: number, fromGroupId: number, toGroupId: number) => void;
+  onViewDetails?: (groupId: number) => void;
+  onEdit?: (groupId: number) => void;
+  onDelete?: (groupId: number) => void;
+  onActivate?: (groupId: number) => void;
+  onDeactivate?: (groupId: number) => void;
+  showActions?: boolean;
+  isSelectable?: boolean;
+  isSelected?: boolean;
+  onSelect?: (groupId: number) => void;
+}
+
+export default function GroupCard({ 
+  group, 
+  onAssignCoach,
+  onAssignPlayer,
+  onRemoveCoach,
+  onRemovePlayer,
+  onUnassignPlayer,
+  onReassignPlayer, 
+  onViewDetails, 
+  onEdit,
+  onDelete,
+  onActivate,
+  onDeactivate,
+  showActions = true,
+  isSelectable = false,
+  isSelected = false,
+  onSelect
+}: GroupCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [unassignModal, setUnassignModal] = useState<{
+    isOpen: boolean;
+    player: PlayerDTO | null;
+  }>({
+    isOpen: false,
+    player: null
+  });
+  
+  const [reassignModal, setReassignModal] = useState<{
+    isOpen: boolean;
+    player: PlayerDTO | null;
+  }>({
+    isOpen: false,
+    player: null
+  });
+  
+  const ageGroupMeta = AGE_GROUP_METADATA[group.ageGroup];
+  const utilizationPercentage = Math.round((group.currentPlayerCount / group.capacity) * 100);
+  
+  const getLevelColor = (level: Level) => {
+    return level === Level.DEVELOPMENT 
+      ? 'from-blue-500 to-blue-600' 
+      : 'from-purple-500 to-purple-600';
+  };
+
+  const getCapacityColor = (percentage: number) => {
+    if (percentage >= 90) return 'text-accent-red';
+    if (percentage >= 75) return 'text-accent-yellow';
+    return 'text-accent-teal';
+  };
+
+  const handleUnassignClick = (player: PlayerDTO) => {
+    setUnassignModal({
+      isOpen: true,
+      player: player
+    });
+  };
+
+  const handleUnassignConfirm = () => {
+    if (unassignModal.player && unassignModal.player.id && onUnassignPlayer) {
+      onUnassignPlayer(group.id, unassignModal.player.id);
+    }
+    setUnassignModal({ isOpen: false, player: null });
+  };
+
+  const handleUnassignClose = () => {
+    setUnassignModal({ isOpen: false, player: null });
+  };
+
+  const handleReassignClick = (player: PlayerDTO) => {
+    setReassignModal({
+      isOpen: true,
+      player: player
+    });
+  };
+
+  const handleReassignConfirm = (newGroupId: number) => {
+    if (reassignModal.player && reassignModal.player.id && onReassignPlayer) {
+      onReassignPlayer(reassignModal.player.id, group.id, newGroupId);
+    }
+    setReassignModal({ isOpen: false, player: null });
+  };
+
+  const handleReassignClose = () => {
+    setReassignModal({ isOpen: false, player: null });
+  };
+
+  const handleClick = () => {
+    if (isSelectable && onSelect) {
+      onSelect(group.id);
+    } else if (onViewDetails) {
+      onViewDetails(group.id);
+    }
+  };
+
+  return (
+    <div
+      className={`
+        card-base p-6 relative
+        ${isSelectable ? 'card-interactive' : 'card-hover'}
+        ${isSelected ? 'card-selected' : ''}
+        ${group.isActive ? '' : 'opacity-60'}
+      `}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleClick}
+    >
+      {/* Status Indicator */}
+      <div className="absolute top-4 right-4">
+        <div className={`
+          w-3 h-3 rounded-full 
+          ${group.isActive ? 'bg-accent-teal' : 'bg-disabled'}
+        `} />
+      </div>
+
+      {/* Group Header */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-xl font-semibold text-text-primary">
+            {group.name}
+          </h3>
+          {group.isFull && (
+            <span className="badge-error">
+              Full
+            </span>
+          )}
+        </div>
+        
+        {/* Level Badge */}
+        <div className={`
+          inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white
+          bg-gradient-to-r ${getLevelColor(group.level)}
+        `}>
+          {group.level}
+        </div>
+      </div>
+
+      {/* Age Group Info */}
+      <div className="mb-4">
+        <div className="flex items-center text-primary mb-2">
+          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+          </svg>
+          <span className="text-sm font-medium">{ageGroupMeta.displayName}</span>
+        </div>
+        <p className="text-sm text-primary">
+          Ages {ageGroupMeta.minAge}-{ageGroupMeta.maxAge} years
+        </p>
+      </div>
+
+      {/* Capacity Info */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-primary">Capacity</span>
+          <span className={`text-sm font-medium ${getCapacityColor(utilizationPercentage)}`}>
+            {group.currentPlayerCount}/{group.capacity} ({utilizationPercentage}%)
+          </span>
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="w-full bg-secondary-50 rounded-full h-2">
+          <div 
+            className={`h-2 rounded-full transition-all duration-300 ${
+              utilizationPercentage >= 90 ? 'bg-accent-red' : 
+              utilizationPercentage >= 75 ? 'bg-accent-yellow' : 'bg-accent-teal'
+            }`}
+            style={{ width: `${utilizationPercentage}%` }}
+          />
+        </div>
+        
+        <p className="text-xs text-primary mt-1">
+          {group.availableSpots} spots available
+        </p>
+      </div>
+
+      {/* Coach Info */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between text-primary mb-1">
+          <div className="flex items-center">
+            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 2a4 4 0 100 8 4 4 0 000-8zM8 14a6 6 0 00-6 6 2 2 0 002 2h12a2 2 0 002-2 6 6 0 00-6-6H8z" clipRule="evenodd" />
+            </svg>
+            <span className="text-sm font-medium">Coach</span>
+          </div>
+          {showActions && group.coach && onRemoveCoach && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemoveCoach(group.id);
+              }}
+              className="btn-destructive btn-xs"
+              title="Remove Coach"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+        {group.coach ? (
+          <p className="text-sm text-text-primary">
+            {group.coach.firstName} {group.coach.lastName}
+          </p>
+        ) : (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-text-secondary italic">No coach assigned</p>
+            {showActions && onAssignCoach && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAssignCoach(group.id);
+                }}
+                className="btn-secondary btn-xs"
+              >
+                Assign Coach
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Zone Info */}
+      {group.zone && (
+        <div className="mb-4">
+          <div className="flex items-center text-primary mb-1">
+            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+            </svg>
+            <span className="text-sm font-medium">Zone</span>
+          </div>
+          <p className="text-sm text-text-primary">{group.zone}</p>
+        </div>
+      )}
+
+      {/* Player Management Section */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between text-primary mb-2">
+          <div className="flex items-center">
+            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+            </svg>
+            <span className="text-sm font-medium">Players</span>
+          </div>
+          {showActions && onAssignPlayer && !group.isFull && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('Add Player button clicked for group:', group.id, group.name);
+                if (onAssignPlayer) {
+                  onAssignPlayer(group.id);
+                } else {
+                  console.error('onAssignPlayer is not defined');
+                }
+              }}
+              className="btn-success btn-xs"
+            >
+              Add Player
+            </button>
+          )}
+        </div>
+        <p className="text-sm text-text-primary mb-2">
+          {group.currentPlayerCount} / {group.capacity} players
+        </p>
+        
+        {/* Players List */}
+        {group.players && group.players.length > 0 && (
+          <div className="space-y-1 max-h-32 overflow-y-auto">
+            {group.players.map((player) => (
+              <div key={player.id} className="flex items-center justify-between bg-secondary-50 rounded px-2 py-1">
+                <span className="text-xs text-text-primary">
+                  {player.firstName} {player.lastName}
+                </span>
+                {showActions && (onUnassignPlayer || onReassignPlayer) && (
+                  <div className="flex gap-1">
+                    {onReassignPlayer && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReassignClick(player);
+                        }}
+                        className="btn-outline btn-xs"
+                        title={`Reassign ${player.firstName} ${player.lastName} to another group`}
+                      >
+                        ↗
+                      </button>
+                    )}
+                    {onUnassignPlayer && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUnassignClick(player);
+                        }}
+                        className="btn-destructive btn-xs"
+                        title={`Remove ${player.firstName} ${player.lastName} from group`}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {group.players && group.players.length === 0 && (
+          <p className="text-xs text-text-secondary italic">No players assigned</p>
+        )}
+      </div>
+
+      {/* Actions */}
+      {showActions && (
+        <div className={`
+          flex gap-2 mt-6 transition-opacity duration-200
+          ${isHovered ? 'opacity-100' : 'opacity-70'}
+        `}>
+          {/* Status toggle */}
+          {(onActivate || onDeactivate) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (group.isActive && onDeactivate) {
+                  onDeactivate(group.id);
+                } else if (!group.isActive && onActivate) {
+                  onActivate(group.id);
+                }
+              }}
+              className={`px-3 py-2 border rounded-lg text-sm font-medium transition-colors duration-200 ${
+                group.isActive 
+                  ? 'bg-accent-red/20 hover:bg-accent-red/30 border-accent-red/30 text-accent-red'
+                  : 'bg-accent-teal/20 hover:bg-accent-teal/30 border-accent-teal/30 text-accent-teal'
+              }`}
+              title={group.isActive ? "Deactivate Group" : "Activate Group"}
+            >
+              {group.isActive ? 'Deactivate' : 'Activate'}
+            </button>
+          )}
+          
+          {onViewDetails && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewDetails(group.id);
+              }}
+              className="btn-outline btn-sm flex-1"
+            >
+              View Details
+            </button>
+          )}
+          
+          {onEdit && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(group.id);
+              }}
+              className="btn-secondary btn-sm"
+              title="Edit Group"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+              </svg>
+            </button>
+          )}
+
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(group.id);
+              }}
+              className="btn-destructive btn-sm"
+              title="Delete Group"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v4a1 1 0 11-2 0V7zM12 7a1 1 0 112 0v4a1 1 0 11-2 0V7z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Description */}
+      {group.description && (
+        <div className="mt-4 pt-4 border-t border-border">
+          <p className="text-sm text-primary">{group.description}</p>
+        </div>
+      )}
+
+      {/* Unassign Player Modal */}
+      <UnassignPlayerModal
+        isOpen={unassignModal.isOpen}
+        onClose={handleUnassignClose}
+        onConfirm={handleUnassignConfirm}
+        player={unassignModal.player}
+        groupName={group.name}
+      />
+
+      {/* Reassign Player Modal */}
+      <ReassignPlayerModal
+        isOpen={reassignModal.isOpen}
+        onClose={handleReassignClose}
+        onConfirm={handleReassignConfirm}
+        player={reassignModal.player}
+        currentGroupId={group.id}
+        currentGroupName={group.name}
+      />
+    </div>
+  );
+}

@@ -1,51 +1,50 @@
-version: "3.8"
-
 services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: batal-postgres
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_DB: batal_db
       POSTGRES_USER: batal_user
-      POSTGRES_PASSWORD: batal_password
-    ports:
-      - "127.0.0.1:5432:5432"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-batal_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - batal-network
+    restart: unless-stopped
 
   # MinIO File Storage
   minio:
     image: minio/minio:latest
-    container_name: batal-minio
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
     ports:
-      - "127.0.0.1:9000:9000"
-      - "127.0.0.1:9001:9001"
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
     networks:
       - batal-network
+    restart: unless-stopped
 
   # Spring Boot Backend
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: batal-backend
+    ports:
+      - "8080:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/batal_db
       SPRING_DATASOURCE_USERNAME: batal_user
-      SPRING_DATASOURCE_PASSWORD: batal_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-batal_password}
       MINIO_ENDPOINT: http://minio:9000
-      SPRING_PROFILES_ACTIVE: prod
-    ports:
-      - "127.0.0.1:8080:8080"
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      JWT_SECRET: ${JWT_SECRET:-default-jwt-secret-change-in-production}
     depends_on:
       - postgres
       - minio
@@ -58,12 +57,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: batal-frontend
-    environment:
-      NEXT_PUBLIC_API_URL: https://batal.nabiljarrai.com/api
-      NODE_ENV: production
     ports:
-      - "127.0.0.1:3000:3000"
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://backend:8080/api
     depends_on:
       - backend
     networks:
@@ -72,7 +70,9 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
   minio_data:
+    driver: local
 
 networks:
   batal-network:

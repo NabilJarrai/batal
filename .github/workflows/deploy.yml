@@ -2,13 +2,12 @@ name: Deploy Batal Academy
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [master]
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME_FRONTEND: ${{ github.repository }}-frontend
-  IMAGE_NAME_BACKEND: ${{ github.repository }}-backend
+  REPO_NAME: ${{ github.repository }}
 
 jobs:
   build-and-deploy:
@@ -18,130 +17,212 @@ jobs:
       packages: write
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Log in to Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set lowercase repository name
+        run: |
+          echo "IMAGE_NAME_FRONTEND=$(echo ${{ env.REPO_NAME }}-frontend | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+          echo "IMAGE_NAME_BACKEND=$(echo ${{ env.REPO_NAME }}-backend | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-    - name: Extract metadata for frontend
-      id: meta-frontend
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha
-          type=raw,value=latest,enable={{is_default_branch}}
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Extract metadata for backend
-      id: meta-backend
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha
-          type=raw,value=latest,enable={{is_default_branch}}
+      - name: Extract metadata for frontend
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+            type=raw,value=latest
 
-    - name: Build and push frontend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./frontend
-        push: true
-        tags: ${{ steps.meta-frontend.outputs.tags }}
-        labels: ${{ steps.meta-frontend.outputs.labels }}
+      - name: Extract metadata for backend
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+            type=raw,value=latest
 
-    - name: Build and push backend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./backend
-        push: true
-        tags: ${{ steps.meta-backend.outputs.tags }}
-        labels: ${{ steps.meta-backend.outputs.labels }}
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          no-cache: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://batal-academy.com/api
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
 
-    - name: Deploy to VPS
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USER }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        script: |
-          # Determine environment based on branch
-          if [[ "${{ github.ref_name }}" == "develop" ]]; then
-            ENV="dev"
-            DOMAIN="batal.dev.nabiljarrai.com"
-            PROJECT_DIR="/opt/batal-dev"
-          else
-            ENV="prod"
-            DOMAIN="batal.nabiljarrai.com" 
-            PROJECT_DIR="/opt/batal"
-          fi
-          
-          echo "Deploying to $ENV environment with domain $DOMAIN"
-          
-          # Create project directory if it doesn't exist
-          sudo mkdir -p $PROJECT_DIR
-          cd $PROJECT_DIR || exit 1
-          
-          # Clone or pull latest changes
-          if [ ! -d ".git" ]; then
-            sudo git clone https://github.com/NabilJarrai/batal.git .
-          fi
-          
-          sudo git fetch origin
-          sudo git checkout ${{ github.ref_name }}
-          sudo git pull origin ${{ github.ref_name }}
-          
-          # Create environment file from secrets
-          sudo tee .env > /dev/null << EOF
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}
-          MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          SPRING_MAIL_HOST=${{ secrets.SPRING_MAIL_HOST }}
-          SPRING_MAIL_PORT=${{ secrets.SPRING_MAIL_PORT }}
-          SPRING_MAIL_USERNAME=${{ secrets.SPRING_MAIL_USERNAME }}
-          SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }}
-          FRONTEND_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
-          BACKEND_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
-          DOMAIN=$DOMAIN
-          EOF
-          
-          # Login to GitHub Container Registry
-          echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-          
-          # Pull latest images
-          sudo docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
-          sudo docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
-          
-          # Deploy with docker-compose
-          sudo docker-compose -f docker-compose.prod.yml down || true
-          sudo docker-compose -f docker-compose.prod.yml up -d
-          
-          # Set up nginx configuration for the domain
-          sudo cp nginx-batal.conf /etc/nginx/sites-available/batal-$ENV
-          sudo sed -i "s/batal\.nabiljarrai\.com/$DOMAIN/g" /etc/nginx/sites-available/batal-$ENV
-          sudo ln -sf /etc/nginx/sites-available/batal-$ENV /etc/nginx/sites-enabled/
-          
-          # Get SSL certificate if it doesn't exist
-          if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
-            sudo certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email ${{ secrets.ADMIN_EMAIL }}
-          fi
-          
-          # Reload nginx
-          sudo nginx -t && sudo systemctl reload nginx
-          
-          # Clean up old images
-          sudo docker image prune -f
-          
-          # Show status
-          sudo docker-compose -f docker-compose.prod.yml ps
-          
-          echo "Deployment completed! Application accessible at: https://$DOMAIN"
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+
+      - name: Deploy to Development Server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            ENV="production"
+            DOMAIN="batal-academy.com"
+            PROJECT_DIR="/opt/batal-production"
+
+            echo "Deploying to $DOMAIN"
+
+            # Create project directory if it doesn't exist
+            sudo mkdir -p $PROJECT_DIR
+            cd $PROJECT_DIR || exit 1
+
+            # Clone or pull latest changes
+            if [ ! -d ".git" ]; then
+              sudo git clone https://github.com/NabilJarrai/batal.git .
+            fi
+
+            sudo git fetch origin
+            sudo git checkout master
+            sudo git reset --hard origin/master
+            sudo git pull origin master
+
+            # Verify required files exist
+            if [ ! -f "docker-compose.deploy.yml" ]; then
+              echo "❌ docker-compose.deploy.yml not found!"
+              ls -la docker-compose*
+              exit 1
+            fi
+
+            # Use deployment configuration
+            COMPOSE_FILES="-f docker-compose.yml -f docker-compose.deploy.yml"
+            IMAGE_TAG="master"
+
+            # Create environment file from secrets
+            sudo tee .env > /dev/null << EOF
+            POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
+            MINIO_ROOT_USER="${{ secrets.MINIO_ROOT_USER }}"
+            MINIO_ROOT_PASSWORD="${{ secrets.MINIO_ROOT_PASSWORD }}"
+            JWT_SECRET="${{ secrets.JWT_SECRET }}"
+            SPRING_MAIL_HOST="${{ secrets.SPRING_MAIL_HOST }}"
+            SPRING_MAIL_PORT="${{ secrets.SPRING_MAIL_PORT }}"
+            SPRING_MAIL_USERNAME="${{ secrets.SPRING_MAIL_USERNAME }}"
+            SPRING_MAIL_PASSWORD="${{ secrets.SPRING_MAIL_PASSWORD }}"
+            FRONTEND_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:$IMAGE_TAG"
+            BACKEND_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:$IMAGE_TAG"
+            DOMAIN="$DOMAIN"
+            EOF
+
+            # Login to GitHub Container Registry
+            echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+            # Pull latest images
+            sudo docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:$IMAGE_TAG
+            sudo docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:$IMAGE_TAG
+
+            # Stop and remove containers to force image refresh
+            sudo docker compose $COMPOSE_FILES down || true
+            sudo docker system prune -f
+
+            # Deploy with docker compose
+            sudo docker compose $COMPOSE_FILES up -d
+
+            # Wait for services to start
+            echo "Waiting for services to start..."
+            sleep 10
+
+            # Verify deployment
+            echo "Verifying deployment..."
+
+            # Check container status
+            for i in {1..6}; do
+              NOT_RUNNING=$(sudo docker compose $COMPOSE_FILES ps --format "table {{.Name}}\t{{.Status}}" | grep -v "STATUS" | grep -v "Up" | head -5)
+              if [ -n "$NOT_RUNNING" ]; then
+                if [ $i -eq 6 ]; then
+                  echo "❌ DEPLOYMENT FAILED: Containers failed to start"
+                  echo "Non-running containers:"
+                  echo "$NOT_RUNNING"
+                  sudo docker compose $COMPOSE_FILES logs --tail=50
+                  exit 1
+                fi
+                echo "Attempt $i/6: Waiting for containers to start..."
+                sleep 10
+              else
+                echo "✅ All containers are running"
+                break
+              fi
+            done
+
+            # Test backend health
+            echo "Testing backend health..."
+            for i in {1..30}; do
+              if curl -f http://localhost:8080/api/actuator/health >/dev/null 2>&1 || curl -f http://localhost:8080/api/health >/dev/null 2>&1; then
+                echo "✅ Backend is healthy"
+                break
+              elif [ $i -eq 30 ]; then
+                echo "❌ Backend health check failed after 60 seconds"
+                echo "Container status:"
+                sudo docker compose $COMPOSE_FILES ps
+                echo "Backend logs:"
+                sudo docker compose $COMPOSE_FILES logs backend --tail=50
+                exit 1
+              else
+                echo "Attempt $i/30: Backend not ready yet..."
+                if [ $((i % 5)) -eq 0 ]; then
+                  echo "Checking container status..."
+                  sudo docker compose $COMPOSE_FILES ps backend
+                fi
+                sleep 2
+              fi
+            done
+
+            # Test frontend
+            echo "Testing frontend..."
+            for i in {1..15}; do
+              if curl -f http://localhost:3000 >/dev/null 2>&1; then
+                echo "✅ Frontend is healthy"
+                break
+              elif [ $i -eq 15 ]; then
+                echo "❌ Frontend health check failed"
+                sudo docker compose $COMPOSE_FILES logs frontend --tail=20
+                exit 1
+              else
+                echo "Attempt $i/15: Frontend not ready yet..."
+                sleep 2
+              fi
+            done
+
+            # Set up nginx configuration
+            sudo cp nginx-batal.conf /etc/nginx/sites-available/batal
+            sudo ln -sf /etc/nginx/sites-available/batal /etc/nginx/sites-enabled/
+
+            # Get SSL certificate if it doesn't exist
+            if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+              sudo certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email ${{ secrets.ADMIN_EMAIL }}
+            fi
+
+            # Test and reload nginx
+            sudo nginx -t && sudo systemctl reload nginx
+
+            # Clean up old images
+            sudo docker image prune -f
+
+            # Final status
+            echo "🎉 DEPLOYMENT SUCCESSFUL!"
+            echo "📊 Final status:"
+            sudo docker compose $COMPOSE_FILES ps
+
+            echo "✅ Application accessible at: https://$DOMAIN"
