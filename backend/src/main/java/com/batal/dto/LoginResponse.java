@@ -11,32 +11,28 @@ public class LoginResponse {
     private String firstName;
     private String lastName;
     private List<String> roles;
-    private boolean isFirstLogin;
     private List<ChildSummaryDTO> children; // For parents only
 
     public LoginResponse() {}
 
     public LoginResponse(String token, Long id, String email, String firstName,
-                        String lastName, List<String> roles, boolean isFirstLogin) {
+                        String lastName, List<String> roles) {
         this.token = token;
         this.id = id;
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.roles = roles;
-        this.isFirstLogin = isFirstLogin;
     }
 
     public LoginResponse(String token, Long id, String email, String firstName,
-                        String lastName, List<String> roles, boolean isFirstLogin,
-                        List<ChildSummaryDTO> children) {
+                        String lastName, List<String> roles, List<ChildSummaryDTO> children) {
         this.token = token;
         this.id = id;
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.roles = roles;
-        this.isFirstLogin = isFirstLogin;
         this.children = children;
     }
     
@@ -91,17 +87,9 @@ public class LoginResponse {
     public List<String> getRoles() {
         return roles;
     }
-    
+
     public void setRoles(List<String> roles) {
         this.roles = roles;
-    }
-
-    public boolean isFirstLogin() {
-        return isFirstLogin;
-    }
-
-    public void setFirstLogin(boolean firstLogin) {
-        this.isFirstLogin = firstLogin;
     }
 
     public List<ChildSummaryDTO> getChildren() {

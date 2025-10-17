@@ -1,6 +1,5 @@
 package com.batal.service;
 
-import com.batal.dto.ChangeFirstLoginPasswordRequest;
 import com.batal.dto.ChildSummaryDTO;
 import com.batal.dto.LoginRequest;
 import com.batal.dto.LoginResponse;
@@ -136,7 +135,7 @@ public class AuthService {
         }
 
         return new LoginResponse(jwt, user.getId(), user.getEmail(),
-                user.getFirstName(), user.getLastName(), roles, user.isFirstLogin(), children);
+                user.getFirstName(), user.getLastName(), roles, children);
     }
 
     /**
@@ -167,38 +166,6 @@ public class AuthService {
                 player.getLevel() != null ? player.getLevel().toString() : null,
                 player.getIsActive()
         );
-    }
-
-    @Transactional
-    public LoginResponse changeFirstLoginPassword(ChangeFirstLoginPasswordRequest request, String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new AuthenticationException("User not found"));
-
-        if (!user.isFirstLogin()) {
-            throw new AuthenticationException("Password change not required for this user");
-        }
-
-        if (!request.isPasswordMatching()) {
-            throw new AuthenticationException("New password and confirmation do not match");
-        }
-
-        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-            throw new AuthenticationException("Current password is incorrect");
-        }
-
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        user.setFirstLoginAt(LocalDateTime.now());
-        userRepository.save(user);
-
-        List<String> roleNames = user.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toList());
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String jwt = jwtUtil.generateJwtToken(authentication);
-
-        return new LoginResponse(jwt, user.getId(), user.getEmail(),
-                user.getFirstName(), user.getLastName(), roleNames, false);
     }
 
     // ========== PASSWORD SETUP VIA EMAIL ==========
@@ -260,7 +227,7 @@ public class AuthService {
         }
 
         return new LoginResponse(jwt, user.getId(), user.getEmail(),
-                user.getFirstName(), user.getLastName(), roleNames, false, children);
+                user.getFirstName(), user.getLastName(), roleNames, children);
     }
 
     /**

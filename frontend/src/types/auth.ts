@@ -41,7 +41,6 @@ export interface LoginResponse {
   roles: string[];
   token: string;
   type: string;
-  firstLogin: boolean;
   children?: ChildSummary[]; // For parents only
 }
 
@@ -100,7 +99,6 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  isFirstLogin: boolean;
   children?: ChildSummary[]; // For parents
   selectedChildId?: number; // Currently selected child for parents
 }

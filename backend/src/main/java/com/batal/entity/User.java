@@ -322,11 +322,6 @@ public class User {
         return AgeGroup.getByAge(age);
     }
 
-    public boolean isFirstLogin() {
-        return firstLoginAt == null && (isCoach() || isParent());
-    }
-    
-    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

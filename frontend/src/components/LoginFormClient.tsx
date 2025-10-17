@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/hooks";
-import { loginUser, clearError, setFirstLoginCompleted } from "@/store/authSlice";
-import FirstLoginPasswordForm from "./FirstLoginPasswordForm";
+import { loginUser, clearError } from "@/store/authSlice";
 
 // Enhanced error interface matching API error structure
 interface EnhancedError extends Error {
@@ -15,7 +14,7 @@ interface EnhancedError extends Error {
 
 export default function LoginFormClient() {
   const router = useRouter();
-  const { isAuthenticated, isLoading, error, user, isFirstLogin, dispatch } = useAuth();
+  const { isAuthenticated, isLoading, error, user, dispatch } = useAuth();
   
   const [formData, setFormData] = useState({
     email: "",
@@ -32,9 +31,9 @@ export default function LoginFormClient() {
     suggestion?: string;
   }>({});
 
-  // Redirect if already authenticated and not first login
+  // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated && user && !isFirstLogin) {
+    if (isAuthenticated && user) {
       // Redirect based on role
       if (user.roles?.includes('ADMIN')) {
         router.push('/admin');
@@ -49,7 +48,7 @@ export default function LoginFormClient() {
         router.push('/player/dashboard');
       }
     }
-  }, [isAuthenticated, user, isFirstLogin, router]);
+  }, [isAuthenticated, user, router]);
 
   // Clear validation errors when form changes (but keep API errors until user submits again)
   useEffect(() => {
@@ -143,16 +142,6 @@ export default function LoginFormClient() {
         break;
     }
   };
-
-  const handlePasswordChanged = () => {
-    dispatch(setFirstLoginCompleted());
-    // Will trigger the redirect useEffect
-  };
-
-  // Show first login password form if user is authenticated but needs to change password
-  if (isAuthenticated && isFirstLogin) {
-    return <FirstLoginPasswordForm onPasswordChanged={handlePasswordChanged} />;
-  }
 
   return (
     <>
