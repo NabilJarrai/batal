@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/store/hooks";
 import { registerUser, loginUser, clearError } from "@/store/authSlice";
 import { UserRole } from "@/types/auth";
@@ -189,8 +190,14 @@ export default function RegisterPage() {
         {/* Header */}
         <div className="text-center">
           <div className="mx-auto mb-6 p-4 bg-white/10 backdrop-blur-lg rounded-2xl w-fit">
-            <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center mx-auto">
-              <span className="text-white font-bold text-2xl">⚽</span>
+            <div className="relative w-24 h-24 mx-auto">
+              <Image
+                src="/Logo.jpeg"
+                alt="Batal Sports Academy Logo"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">Create Account</h2>

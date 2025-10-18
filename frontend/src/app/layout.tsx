@@ -16,8 +16,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Batal Football Academy",
-  description: "Football Academy Management System",
+  title: "Batal Sports Academy - Football Academy Management",
+  description: "Comprehensive football academy management system for youth athletes aged 4-16. Track skills, assessments, and player development.",
+  icons: {
+    icon: "/Logo.jpeg",
+    apple: "/Logo.jpeg",
+  },
+  openGraph: {
+    title: "Batal Sports Academy",
+    description: "Football Academy Management System",
+    images: ["/Logo.jpeg"],
+  },
 };
 
 export default function RootLayout({

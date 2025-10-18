@@ -1,9 +1,11 @@
 package com.batal.service;
 
 import com.batal.dto.ChildSummaryDTO;
+import com.batal.dto.ForgotPasswordRequest;
 import com.batal.dto.LoginRequest;
 import com.batal.dto.LoginResponse;
 import com.batal.dto.RegisterRequest;
+import com.batal.dto.ResetPasswordRequest;
 import com.batal.dto.SetPasswordRequest;
 import com.batal.dto.UserResponse;
 import com.batal.dto.ValidateTokenResponse;
@@ -11,6 +13,7 @@ import com.batal.entity.PasswordSetupToken;
 import com.batal.entity.Player;
 import com.batal.entity.Role;
 import com.batal.entity.User;
+import com.batal.entity.enums.TokenType;
 import com.batal.exception.AuthenticationException;
 import com.batal.exception.BusinessRuleException;
 import com.batal.exception.ResourceAlreadyExistsException;
@@ -116,8 +119,13 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtil.generateJwtToken(authentication);
 
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof UserDetailsServiceImpl.UserPrincipal)) {
+            throw new AuthenticationException("Invalid authentication principal");
+        }
+
         UserDetailsServiceImpl.UserPrincipal userPrincipal =
-                (UserDetailsServiceImpl.UserPrincipal) authentication.getPrincipal();
+                (UserDetailsServiceImpl.UserPrincipal) principal;
 
         List<String> roles = userPrincipal.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -206,15 +214,8 @@ public class AuthService {
         // Invalidate all other tokens for this user
         tokenRepository.invalidateAllUserTokens(user.getId(), LocalDateTime.now());
 
-        // Generate JWT token
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                user.getEmail(), null,
-                user.getRoles().stream()
-                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
-                        .collect(Collectors.toList())
-        );
-
-        String jwt = jwtUtil.generateJwtToken(authentication);
+        // Generate JWT token using email (user is not authenticated yet during password setup)
+        String jwt = jwtUtil.generateJwtToken(user.getEmail());
 
         List<String> roleNames = user.getRoles().stream()
                 .map(Role::getName)
@@ -234,7 +235,7 @@ public class AuthService {
      * Validate token without using it
      */
     public ValidateTokenResponse validatePasswordSetupToken(String token) {
-        var tokenOpt = tokenRepository.findByToken(token);
+        var tokenOpt = tokenRepository.findByTokenWithUser(token);
 
         if (tokenOpt.isEmpty()) {
             return ValidateTokenResponse.invalid("Invalid token");
@@ -276,6 +277,7 @@ public class AuthService {
         PasswordSetupToken token = new PasswordSetupToken();
         token.setUser(user);
         token.setToken(tokenString);
+        token.setTokenType(TokenType.SETUP);
         token.setExpiresAt(LocalDateTime.now().plusHours(tokenExpiryHours));
         tokenRepository.save(token);
 
@@ -291,5 +293,110 @@ public class AuthService {
         byte[] bytes = new byte[48]; // 48 bytes = 64 characters in base64
         random.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    // ========== PASSWORD RESET (FORGOT PASSWORD) ==========
+
+    /**
+     * Initiate password reset process by sending reset email
+     * Public endpoint - anyone can request password reset
+     * Note: For security, we don't reveal if the email exists or not
+     */
+    @Transactional
+    public void initiatePasswordReset(ForgotPasswordRequest request) {
+        // Find user by email - if not found, silently succeed (security best practice)
+        var userOpt = userRepository.findByEmail(request.getEmail());
+
+        if (userOpt.isEmpty()) {
+            // Don't reveal that email doesn't exist - just log and return
+            // This prevents email enumeration attacks
+            return;
+        }
+
+        User user = userOpt.get();
+
+        // Check if user has set a password (only allow reset if they have)
+        if (user.getPasswordSetAt() == null) {
+            // User hasn't set password yet, they should use setup flow instead
+            // Silently succeed (don't reveal this info)
+            return;
+        }
+
+        // Invalidate existing reset tokens for this user
+        tokenRepository.invalidateAllUserTokensByType(user.getId(), TokenType.RESET, LocalDateTime.now());
+
+        // Generate new reset token
+        String tokenString = generateSecureToken();
+
+        PasswordSetupToken token = new PasswordSetupToken();
+        token.setUser(user);
+        token.setToken(tokenString);
+        token.setTokenType(TokenType.RESET);
+        token.setExpiresAt(LocalDateTime.now().plusHours(tokenExpiryHours));
+        tokenRepository.save(token);
+
+        // Send reset email
+        emailService.sendPasswordResetEmail(user, tokenString);
+    }
+
+    /**
+     * Reset password using reset token
+     */
+    @Transactional
+    public void resetPasswordWithToken(ResetPasswordRequest request) {
+        // Validate passwords match
+        if (!request.isPasswordMatching()) {
+            throw new ValidationException("password", "Passwords do not match");
+        }
+
+        // Find and validate token
+        PasswordSetupToken token = tokenRepository.findByTokenAndTokenType(
+                request.getToken(), TokenType.RESET)
+                .orElseThrow(() -> new AuthenticationException("Invalid or expired reset token"));
+
+        if (!token.isValid()) {
+            if (token.isUsed()) {
+                throw new AuthenticationException("This reset link has already been used");
+            } else {
+                throw new AuthenticationException("This reset link has expired. Please request a new password reset.");
+            }
+        }
+
+        // Get user and update password
+        User user = token.getUser();
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPasswordSetAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        // Mark token as used
+        token.markAsUsed();
+        tokenRepository.save(token);
+
+        // Invalidate all other reset tokens for this user
+        tokenRepository.invalidateAllUserTokensByType(user.getId(), TokenType.RESET, LocalDateTime.now());
+    }
+
+    /**
+     * Validate password reset token without using it
+     */
+    public ValidateTokenResponse validatePasswordResetToken(String token) {
+        var tokenOpt = tokenRepository.findByTokenAndTokenTypeWithUser(token, TokenType.RESET);
+
+        if (tokenOpt.isEmpty()) {
+            return ValidateTokenResponse.invalid("Invalid reset token");
+        }
+
+        PasswordSetupToken resetToken = tokenOpt.get();
+
+        if (resetToken.isUsed()) {
+            return ValidateTokenResponse.invalid("Reset link already used");
+        }
+
+        if (resetToken.isExpired()) {
+            return ValidateTokenResponse.invalid("Reset link expired. Please request a new password reset.");
+        }
+
+        User user = resetToken.getUser();
+        return ValidateTokenResponse.valid(user.getEmail(), user.getFullName());
     }
 }

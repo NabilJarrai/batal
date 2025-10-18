@@ -80,8 +80,13 @@ public class ParentSelfController {
      * Extract user ID from authentication principal
      */
     private Long getUserIdFromAuth(Authentication authentication) {
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof UserDetailsServiceImpl.UserPrincipal)) {
+            throw new IllegalStateException("Authentication principal is not a UserPrincipal instance");
+        }
+
         UserDetailsServiceImpl.UserPrincipal userPrincipal =
-                (UserDetailsServiceImpl.UserPrincipal) authentication.getPrincipal();
+                (UserDetailsServiceImpl.UserPrincipal) principal;
         return userPrincipal.getId();
     }
 }

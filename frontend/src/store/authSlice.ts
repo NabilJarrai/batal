@@ -92,6 +92,44 @@ export const registerUser = createAsyncThunk(
   }
 );
 
+// Password setup (for new users via email token)
+export const setupPasswordWithToken = createAsyncThunk(
+  "auth/setupPassword",
+  async (setupData: { token: string; password: string; confirmPassword: string }, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.setupPassword(setupData);
+      // Store token in localStorage
+      tokenManager.setToken(response.token);
+
+      // Extract user data from response
+      const userResponse: UserResponse = {
+        id: response.id,
+        email: response.email,
+        firstName: response.firstName || '',
+        lastName: response.lastName || '',
+        roles: response.roles || [],
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      return {
+        user: userResponse,
+        token: response.token,
+        children: response.children,
+      };
+    } catch (error) {
+      // Log error for debugging
+      logError(error, 'Password setup failed');
+
+      tokenManager.removeToken();
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Password setup failed"
+      );
+    }
+  }
+);
+
 // Initialize auth state from localStorage
 export const initializeAuth = createAsyncThunk(
   "auth/initialize",
@@ -263,6 +301,35 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Setup password cases
+      .addCase(setupPasswordWithToken.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(setupPasswordWithToken.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.isAuthenticated = true;
+        state.error = null;
+        state.children = action.payload.children;
+        // Auto-select first child if parent has children
+        if (action.payload.children && action.payload.children.length > 0) {
+          state.selectedChildId = action.payload.children[0].id;
+          // Persist to localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('selectedChildId', action.payload.children[0].id.toString());
+          }
+        }
+      })
+      .addCase(setupPasswordWithToken.rejected, (state, action) => {
+        state.isLoading = false;
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
         state.error = action.payload as string;
       })
 

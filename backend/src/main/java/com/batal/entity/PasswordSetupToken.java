@@ -1,5 +1,6 @@
 package com.batal.entity;
 
+import com.batal.entity.enums.TokenType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,11 +9,12 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 /**
- * Entity representing a one-time password setup token sent via email.
- * Used for secure password initialization for new users.
+ * Entity representing a one-time password token sent via email.
+ * Used for both secure password initialization for new users (SETUP)
+ * and password reset for existing users (RESET).
  */
 @Entity
-@Table(name = "password_setup_tokens")
+@Table(name = "password_tokens")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,6 +30,10 @@ public class PasswordSetupToken {
 
     @Column(nullable = false, unique = true, length = 255)
     private String token;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "token_type", nullable = false, length = 10)
+    private TokenType tokenType = TokenType.SETUP;
 
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
@@ -89,6 +95,7 @@ public class PasswordSetupToken {
         return "PasswordSetupToken{" +
                 "id=" + id +
                 ", userId=" + (user != null ? user.getId() : null) +
+                ", tokenType=" + tokenType +
                 ", expiresAt=" + expiresAt +
                 ", isUsed=" + isUsed() +
                 ", isExpired=" + isExpired() +

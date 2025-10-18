@@ -125,24 +125,6 @@ export default function LoginFormClient() {
     }));
   };
 
-  // Demo credentials for quick access
-  const fillDemoCredentials = (role: 'admin' | 'manager' | 'coach' | 'parent') => {
-    switch(role) {
-      case 'admin':
-        setFormData({ email: 'admin@batal.com', password: 'admin123' });
-        break;
-      case 'manager':
-        setFormData({ email: 'manager@batal.com', password: 'manager123' });
-        break;
-      case 'coach':
-        setFormData({ email: 'coach@batal.com', password: 'coach123' });
-        break;
-      case 'parent':
-        setFormData({ email: 'parent1@batal.com', password: 'parent123' });
-        break;
-    }
-  };
-
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -190,7 +172,7 @@ export default function LoginFormClient() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => alert('Contact your administrator for password reset assistance.')}
+                    onClick={() => router.push('/forgot-password')}
                     className="btn-ghost btn-xs"
                   >
                     Forgot Password?
@@ -240,7 +222,7 @@ export default function LoginFormClient() {
           <div className="mt-2 flex justify-end">
             <button
               type="button"
-              onClick={() => alert('Contact your administrator for password reset assistance.')}
+              onClick={() => router.push('/forgot-password')}
               className="btn-ghost btn-xs"
             >
               Forgot password?
@@ -291,45 +273,6 @@ export default function LoginFormClient() {
           </button>
         </div>
       </form>
-
-      {/* Demo Credentials */}
-      <div className="mt-6 pt-6 divider">
-        <p className="text-body-sm text-center mb-3">Quick demo access (for testing):</p>
-        <div className="grid grid-cols-4 gap-2">
-          <button
-            type="button"
-            onClick={() => fillDemoCredentials('admin')}
-            className="btn-outline btn-sm flex flex-col items-center"
-          >
-            <div className="font-medium">Admin</div>
-            <div className="text-[10px] opacity-75">Full access</div>
-          </button>
-          <button
-            type="button"
-            onClick={() => fillDemoCredentials('manager')}
-            className="btn-outline btn-sm flex flex-col items-center"
-          >
-            <div className="font-medium">Manager</div>
-            <div className="text-[10px] opacity-75">Analytics</div>
-          </button>
-          <button
-            type="button"
-            onClick={() => fillDemoCredentials('coach')}
-            className="btn-outline btn-sm flex flex-col items-center"
-          >
-            <div className="font-medium">Coach</div>
-            <div className="text-[10px] opacity-75">Groups</div>
-          </button>
-          <button
-            type="button"
-            onClick={() => fillDemoCredentials('parent')}
-            className="btn-outline btn-sm flex flex-col items-center"
-          >
-            <div className="font-medium">Parent</div>
-            <div className="text-[10px] opacity-75">Children</div>
-          </button>
-        </div>
-      </div>
     </>
   );
 }

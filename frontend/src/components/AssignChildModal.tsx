@@ -195,40 +195,36 @@ export default function AssignChildModal({
                             key={player.id}
                             type="button"
                             onClick={() => setSelectedPlayerId(player.id)}
-                            className={`w-full p-4 text-left border-b border-border last:border-b-0 transition-colors ${
+                            className={`w-full p-3 text-left border-b border-border last:border-b-0 transition-colors ${
                               selectedPlayerId === player.id
                                 ? 'bg-blue-500/20 border-l-4 border-l-blue-500'
                                 : 'hover:bg-secondary'
                             }`}
                           >
                             <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-medium text-text-primary">
+                              <div className="flex-1 min-w-0">
+                                {/* Compact name display */}
+                                <p className="font-medium text-text-primary text-sm truncate">
                                   {player.firstName} {player.lastName}
                                 </p>
-                                <p className="text-sm text-text-secondary">{player.email}</p>
-                                <div className="flex gap-3 mt-1">
-                                  {player.dateOfBirth && (
-                                    <span className="text-xs text-text-secondary">
-                                      Age: {calculateAge(player.dateOfBirth)}
-                                    </span>
-                                  )}
-                                  {player.groupName && (
-                                    <span className="text-xs text-text-secondary">
-                                      Group: {player.groupName}
-                                    </span>
-                                  )}
-                                  {player.level && (
-                                    <span className="text-xs text-blue-400">
-                                      {player.level}
-                                    </span>
-                                  )}
-                                </div>
+                                {/* Optional compact info for selected items */}
+                                {selectedPlayerId === player.id && (
+                                  <div className="flex gap-2 mt-1 text-xs text-text-secondary">
+                                    {player.dateOfBirth && (
+                                      <span>Age: {calculateAge(player.dateOfBirth)}</span>
+                                    )}
+                                    {player.groupName && (
+                                      <span>• {player.groupName}</span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                               {selectedPlayerId === player.id && (
-                                <svg className="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
+                                <div className="flex-shrink-0 ml-2">
+                                  <svg className="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
                               )}
                             </div>
                           </button>

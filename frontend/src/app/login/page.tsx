@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import Image from "next/image";
 
 // Dynamically import the login form to avoid hydration issues with browser extensions
 const LoginFormClient = dynamic(
@@ -32,8 +33,14 @@ export default function LoginPage() {
         {/* Header */}
         <div className="text-center">
           <div className="mx-auto mb-6 p-4 bg-background rounded-2xl shadow-lg w-fit border border-border">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-hover rounded-full flex items-center justify-center mx-auto">
-              <span className="text-white font-bold text-2xl">⚽</span>
+            <div className="relative w-24 h-24 mx-auto">
+              <Image
+                src="/Logo.jpeg"
+                alt="Batal Sports Academy Logo"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
           </div>
           <h2 className="text-3xl font-bold text-text-primary mb-2">Welcome Back</h2>
@@ -53,6 +60,11 @@ export default function LoginPage() {
 
         {/* Links */}
         <div className="text-center space-y-2">
+          <p className="text-sm text-text-secondary">
+            <Link href="/forgot-password" className="font-medium text-primary hover:text-primary-hover transition-colors duration-200 underline underline-offset-4">
+              Forgot your password?
+            </Link>
+          </p>
           <p className="text-sm text-text-secondary">
             Don't have an account?{" "}
             <Link href="/register" className="font-medium text-primary hover:text-primary-hover transition-colors duration-200 underline underline-offset-4">

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { logout } from "@/store/authSlice";
@@ -61,11 +62,21 @@ export default function PlayerLayout({ children }: PlayerLayoutProps) {
         <nav className="bg-background border-b border-border shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
-              <div className="flex items-center">
-                <h1 className="text-2xl font-bold text-text-primary">
-                  Batal Academy
-                </h1>
-                <span className="ml-4 text-sm text-text-secondary">Player Portal</span>
+              <div className="flex items-center gap-3">
+                <Link href="/player/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                  <div className="relative w-10 h-10">
+                    <Image
+                      src="/Logo.jpeg"
+                      alt="Batal Sports Academy"
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <h1 className="text-2xl font-bold text-text-primary">
+                    Batal Academy
+                  </h1>
+                </Link>
+                <span className="ml-1 text-sm text-text-secondary">Player Portal</span>
               </div>
               
               <div className="flex items-center space-x-4">
