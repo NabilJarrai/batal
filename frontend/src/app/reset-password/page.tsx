@@ -2,15 +2,14 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
-import { useAuth } from '@/store/hooks';
-import { setupPasswordWithToken } from '@/store/authSlice';
+import { authAPI } from '@/lib/api';
 
-function SetupPasswordForm() {
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  const { dispatch, isAuthenticated, user, isLoading, error } = useAuth();
 
   const [formData, setFormData] = useState({
     password: '',
@@ -25,26 +24,15 @@ function SetupPasswordForm() {
     userName: '',
   });
 
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-
-  // Redirect when authenticated
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      const role = user.roles?.[0];
-      if (role === 'ADMIN') router.push('/admin');
-      else if (role === 'MANAGER') router.push('/manager');
-      else if (role === 'COACH') router.push('/coach');
-      else if (role === 'PARENT') router.push('/parent/dashboard');
-      else router.push('/player/dashboard');
-    }
-  }, [isAuthenticated, user, router]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!token) {
       setValidation({
         isValidating: false,
         isValid: false,
-        message: 'No token provided',
+        message: 'No reset token provided',
         userEmail: '',
         userName: '',
       });
@@ -52,14 +40,13 @@ function SetupPasswordForm() {
     }
 
     // Validate token
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/auth/validate-setup-token?token=${token}`)
-      .then((res) => res.json())
+    authAPI.validateResetToken(token)
       .then((response) => {
         setValidation({
           isValidating: false,
           isValid: response.valid,
           message: response.message,
-          userEmail: response.userEmail || '',
+          userEmail: response.email || '',
           userName: response.userName || '',
         });
       })
@@ -67,7 +54,7 @@ function SetupPasswordForm() {
         setValidation({
           isValidating: false,
           isValid: false,
-          message: 'Failed to validate token',
+          message: 'Failed to validate reset token',
           userEmail: '',
           userName: '',
         });
@@ -87,20 +74,28 @@ function SetupPasswordForm() {
     }
 
     if (Object.keys(newErrors).length > 0) {
-      setValidationErrors(newErrors);
+      setErrors(newErrors);
       return;
     }
 
-    setValidationErrors({});
+    setIsSubmitting(true);
+    setErrors({});
 
-    // Dispatch setup password action
-    await dispatch(setupPasswordWithToken({
-      token: token!,
-      password: formData.password,
-      confirmPassword: formData.confirmPassword,
-    }));
+    try {
+      await authAPI.resetPassword({
+        token: token!,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+      });
 
-    // Redirect is handled by the useEffect above when authentication succeeds
+      // Redirect to login with success message
+      router.push('/login?reset=success');
+
+    } catch (error: any) {
+      setErrors({ general: error.message || 'Failed to reset password' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (validation.isValidating) {
@@ -108,7 +103,7 @@ function SetupPasswordForm() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary-50">
         <div className="text-center">
           <div className="loading-spinner mx-auto mb-4"></div>
-          <p className="text-text-secondary">Validating your link...</p>
+          <p className="text-text-secondary">Validating your reset link...</p>
         </div>
       </div>
     );
@@ -126,11 +121,22 @@ function SetupPasswordForm() {
           <h2 className="text-2xl font-bold text-text-primary mb-2">Invalid or Expired Link</h2>
           <p className="text-text-secondary mb-6">{validation.message}</p>
           <p className="text-sm text-text-secondary mb-6">
-            Please contact your administrator for a new password setup link.
+            The password reset link may have expired or already been used. Please request a new password reset.
           </p>
-          <button onClick={() => router.push('/login')} className="btn-primary">
-            Go to Login
-          </button>
+          <div className="space-y-3">
+            <button
+              onClick={() => router.push('/forgot-password')}
+              className="btn-primary w-full"
+            >
+              Request New Reset Link
+            </button>
+            <Link
+              href="/login"
+              className="block text-primary hover:text-primary-hover transition-colors duration-200 font-medium"
+            >
+              Back to Login
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -152,18 +158,22 @@ function SetupPasswordForm() {
               />
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-text-primary mb-2">Set Your Password</h2>
-          <p className="text-text-secondary">Welcome, <strong>{validation.userName}</strong>!</p>
-          <p className="text-text-secondary text-sm">{validation.userEmail}</p>
+          <h2 className="text-2xl font-bold text-text-primary mb-2">Reset Your Password</h2>
+          {validation.userName && (
+            <>
+              <p className="text-text-secondary">Welcome, <strong>{validation.userName}</strong>!</p>
+              <p className="text-text-secondary text-sm">{validation.userEmail}</p>
+            </>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
+          {errors.general && (
             <div className="alert-error">
               <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p>{error}</p>
+              <p>{errors.general}</p>
             </div>
           )}
 
@@ -177,20 +187,21 @@ function SetupPasswordForm() {
               value={formData.password}
               onChange={(e) => {
                 setFormData({ ...formData, password: e.target.value });
-                setValidationErrors({});
+                setErrors({});
               }}
-              className={validationErrors.password ? 'input-error' : 'input-base'}
-              placeholder="Enter your password (min. 8 characters)"
-              disabled={isLoading}
+              className={errors.password ? 'input-error' : 'input-base'}
+              placeholder="Enter your new password (min. 8 characters)"
+              disabled={isSubmitting}
+              autoFocus
             />
-            {validationErrors.password && (
-              <p className="text-sm text-accent-red mt-1">{validationErrors.password}</p>
+            {errors.password && (
+              <p className="text-sm text-accent-red mt-1">{errors.password}</p>
             )}
           </div>
 
           <div>
             <label htmlFor="confirmPassword" className="text-caption mb-2">
-              Confirm Password
+              Confirm New Password
             </label>
             <input
               id="confirmPassword"
@@ -198,29 +209,29 @@ function SetupPasswordForm() {
               value={formData.confirmPassword}
               onChange={(e) => {
                 setFormData({ ...formData, confirmPassword: e.target.value });
-                setValidationErrors({});
+                setErrors({});
               }}
-              className={validationErrors.confirmPassword ? 'input-error' : 'input-base'}
-              placeholder="Confirm your password"
-              disabled={isLoading}
+              className={errors.confirmPassword ? 'input-error' : 'input-base'}
+              placeholder="Confirm your new password"
+              disabled={isSubmitting}
             />
-            {validationErrors.confirmPassword && (
-              <p className="text-sm text-accent-red mt-1">{validationErrors.confirmPassword}</p>
+            {errors.confirmPassword && (
+              <p className="text-sm text-accent-red mt-1">{errors.confirmPassword}</p>
             )}
           </div>
 
           <button
             type="submit"
-            disabled={isLoading || !formData.password || !formData.confirmPassword}
+            disabled={isSubmitting || !formData.password || !formData.confirmPassword}
             className="btn-primary w-full"
           >
-            {isLoading ? (
+            {isSubmitting ? (
               <div className="flex items-center justify-center">
                 <div className="loading-spinner mr-2"></div>
-                Setting Password...
+                Resetting Password...
               </div>
             ) : (
-              'Set Password & Continue'
+              'Reset Password'
             )}
           </button>
         </form>
@@ -236,14 +247,14 @@ function SetupPasswordForm() {
   );
 }
 
-export default function SetupPasswordPage() {
+export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
         <div className="loading-spinner"></div>
       </div>
     }>
-      <SetupPasswordForm />
+      <ResetPasswordForm />
     </Suspense>
   );
 }

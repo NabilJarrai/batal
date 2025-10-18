@@ -207,6 +207,34 @@ export const authAPI = {
       method: "POST",
     });
   },
+
+  // Password reset (forgot password)
+  forgotPassword: async (email: string): Promise<{ message: string; email: string }> => {
+    return apiRequest("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  validateResetToken: async (token: string): Promise<{
+    valid: boolean;
+    message: string;
+    email?: string;
+    userName?: string;
+  }> => {
+    return apiRequest(`/auth/validate-reset-token?token=${encodeURIComponent(token)}`);
+  },
+
+  resetPassword: async (data: {
+    token: string;
+    password: string;
+    confirmPassword: string;
+  }): Promise<{ message: string }> => {
+    return apiRequest("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
 };
 
 // Users API calls  

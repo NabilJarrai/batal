@@ -25,10 +25,17 @@ public class JwtUtil {
     }
     
     public String generateJwtToken(Authentication authentication) {
-        UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
-        
+        Object principal = authentication.getPrincipal();
+
+        // Safety check: ensure principal is UserDetails
+        if (!(principal instanceof UserDetails)) {
+            throw new IllegalStateException("Authentication principal is not a UserDetails instance");
+        }
+
+        UserDetails userPrincipal = (UserDetails) principal;
+
         Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationMs);
-        
+
         return Jwts.builder()
                 .setSubject(userPrincipal.getUsername())
                 .setIssuedAt(new Date())

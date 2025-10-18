@@ -1,8 +1,10 @@
 package com.batal.controller;
 
+import com.batal.dto.ForgotPasswordRequest;
 import com.batal.dto.LoginRequest;
 import com.batal.dto.LoginResponse;
 import com.batal.dto.RegisterRequest;
+import com.batal.dto.ResetPasswordRequest;
 import com.batal.dto.SetPasswordRequest;
 import com.batal.dto.UserResponse;
 import com.batal.dto.ValidateTokenResponse;
@@ -89,5 +91,60 @@ public class AuthController {
             return ResponseEntity.status(500)
                     .body(Map.of("error", "Failed to send email", "message", e.getMessage()));
         }
+    }
+
+    // ========== PASSWORD RESET (FORGOT PASSWORD) ==========
+
+    /**
+     * Initiate password reset - public endpoint (no authentication required)
+     * For security, always returns success even if email doesn't exist
+     */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        try {
+            authService.initiatePasswordReset(request);
+            // Always return success for security (don't reveal if email exists)
+            return ResponseEntity.ok(Map.of(
+                    "message", "If an account exists with this email, you will receive a password reset link shortly.",
+                    "email", request.getEmail()
+            ));
+        } catch (Exception e) {
+            // Log error but still return success to user
+            return ResponseEntity.ok(Map.of(
+                    "message", "If an account exists with this email, you will receive a password reset link shortly.",
+                    "email", request.getEmail()
+            ));
+        }
+    }
+
+    /**
+     * Reset password using reset token (no authentication required)
+     */
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        try {
+            authService.resetPasswordWithToken(request);
+            return ResponseEntity.ok(Map.of(
+                    "message", "Password has been reset successfully. You can now login with your new password."
+            ));
+        } catch (com.batal.exception.AuthenticationException e) {
+            return ResponseEntity.status(401)
+                    .body(Map.of("error", "Authentication failed", "message", e.getMessage()));
+        } catch (com.batal.exception.ValidationException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Validation error", "message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Password reset failed", "message", e.getMessage()));
+        }
+    }
+
+    /**
+     * Validate password reset token (no authentication required)
+     */
+    @GetMapping("/validate-reset-token")
+    public ResponseEntity<ValidateTokenResponse> validateResetToken(@RequestParam String token) {
+        ValidateTokenResponse response = authService.validatePasswordResetToken(token);
+        return ResponseEntity.ok(response);
     }
 }
