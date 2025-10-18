@@ -26,7 +26,7 @@ export default function ChildSelector() {
   if (children.length === 1) {
     return (
       <div className="space-y-2">
-        <p className="text-xs font-medium text-text-secondary uppercase tracking-wide px-1">
+        <p className="text-sm text-text-secondary mb-2 font-medium">
           Your Child
         </p>
         <ChildCard
@@ -35,7 +35,6 @@ export default function ChildSelector() {
           onClick={() => {}}
           isCompact={true}
         />
-        <ChildCard child={children[0]} isSelected={true} onClick={() => {}} isCompact={true} />
       </div>
     );
   }
@@ -61,7 +60,6 @@ export default function ChildSelector() {
         child={selectedChild}
         isSelected={true}
         onClick={() => setIsExpanded(!isExpanded)}
-        isCompact={true}
         isCompact={true}
       />
 
@@ -112,9 +110,7 @@ function ChildCard({ child, isSelected, onClick, isCompact }: ChildCardProps) {
     >
       <div className="flex items-center gap-3">
         {/* Avatar with group theme - Always compact */}
-        {/* Avatar with group theme - Always compact */}
         <div
-          className="flex-shrink-0 rounded-full flex items-center justify-center font-bold w-10 h-10 text-base"
           className="flex-shrink-0 rounded-full flex items-center justify-center font-bold w-10 h-10 text-base"
           style={{
             backgroundColor: groupTheme.bgColor,
@@ -122,7 +118,6 @@ function ChildCard({ child, isSelected, onClick, isCompact }: ChildCardProps) {
           }}
         >
           {groupTheme.icon ? (
-            <span className="text-lg">{groupTheme.icon}</span>
             <span className="text-lg">{groupTheme.icon}</span>
           ) : (
             <span>
@@ -135,9 +130,7 @@ function ChildCard({ child, isSelected, onClick, isCompact }: ChildCardProps) {
         {/* Child Info */}
         <div className="flex-1 min-w-0">
           {/* Name - Always compact, showing just first and last name */}
-          {/* Name - Always compact, showing just first and last name */}
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-bold text-text-primary truncate text-sm">
             <h3 className="font-bold text-text-primary truncate text-sm">
               {child.firstName} {child.lastName}
             </h3>
