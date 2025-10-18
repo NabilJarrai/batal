@@ -136,8 +136,8 @@ function ChildCard({ child, isSelected, onClick, isCompact }: ChildCardProps) {
             </h3>
           </div>
 
-          {/* Show essential info for selected child only */}
-          {isSelected && (
+          {/* Show essential info for selected child only - but not in compact mode */}
+          {isSelected && !isCompact && (
             <div className="flex items-center gap-2 text-xs text-text-secondary">
               <span className="flex items-center gap-1">
                 <svg

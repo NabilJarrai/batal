@@ -163,15 +163,15 @@ export default function ParentNutritionPage() {
         )}
 
         {/* PDF Viewer with enhanced display and controls */}
-        <div className="relative">
+        <div className="relative bg-gray-50 rounded-lg">
           <iframe
-            src={`${pdfPath}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH&zoom=150`}
+            src={`${pdfPath}#toolbar=1&navpanes=0&scrollbar=1&page=1&view=FitV&zoom=125&pagemode=none`}
             className={`w-full border-0 rounded-lg ${
               isPdfLoading ? "hidden" : "block"
             }`}
             style={{
-              height: "900px",
-              minHeight: "700px",
+              height: "1000px",
+              minHeight: "800px",
             }}
             title={`Meal Plan for ${selectedChild.firstName}`}
             onLoad={() => setIsPdfLoading(false)}
@@ -181,28 +181,33 @@ export default function ParentNutritionPage() {
             }}
           />
 
-          {/* Fallback - Open in new window button */}
+          {/* PDF Controls Bar */}
           {!isPdfLoading && (
-            <div className="absolute top-4 right-4">
-              <button
-                onClick={() => window.open(pdfPath, "_blank")}
-                className="btn-secondary btn-sm flex items-center gap-2 bg-white/90 backdrop-blur-sm shadow-md hover:bg-white"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            <div className="absolute top-2 left-2 right-2 flex justify-between items-center bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-sm">
+              <div className="text-xs text-gray-600 font-medium">
+                Meal Plan - {selectedChild.firstName} {selectedChild.lastName}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => window.open(pdfPath, "_blank")}
+                  className="btn-secondary btn-sm flex items-center gap-1 text-xs"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-                Open Full View
-              </button>
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
+                  Full View
+                </button>
+              </div>
             </div>
           )}
         </div>
