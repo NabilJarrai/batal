@@ -123,6 +123,8 @@ END $$;
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM roles WHERE name = 'PARENT') THEN
+        -- Reset the sequence to avoid conflicts
+        PERFORM setval('roles_id_seq', (SELECT COALESCE(MAX(id), 0) FROM roles));
         INSERT INTO roles (name) VALUES ('PARENT');
     END IF;
 END $$;
