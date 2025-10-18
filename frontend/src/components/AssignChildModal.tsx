@@ -1,9 +1,9 @@
 "use client";
 
-import { Fragment, useState, useEffect } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { playersAPI, usersAPI } from '@/lib/api';
-import { UserResponse } from '@/types/users';
+import { Fragment, useState, useEffect } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { playersAPI, usersAPI } from "@/lib/api";
+import { UserResponse } from "@/types/users";
 
 interface AssignChildModalProps {
   isOpen: boolean;
@@ -27,12 +27,12 @@ export default function AssignChildModal({
   isOpen,
   onClose,
   parent,
-  onComplete
+  onComplete,
 }: AssignChildModalProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [filteredPlayers, setFilteredPlayers] = useState<Player[]>([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,13 +45,15 @@ export default function AssignChildModal({
 
   useEffect(() => {
     // Filter players based on search term
-    if (searchTerm.trim() === '') {
+    if (searchTerm.trim() === "") {
       setFilteredPlayers(players);
     } else {
       const term = searchTerm.toLowerCase();
-      const filtered = players.filter(player => {
-        const fullName = `${player.firstName || ''} ${player.lastName || ''}`.toLowerCase();
-        const email = (player.email || '').toLowerCase();
+      const filtered = players.filter((player) => {
+        const fullName = `${player.firstName || ""} ${
+          player.lastName || ""
+        }`.toLowerCase();
+        const email = (player.email || "").toLowerCase();
         return fullName.includes(term) || email.includes(term);
       });
       setFilteredPlayers(filtered);
@@ -69,8 +71,8 @@ export default function AssignChildModal({
       setPlayers(availablePlayers);
       setFilteredPlayers(availablePlayers);
     } catch (err) {
-      console.error('Error loading players:', err);
-      setError('Failed to load available players');
+      console.error("Error loading players:", err);
+      setError("Failed to load available players");
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +82,7 @@ export default function AssignChildModal({
     e.preventDefault();
 
     if (!selectedPlayerId) {
-      setError('Please select a player');
+      setError("Please select a player");
       return;
     }
 
@@ -92,8 +94,8 @@ export default function AssignChildModal({
       onComplete();
       handleClose();
     } catch (err) {
-      console.error('Error assigning child:', err);
-      setError(err instanceof Error ? err.message : 'Failed to assign child');
+      console.error("Error assigning child:", err);
+      setError(err instanceof Error ? err.message : "Failed to assign child");
     } finally {
       setIsSubmitting(false);
     }
@@ -101,7 +103,7 @@ export default function AssignChildModal({
 
   const handleClose = () => {
     setSelectedPlayerId(null);
-    setSearchTerm('');
+    setSearchTerm("");
     setError(null);
     onClose();
   };
@@ -112,7 +114,10 @@ export default function AssignChildModal({
     const birthDate = new Date(dateOfBirth);
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
       age--;
     }
     return age;
@@ -145,14 +150,27 @@ export default function AssignChildModal({
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-background-modal border border-border p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title as="h3" className="text-lg font-medium text-text-primary mb-4">
+                <Dialog.Title
+                  as="h3"
+                  className="text-lg font-medium text-text-primary mb-4"
+                >
                   Assign Child to {parent.firstName} {parent.lastName}
                 </Dialog.Title>
 
                 {error && (
                   <div className="alert-error mb-4">
-                    <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    <svg
+                      className="h-5 w-5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                      />
                     </svg>
                     <p className="text-body">{error}</p>
                   </div>
@@ -176,17 +194,22 @@ export default function AssignChildModal({
                   {/* Players List */}
                   <div>
                     <label className="block text-sm font-medium text-text-secondary mb-2">
-                      Available Players {!isLoading && `(${filteredPlayers.length})`}
+                      Available Players{" "}
+                      {!isLoading && `(${filteredPlayers.length})`}
                     </label>
 
                     {isLoading ? (
                       <div className="flex items-center justify-center py-8">
                         <div className="loading-spinner"></div>
-                        <span className="ml-2 text-text-secondary">Loading players...</span>
+                        <span className="ml-2 text-text-secondary">
+                          Loading players...
+                        </span>
                       </div>
                     ) : filteredPlayers.length === 0 ? (
                       <div className="text-center py-8 text-text-secondary">
-                        {searchTerm ? 'No players match your search' : 'No active players available'}
+                        {searchTerm
+                          ? "No players match your search"
+                          : "No active players available"}
                       </div>
                     ) : (
                       <div className="border border-border rounded-lg max-h-96 overflow-y-auto">
@@ -195,40 +218,48 @@ export default function AssignChildModal({
                             key={player.id}
                             type="button"
                             onClick={() => setSelectedPlayerId(player.id)}
-                            className={`w-full p-4 text-left border-b border-border last:border-b-0 transition-colors ${
+                            className={`w-full p-3 text-left border-b border-border last:border-b-0 transition-colors ${
                               selectedPlayerId === player.id
-                                ? 'bg-blue-500/20 border-l-4 border-l-blue-500'
-                                : 'hover:bg-secondary'
+                                ? "bg-blue-500/20 border-l-4 border-l-blue-500"
+                                : "hover:bg-secondary"
                             }`}
                           >
                             <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-medium text-text-primary">
+                              <div className="flex-1 min-w-0">
+                                {/* Compact name display */}
+                                <p className="font-medium text-text-primary text-sm truncate">
                                   {player.firstName} {player.lastName}
                                 </p>
-                                <p className="text-sm text-text-secondary">{player.email}</p>
-                                <div className="flex gap-3 mt-1">
-                                  {player.dateOfBirth && (
-                                    <span className="text-xs text-text-secondary">
-                                      Age: {calculateAge(player.dateOfBirth)}
-                                    </span>
-                                  )}
-                                  {player.groupName && (
-                                    <span className="text-xs text-text-secondary">
-                                      Group: {player.groupName}
-                                    </span>
-                                  )}
-                                  {player.level && (
-                                    <span className="text-xs text-blue-400">
-                                      {player.level}
-                                    </span>
-                                  )}
-                                </div>
+                                {/* Optional compact info for selected items */}
+                                {selectedPlayerId === player.id && (
+                                  <div className="flex gap-2 mt-1 text-xs text-text-secondary">
+                                    {player.dateOfBirth && (
+                                      <span>
+                                        Age: {calculateAge(player.dateOfBirth)}
+                                      </span>
+                                    )}
+                                    {player.groupName && (
+                                      <span>• {player.groupName}</span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                               {selectedPlayerId === player.id && (
-                                <svg className="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
+                                <div className="flex-shrink-0 ml-2">
+                                  <svg
+                                    className="h-5 w-5 text-blue-500"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M5 13l4 4L19 7"
+                                    />
+                                  </svg>
+                                </div>
                               )}
                             </div>
                           </button>
@@ -257,7 +288,7 @@ export default function AssignChildModal({
                           Assigning...
                         </div>
                       ) : (
-                        'Assign Child'
+                        "Assign Child"
                       )}
                     </button>
                   </div>

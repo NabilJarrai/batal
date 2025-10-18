@@ -2,6 +2,17 @@
 -- This allows us to reuse the same table for both initial password setup (for new users)
 -- and password reset (for existing users)
 
+-- First, rename the table to match the entity name
+ALTER TABLE password_setup_tokens RENAME TO password_tokens;
+
+-- Rename the indexes to match the new table name
+ALTER INDEX idx_password_setup_token RENAME TO idx_password_token;
+ALTER INDEX idx_password_setup_user_id RENAME TO idx_password_user_id;
+ALTER INDEX idx_password_setup_expires_at RENAME TO idx_password_expires_at;
+
+-- Update table comment
+COMMENT ON TABLE password_tokens IS 'Stores one-time tokens for password setup and reset via email';
+
 -- Add token_type enum column with default value 'SETUP' for existing records
 ALTER TABLE password_tokens
 ADD COLUMN token_type VARCHAR(10) NOT NULL DEFAULT 'SETUP';

@@ -17,7 +17,10 @@ function calculateAge(dateOfBirth: string): number {
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
 
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
     age--;
   }
 
@@ -29,23 +32,23 @@ function getMealPlanPDF(age: number): { filename: string; ageRange: string } {
   if (age >= 4 && age <= 6) {
     return {
       filename: "4-6 years old meal plan-1.pdf",
-      ageRange: "4-6 years"
+      ageRange: "4-6 years",
     };
   } else if (age >= 6 && age <= 8) {
     return {
       filename: "6-8 years old meal plan.pdf",
-      ageRange: "6-8 years"
+      ageRange: "6-8 years",
     };
   } else if (age >= 8 && age <= 10) {
     return {
       filename: "8-10 years old meal plan.pdf",
-      ageRange: "8-10 years"
+      ageRange: "8-10 years",
     };
   } else {
     // For ages 10+ (including Lions group 14-16), use the 10-12 plan as closest match
     return {
       filename: "10-12 years old meal plan.pdf",
-      ageRange: "10-12 years"
+      ageRange: "10-12 years",
     };
   }
 }
@@ -55,14 +58,17 @@ export default function ParentNutritionPage() {
   const [isPdfLoading, setIsPdfLoading] = useState(true);
 
   // Get the selected child
-  const selectedChild = children?.find(child => child.id === selectedChildId) || children?.[0];
+  const selectedChild =
+    children?.find((child) => child.id === selectedChildId) || children?.[0];
 
   if (!selectedChild) {
     return (
       <div className="space-y-8">
         <div className="bg-gradient-to-r from-accent-yellow/10 to-accent-yellow/5 rounded-2xl p-12 border border-accent-yellow/20 text-center">
           <ExclamationTriangleIcon className="w-16 h-16 text-accent-yellow mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-text-primary mb-2">No Child Selected</h2>
+          <h2 className="text-2xl font-bold text-text-primary mb-2">
+            No Child Selected
+          </h2>
           <p className="text-text-secondary">
             Please ensure you have children registered to view their meal plans.
           </p>
@@ -78,7 +84,7 @@ export default function ParentNutritionPage() {
 
   // Handle PDF download
   const handleDownload = () => {
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = pdfPath;
     link.download = mealPlan.filename;
     document.body.appendChild(link);
@@ -108,14 +114,16 @@ export default function ParentNutritionPage() {
                   Nutrition Meal Plan
                 </h1>
                 <p className="text-sm text-text-secondary">
-                  For {selectedChild.firstName} {selectedChild.lastName} ({age} years old)
+                  For {selectedChild.firstName} {selectedChild.lastName} ({age}{" "}
+                  years old)
                 </p>
               </div>
             </div>
 
             <p className="text-text-secondary mb-4">
-              Personalized nutrition guidance designed to fuel young athletes and support their development,
-              energy levels, and performance on and off the field.
+              Personalized nutrition guidance designed to fuel young athletes
+              and support their development, energy levels, and performance on
+              and off the field.
             </p>
 
             <div className="flex items-center gap-3">
@@ -154,18 +162,50 @@ export default function ParentNutritionPage() {
           </div>
         )}
 
-        {/* PDF Viewer */}
-        <iframe
-          src={pdfPath}
-          className={`w-full border-0 ${isPdfLoading ? 'hidden' : 'block'}`}
-          style={{ height: '800px', minHeight: '600px' }}
-          title={`Meal Plan for ${selectedChild.firstName}`}
-          onLoad={() => setIsPdfLoading(false)}
-          onError={() => {
-            setIsPdfLoading(false);
-            console.error('Failed to load PDF');
-          }}
-        />
+        {/* PDF Viewer with enhanced display and controls */}
+        <div className="relative">
+          <iframe
+            src={`${pdfPath}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH&zoom=150`}
+            className={`w-full border-0 rounded-lg ${
+              isPdfLoading ? "hidden" : "block"
+            }`}
+            style={{
+              height: "900px",
+              minHeight: "700px",
+            }}
+            title={`Meal Plan for ${selectedChild.firstName}`}
+            onLoad={() => setIsPdfLoading(false)}
+            onError={() => {
+              setIsPdfLoading(false);
+              console.error("Failed to load PDF");
+            }}
+          />
+
+          {/* Fallback - Open in new window button */}
+          {!isPdfLoading && (
+            <div className="absolute top-4 right-4">
+              <button
+                onClick={() => window.open(pdfPath, "_blank")}
+                className="btn-secondary btn-sm flex items-center gap-2 bg-white/90 backdrop-blur-sm shadow-md hover:bg-white"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+                Open Full View
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Helpful Tips Section */}
@@ -217,15 +257,29 @@ export default function ParentNutritionPage() {
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
         <div className="flex gap-4">
           <div className="flex-shrink-0">
-            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="w-6 h-6 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-blue-900 mb-2">Need Personalized Advice?</h3>
+            <h3 className="font-semibold text-blue-900 mb-2">
+              Need Personalized Advice?
+            </h3>
             <p className="text-sm text-blue-800">
-              These meal plans provide general guidance. For specific dietary needs, allergies, or personalized
-              nutrition planning, please consult with a registered dietitian or your child's healthcare provider.
+              These meal plans provide general guidance. For specific dietary
+              needs, allergies, or personalized nutrition planning, please
+              consult with a registered dietitian or your child&apos;s
+              healthcare provider.
             </p>
           </div>
         </div>
