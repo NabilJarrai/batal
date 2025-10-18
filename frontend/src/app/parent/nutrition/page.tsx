@@ -162,23 +162,17 @@ export default function ParentNutritionPage() {
           </div>
         )}
 
-        {/* PDF Viewer with enhanced display and controls */}
+        {/* PDF Viewer - Using embed for better default zoom */}
         <div className="relative bg-gray-50 rounded-lg">
-          <iframe
-            src={`${pdfPath}#toolbar=1&navpanes=0&scrollbar=1&page=1&view=FitV&zoom=125&pagemode=none`}
-            className={`w-full border-0 rounded-lg ${
-              isPdfLoading ? "hidden" : "block"
-            }`}
+          <embed
+            src={`${pdfPath}#zoom=150`}
+            type="application/pdf"
+            className={`w-full rounded-lg ${isPdfLoading ? "hidden" : "block"}`}
             style={{
-              height: "1000px",
-              minHeight: "800px",
+              height: "1400px",
+              minHeight: "1200px",
             }}
-            title={`Meal Plan for ${selectedChild.firstName}`}
             onLoad={() => setIsPdfLoading(false)}
-            onError={() => {
-              setIsPdfLoading(false);
-              console.error("Failed to load PDF");
-            }}
           />
 
           {/* PDF Controls Bar */}
@@ -188,6 +182,15 @@ export default function ParentNutritionPage() {
                 Meal Plan - {selectedChild.firstName} {selectedChild.lastName}
               </div>
               <div className="flex gap-2">
+                <button
+                  onClick={handleDownload}
+                  className="btn-secondary btn-sm flex items-center gap-1 text-xs"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Download
+                </button>
                 <button
                   onClick={() => window.open(pdfPath, "_blank")}
                   className="btn-secondary btn-sm flex items-center gap-1 text-xs"
@@ -210,6 +213,26 @@ export default function ParentNutritionPage() {
               </div>
             </div>
           )}
+        </div>
+        
+        {/* PDF Viewing Tips */}
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <div className="flex gap-3">
+            <div className="flex-shrink-0">
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h4 className="font-semibold text-blue-900 text-sm mb-1">
+                Better PDF Experience
+              </h4>
+              <p className="text-sm text-blue-800">
+                For the best reading experience, click &quot;Full View&quot; to open in a new tab or &quot;Download&quot; to save the PDF to your device. 
+                You can also use your browser&apos;s zoom controls (Ctrl/Cmd + or -) to adjust the size.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
