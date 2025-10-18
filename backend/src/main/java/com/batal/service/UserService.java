@@ -61,9 +61,24 @@ public class UserService {
             users = userRepository.findStaffUsers(pageable);
         }
         
-        return users.map(user -> new UserResponse(user, user.getRoles().stream()
-                .map(role -> role.getName())
-                .collect(Collectors.toList())));
+        return users.map(user -> {
+            List<String> roles = user.getRoles().stream()
+                    .map(role -> role.getName())
+                    .collect(Collectors.toList());
+            
+            UserResponse response = new UserResponse(user, roles);
+            
+            // If user is a parent, populate children
+            if (user.getUserType() == UserType.PARENT) {
+                List<Player> children = playerRepository.findByParentIdWithGroup(user.getId());
+                List<ChildSummaryDTO> childSummaries = children.stream()
+                        .map(this::mapPlayerToChildSummary)
+                        .collect(Collectors.toList());
+                response.setChildren(childSummaries);
+            }
+            
+            return response;
+        });
     }
     
     // Get all users (only authenticated users: COACH, ADMIN, MANAGER, PARENT)

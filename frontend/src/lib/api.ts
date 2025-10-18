@@ -5,6 +5,7 @@ import {
   LoginResponse,
   UserResponse,
 } from "@/types/auth";
+import { apiClient } from "@/lib/apiClient";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
@@ -35,72 +36,73 @@ export const tokenManager = {
 interface APIError {
   message: string;
   status: number;
-  type: 'AUTHENTICATION' | 'VALIDATION' | 'NETWORK' | 'SERVER' | 'UNKNOWN';
+  type: "AUTHENTICATION" | "VALIDATION" | "NETWORK" | "SERVER" | "UNKNOWN";
   details?: any;
 }
 
 // Create enhanced error object
 function createAPIError(response: Response, errorData: any = {}): APIError {
   const status = response.status;
-  let type: APIError['type'] = 'UNKNOWN';
+  let type: APIError["type"] = "UNKNOWN";
   let message = errorData.message || `HTTP error! status: ${status}`;
 
   // Categorize errors based on status code or backend error code
   switch (status) {
     case 401:
-      type = 'AUTHENTICATION';
+      type = "AUTHENTICATION";
       // Use backend error message if available, otherwise default message
       if (!errorData.message) {
-        message = 'Invalid email or password. Please check your credentials and try again.';
+        message =
+          "Invalid email or password. Please check your credentials and try again.";
       }
       break;
     case 403:
-      type = 'AUTHENTICATION';
+      type = "AUTHENTICATION";
       if (!errorData.message) {
-        message = 'Access denied. Please contact your administrator.';
+        message = "Access denied. Please contact your administrator.";
       }
       break;
     case 400:
-      type = 'VALIDATION';
+      type = "VALIDATION";
       if (!errorData.message) {
-        message = 'Please check your input and try again.';
+        message = "Please check your input and try again.";
       }
       break;
     case 404:
-      type = 'NETWORK';
+      type = "NETWORK";
       if (!errorData.message) {
-        message = 'Service not available. Please try again later.';
+        message = "Service not available. Please try again later.";
       }
       break;
     case 500:
     case 502:
     case 503:
     case 504:
-      type = 'SERVER';
+      type = "SERVER";
       if (!errorData.message) {
-        message = 'Server error. Please try again in a few moments.';
+        message = "Server error. Please try again in a few moments.";
       }
       break;
     default:
       if (status >= 400 && status < 500) {
-        type = 'VALIDATION';
+        type = "VALIDATION";
       } else if (status >= 500) {
-        type = 'SERVER';
+        type = "SERVER";
       }
   }
 
   // Override type based on backend errorCode if available
   if (errorData.errorCode) {
     switch (errorData.errorCode) {
-      case 'AUTHENTICATION_FAILED':
-        type = 'AUTHENTICATION';
+      case "AUTHENTICATION_FAILED":
+        type = "AUTHENTICATION";
         break;
-      case 'VALIDATION_ERROR':
-      case 'CONSTRAINT_VIOLATION':
-        type = 'VALIDATION';
+      case "VALIDATION_ERROR":
+      case "CONSTRAINT_VIOLATION":
+        type = "VALIDATION";
         break;
-      case 'ACCESS_DENIED':
-        type = 'AUTHENTICATION';
+      case "ACCESS_DENIED":
+        type = "AUTHENTICATION";
         break;
     }
   }
@@ -132,7 +134,8 @@ async function apiRequest<T>(
       const errorData = await response.json().catch(() => ({}));
 
       // Handle structured error response from backend (ErrorResponse class)
-      let message = errorData.message || `HTTP error! status: ${response.status}`;
+      let message =
+        errorData.message || `HTTP error! status: ${response.status}`;
 
       // If we have a structured error response, use its message
       if (errorData.error && errorData.message) {
@@ -153,10 +156,12 @@ async function apiRequest<T>(
     return response.json();
   } catch (error) {
     // Handle network errors (fetch failures)
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      const networkError = new Error('Network connection failed. Please check your internet connection and try again.') as Error & APIError;
+    if (error instanceof TypeError && error.message.includes("fetch")) {
+      const networkError = new Error(
+        "Network connection failed. Please check your internet connection and try again."
+      ) as Error & APIError;
       networkError.status = 0;
-      networkError.type = 'NETWORK';
+      networkError.type = "NETWORK";
       throw networkError;
     }
 
@@ -182,13 +187,17 @@ export const authAPI = {
   },
 
   // Password setup via email
-  validateSetupToken: async (token: string): Promise<{
+  validateSetupToken: async (
+    token: string
+  ): Promise<{
     valid: boolean;
     message: string;
     userEmail?: string;
     userName?: string;
   }> => {
-    return apiRequest(`/auth/validate-setup-token?token=${encodeURIComponent(token)}`);
+    return apiRequest(
+      `/auth/validate-setup-token?token=${encodeURIComponent(token)}`
+    );
   },
 
   setupPassword: async (data: {
@@ -202,27 +211,35 @@ export const authAPI = {
     });
   },
 
-  resendSetupEmail: async (userId: number): Promise<{ message: string; userId: number }> => {
+  resendSetupEmail: async (
+    userId: number
+  ): Promise<{ message: string; userId: number }> => {
     return apiRequest(`/auth/resend-setup-email/${userId}`, {
       method: "POST",
     });
   },
 
   // Password reset (forgot password)
-  forgotPassword: async (email: string): Promise<{ message: string; email: string }> => {
+  forgotPassword: async (
+    email: string
+  ): Promise<{ message: string; email: string }> => {
     return apiRequest("/auth/forgot-password", {
       method: "POST",
       body: JSON.stringify({ email }),
     });
   },
 
-  validateResetToken: async (token: string): Promise<{
+  validateResetToken: async (
+    token: string
+  ): Promise<{
     valid: boolean;
     message: string;
     email?: string;
     userName?: string;
   }> => {
-    return apiRequest(`/auth/validate-reset-token?token=${encodeURIComponent(token)}`);
+    return apiRequest(
+      `/auth/validate-reset-token?token=${encodeURIComponent(token)}`
+    );
   },
 
   resetPassword: async (data: {
@@ -237,9 +254,15 @@ export const authAPI = {
   },
 };
 
-// Users API calls  
+// Users API calls
 export const usersAPI = {
-  getAll: async (page = 0, size = 10, sortBy = 'firstName', sortDir = 'asc', search?: string): Promise<{
+  getAll: async (
+    page = 0,
+    size = 10,
+    sortBy = "firstName",
+    sortDir = "asc",
+    search?: string
+  ): Promise<{
     content: UserResponse[];
     totalElements: number;
     totalPages: number;
@@ -250,16 +273,15 @@ export const usersAPI = {
       page: page.toString(),
       size: size.toString(),
       sortBy,
-      sortDir
+      sortDir,
     });
-    
+
     if (search) {
-      params.append('search', search);
+      params.append("search", search);
     }
-    
+
     return apiRequest(`/users?${params.toString()}`);
   },
-
 
   getById: async (id: number): Promise<UserResponse> => {
     return apiRequest<UserResponse>(`/users/${id}`);
@@ -302,23 +324,34 @@ export const usersAPI = {
   },
 
   // Parent-child management endpoints
-  assignChild: async (parentId: number, playerId: number): Promise<UserResponse> => {
-    return apiRequest<UserResponse>(`/users/${parentId}/children`, {
-      method: "POST",
-      body: JSON.stringify({ playerId }),
+  assignChild: async (
+    parentId: number,
+    playerId: number
+  ): Promise<UserResponse> => {
+    return apiClient.post<UserResponse>(`/users/${parentId}/children`, {
+      playerId,
     });
   },
 
-  unassignChild: async (parentId: number, playerId: number): Promise<UserResponse> => {
-    return apiRequest<UserResponse>(`/users/${parentId}/children/${playerId}`, {
-      method: "DELETE",
-    });
+  unassignChild: async (
+    parentId: number,
+    playerId: number
+  ): Promise<UserResponse> => {
+    return apiClient.delete<UserResponse>(
+      `/users/${parentId}/children/${playerId}`
+    );
   },
 };
 
 // Players API calls
 export const playersAPI = {
-  getAll: async (page = 0, size = 10, sortBy = 'firstName', sortDir = 'asc', search?: string): Promise<{
+  getAll: async (
+    page = 0,
+    size = 10,
+    sortBy = "firstName",
+    sortDir = "asc",
+    search?: string
+  ): Promise<{
     content: any[];
     totalElements: number;
     totalPages: number;
@@ -329,13 +362,13 @@ export const playersAPI = {
       page: page.toString(),
       size: size.toString(),
       sortBy,
-      sortDir
+      sortDir,
     });
-    
+
     if (search) {
-      params.append('search', search);
+      params.append("search", search);
     }
-    
+
     return apiRequest(`/players?${params.toString()}`);
   },
 
@@ -358,7 +391,7 @@ export const playersAPI = {
 
   update: async (id: number, playerData: any): Promise<any> => {
     return apiRequest<any>(`/players/${id}`, {
-      method: "PUT", 
+      method: "PUT",
       body: JSON.stringify(playerData),
     });
   },
@@ -405,7 +438,7 @@ export const playersAPI = {
 // Groups API calls
 export const groupsAPI = {
   getAll: async (params?: any): Promise<any> => {
-    const queryParams = params ? `?${new URLSearchParams(params)}` : '';
+    const queryParams = params ? `?${new URLSearchParams(params)}` : "";
     const response = await apiRequest<any>(`/groups${queryParams}`);
     // Handle paginated response - return just the content array if it's a Page object
     return response.content || response;
@@ -442,7 +475,7 @@ export const groupsAPI = {
 
   getCoachGroups: async (coachId: number): Promise<any[]> => {
     const response = await apiRequest<any>(`/groups/coach/${coachId}`);
-    return Array.isArray(response) ? response : (response.content || []);
+    return Array.isArray(response) ? response : response.content || [];
   },
 
   // Assignment operations
@@ -500,11 +533,16 @@ export const parentAPI = {
     return apiRequest<any[]>(`/parents/me/children/${playerId}/assessments`);
   },
 
-  getChildAssessment: async (playerId: number, assessmentId: number): Promise<any> => {
-    return apiRequest<any>(`/parents/me/children/${playerId}/assessments/${assessmentId}`);
+  getChildAssessment: async (
+    playerId: number,
+    assessmentId: number
+  ): Promise<any> => {
+    return apiRequest<any>(
+      `/parents/me/children/${playerId}/assessments/${assessmentId}`
+    );
   },
 };
 
 // Export other API modules
-export { skillsAPI } from './api/skills';
-export { assessmentsAPI } from './api/assessments';
+export { skillsAPI } from "./api/skills";
+export { assessmentsAPI } from "./api/assessments";

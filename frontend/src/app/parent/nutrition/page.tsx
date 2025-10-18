@@ -154,18 +154,38 @@ export default function ParentNutritionPage() {
           </div>
         )}
 
-        {/* PDF Viewer */}
-        <iframe
-          src={pdfPath}
-          className={`w-full border-0 ${isPdfLoading ? 'hidden' : 'block'}`}
-          style={{ height: '800px', minHeight: '600px' }}
-          title={`Meal Plan for ${selectedChild.firstName}`}
-          onLoad={() => setIsPdfLoading(false)}
-          onError={() => {
-            setIsPdfLoading(false);
-            console.error('Failed to load PDF');
-          }}
-        />
+        {/* PDF Viewer with enhanced display and controls */}
+        <div className="relative">
+          <iframe
+            src={`${pdfPath}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH&zoom=150`}
+            className={`w-full border-0 rounded-lg ${isPdfLoading ? 'hidden' : 'block'}`}
+            style={{ 
+              height: '900px', 
+              minHeight: '700px'
+            }}
+            title={`Meal Plan for ${selectedChild.firstName}`}
+            onLoad={() => setIsPdfLoading(false)}
+            onError={() => {
+              setIsPdfLoading(false);
+              console.error('Failed to load PDF');
+            }}
+          />
+          
+          {/* Fallback - Open in new window button */}
+          {!isPdfLoading && (
+            <div className="absolute top-4 right-4">
+              <button
+                onClick={() => window.open(pdfPath, '_blank')}
+                className="btn-secondary btn-sm flex items-center gap-2 bg-white/90 backdrop-blur-sm shadow-md hover:bg-white"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Open Full View
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Helpful Tips Section */}
@@ -225,7 +245,7 @@ export default function ParentNutritionPage() {
             <h3 className="font-semibold text-blue-900 mb-2">Need Personalized Advice?</h3>
             <p className="text-sm text-blue-800">
               These meal plans provide general guidance. For specific dietary needs, allergies, or personalized
-              nutrition planning, please consult with a registered dietitian or your child's healthcare provider.
+              nutrition planning, please consult with a registered dietitian or your child&apos;s healthcare provider.
             </p>
           </div>
         </div>
