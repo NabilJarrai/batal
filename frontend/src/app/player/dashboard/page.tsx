@@ -7,6 +7,7 @@ import { useAppSelector } from "@/store/hooks";
 import { AssessmentCard } from "@/components/player/AssessmentCard";
 import { CategoryProgressChart } from "@/components/player/CategoryProgressChart";
 import { SkillProgressChart } from "@/components/player/SkillProgressChart";
+import { ResponsiveHeader, ResponsiveGrid, ResponsiveCard, ResponsiveButtonGroup } from "@/components/responsive";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 import {
@@ -112,23 +113,23 @@ export default function PlayerDashboard() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Welcome Section with Progress Summary */}
-      <div className="bg-gradient-to-r from-primary/5 via-white to-accent-teal/5 rounded-2xl p-6 border border-gray-100 shadow-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-text-primary mb-2">
+      <div className="bg-gradient-to-r from-primary/5 via-white to-accent-teal/5 rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary mb-2">
               Welcome back, {profile?.firstName}!
             </h1>
-            <p className="text-base text-text-secondary">
+            <p className="text-sm sm:text-base text-text-secondary">
               Track your progress and view your performance assessments
             </p>
           </div>
 
           {stats && (
-            <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-200">
+            <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-200 flex-shrink-0 w-full sm:w-auto">
               <div className="text-center">
-                <div className="text-3xl font-bold text-primary mb-2">
+                <div className="text-2xl sm:text-3xl font-bold text-primary mb-2">
                   {stats.current.toFixed(1)}/10
                 </div>
                 <div className={`text-sm font-medium mb-1 ${
@@ -146,7 +147,7 @@ export default function PlayerDashboard() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-lg hover:shadow-xl transition-all">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-full">

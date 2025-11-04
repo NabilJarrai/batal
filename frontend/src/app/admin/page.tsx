@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
+import { ResponsiveTabs } from '@/components/responsive';
 import GroupList from '@/components/GroupList';
 import UserCard from '@/components/UserCard';
 import PlayerCard from '@/components/PlayerCard';
@@ -732,33 +733,33 @@ export default function AdminDashboard() {
 
   return (
     <ProtectedRoute allowedRoles={['ADMIN']}>
-      <div className="min-h-screen bg-background p-6">
+      <div className="min-h-screen bg-background p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8 flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold text-text-primary mb-2">Admin Dashboard</h1>
-              <p className="text-text-secondary">Manage users, groups, and academy operations</p>
+          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-text-primary mb-2">Admin Dashboard</h1>
+              <p className="text-sm sm:text-base text-text-secondary">Manage users, groups, and academy operations</p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
               <div className="text-right">
-                <p className="text-sm text-text-secondary">Welcome back,</p>
-                <p className="text-text-primary font-semibold">{user?.email || 'Admin'}</p>
+                <p className="text-xs sm:text-sm text-text-secondary">Welcome back,</p>
+                <p className="text-sm sm:text-base text-text-primary font-semibold truncate max-w-[150px] sm:max-w-none">{user?.email || 'Admin'}</p>
               </div>
               <LogoutButton />
             </div>
           </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-background border border-border shadow-sm rounded-xl p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-background border border-border shadow-sm rounded-xl p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-text-secondary text-sm font-medium">Total Groups</p>
-                <p className="text-2xl font-bold text-text-primary">{stats.totalGroups}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-text-secondary text-xs sm:text-sm font-medium">Total Groups</p>
+                <p className="text-xl sm:text-2xl font-bold text-text-primary">{stats.totalGroups}</p>
               </div>
-              <div className="p-3 bg-blue-500/20 rounded-full">
-                <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
+              <div className="p-2 sm:p-3 bg-blue-500/20 rounded-full flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                 </svg>
               </div>
@@ -766,14 +767,14 @@ export default function AdminDashboard() {
             <p className="text-xs text-text-secondary mt-2">{stats.activeGroups} active groups</p>
           </div>
 
-          <div className="bg-background border border-border shadow-sm rounded-xl p-6">
+          <div className="bg-background border border-border shadow-sm rounded-xl p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-text-secondary text-sm font-medium">Total Coaches</p>
-                <p className="text-2xl font-bold text-text-primary">{stats.totalCoaches}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-text-secondary text-xs sm:text-sm font-medium">Total Coaches</p>
+                <p className="text-xl sm:text-2xl font-bold text-text-primary">{stats.totalCoaches}</p>
               </div>
-              <div className="p-3 bg-purple-500/20 rounded-full">
-                <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
+              <div className="p-2 sm:p-3 bg-purple-500/20 rounded-full flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 2a4 4 0 100 8 4 4 0 000-8zM8 14a6 6 0 00-6 6 2 2 0 002 2h12a2 2 0 002-2 6 6 0 00-6-6H8z" clipRule="evenodd" />
                 </svg>
               </div>
@@ -781,14 +782,14 @@ export default function AdminDashboard() {
             <p className="text-xs text-text-secondary mt-2">Available for assignment</p>
           </div>
 
-          <div className="bg-background-modal border border-border rounded-xl p-6">
+          <div className="bg-background-modal border border-border rounded-xl p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-text-secondary text-sm font-medium">Total Players</p>
-                <p className="text-2xl font-bold text-text-primary">{stats.totalPlayers}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-text-secondary text-xs sm:text-sm font-medium">Total Players</p>
+                <p className="text-xl sm:text-2xl font-bold text-text-primary">{stats.totalPlayers}</p>
               </div>
-              <div className="p-3 bg-green-500/20 rounded-full">
-                <svg className="w-6 h-6 text-accent-teal" fill="currentColor" viewBox="0 0 20 20">
+              <div className="p-2 sm:p-3 bg-green-500/20 rounded-full flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-accent-teal" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                 </svg>
               </div>
@@ -796,35 +797,35 @@ export default function AdminDashboard() {
             <p className="text-xs text-text-secondary mt-2">{stats.unassignedPlayers} unassigned</p>
           </div>
 
-          <div className="bg-background-modal border border-border rounded-xl p-6">
+          <div className="bg-background-modal border border-border rounded-xl p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-text-secondary text-sm font-medium">Quick Actions</p>
-                <p className="text-sm font-medium text-text-primary">Management</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-text-secondary text-xs sm:text-sm font-medium">Quick Actions</p>
+                <p className="text-xs sm:text-sm font-medium text-text-primary">Management</p>
               </div>
-              <div className="p-3 bg-yellow-500/20 rounded-full">
-                <svg className="w-6 h-6 text-accent-yellow" fill="currentColor" viewBox="0 0 20 20">
+              <div className="p-2 sm:p-3 bg-yellow-500/20 rounded-full flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-accent-yellow" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                 </svg>
               </div>
             </div>
             <div className="space-y-2 mt-2">
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1">
                 <button
                   onClick={handleCreateGroup}
-                  className="px-2 py-1 bg-blue-500/20 hover:bg-blue-500/30 rounded text-xs text-text-secondary"
+                  className="flex-1 sm:flex-none px-2 py-1 bg-blue-500/20 hover:bg-blue-500/30 rounded text-xs text-text-secondary min-w-[60px]"
                 >
                   Group
                 </button>
                 <button
                   onClick={handleCreateUser}
-                  className="px-2 py-1 bg-purple-500/20 hover:bg-purple-500/30 rounded text-xs text-text-secondary"
+                  className="flex-1 sm:flex-none px-2 py-1 bg-purple-500/20 hover:bg-purple-500/30 rounded text-xs text-text-secondary min-w-[60px]"
                 >
                   User
                 </button>
                 <button
                   onClick={handleCreatePlayer}
-                  className="px-2 py-1 bg-green-500/20 hover:bg-green-500/30 rounded text-xs text-accent-teal"
+                  className="flex-1 sm:flex-none px-2 py-1 bg-green-500/20 hover:bg-green-500/30 rounded text-xs text-accent-teal min-w-[60px]"
                 >
                   Player
                 </button>
@@ -846,32 +847,18 @@ export default function AdminDashboard() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-background border border-border shadow-sm rounded-xl p-1 mb-8">
-          <div className="flex space-x-1">
-            {[
-              { key: 'overview', label: 'Overview', icon: '📊' },
-              { key: 'groups', label: 'Groups', icon: '👥' },
-              { key: 'users', label: 'Users', icon: '🧑‍💼' },
-              { key: 'players', label: 'Players', icon: '⚽' },
-              { key: 'skills', label: 'Skills', icon: '🎯' }
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key as 'overview' | 'groups' | 'users' | 'players' | 'skills')}
-                className={`
-                  flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200
-                  ${activeTab === tab.key
-                    ? 'bg-primary text-white shadow-lg'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-secondary-50'
-                  }
-                `}
-              >
-                <span>{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <ResponsiveTabs
+          tabs={[
+            { id: 'overview', label: 'Overview', icon: <span>📊</span> },
+            { id: 'groups', label: 'Groups', icon: <span>👥</span> },
+            { id: 'users', label: 'Users', icon: <span>🧑‍💼</span> },
+            { id: 'players', label: 'Players', icon: <span>⚽</span> },
+            { id: 'skills', label: 'Skills', icon: <span>🎯</span> }
+          ]}
+          activeTab={activeTab}
+          onChange={(tabId) => setActiveTab(tabId as 'overview' | 'groups' | 'users' | 'players' | 'skills')}
+          className="mb-6 sm:mb-8"
+        />
 
         {/* Tab Content */}
         <div className="bg-background border border-border shadow-sm rounded-xl p-6">
@@ -955,12 +942,12 @@ export default function AdminDashboard() {
 
           {activeTab === 'users' && (
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-text-primary">Staff Management</h2>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-text-primary">Staff Management</h2>
                 <button
                   type="button"
                   onClick={handleCreateUser}
-                  className="px-4 py-2 bg-gradient-to-r from-primary to-primary-hover hover:from-primary-hover hover:to-primary/80 rounded-lg text-text-primary font-medium transition-all duration-200"
+                  className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-primary to-primary-hover hover:from-primary-hover hover:to-primary/80 rounded-lg text-text-primary text-sm sm:text-base font-medium transition-all duration-200"
                 >
                   Add Staff Member
                 </button>
@@ -1011,31 +998,31 @@ export default function AdminDashboard() {
 
               {/* Pagination Controls */}
               {usersPagination.totalElements > 0 && (
-                <div className="flex items-center justify-between mt-6 p-4 bg-secondary-50 rounded-lg">
-                  <div className="text-sm text-text-secondary">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6 p-4 bg-secondary-50 rounded-lg">
+                  <div className="text-xs sm:text-sm text-text-secondary text-center sm:text-left">
                     Showing {usersPagination.page * usersPagination.size + 1} to {Math.min((usersPagination.page + 1) * usersPagination.size, usersPagination.totalElements)} of {usersPagination.totalElements} staff members
                   </div>
-                  
+
                   {usersPagination.totalPages > 1 && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       <button
                         type="button"
                         onClick={() => setUsersPagination(prev => ({ ...prev, page: Math.max(0, prev.page - 1) }))}
                         disabled={usersPagination.page === 0}
-                        className="px-3 py-1 bg-background hover:bg-background/20 disabled:opacity-50 disabled:cursor-not-allowed rounded text-text-primary text-sm transition-colors"
+                        className="px-3 py-1 bg-background hover:bg-background/20 disabled:opacity-50 disabled:cursor-not-allowed rounded text-text-primary text-xs sm:text-sm transition-colors"
                       >
                         Previous
                       </button>
-                      
-                      <span className="text-sm text-text-secondary">
+
+                      <span className="text-xs sm:text-sm text-text-secondary whitespace-nowrap">
                         Page {usersPagination.page + 1} of {usersPagination.totalPages}
                       </span>
-                      
+
                       <button
                         type="button"
                         onClick={() => setUsersPagination(prev => ({ ...prev, page: Math.min(prev.totalPages - 1, prev.page + 1) }))}
                         disabled={usersPagination.page >= usersPagination.totalPages - 1}
-                        className="px-3 py-1 bg-background hover:bg-background/20 disabled:opacity-50 disabled:cursor-not-allowed rounded text-text-primary text-sm transition-colors"
+                        className="px-3 py-1 bg-background hover:bg-background/20 disabled:opacity-50 disabled:cursor-not-allowed rounded text-text-primary text-xs sm:text-sm transition-colors"
                       >
                         Next
                       </button>
@@ -1048,12 +1035,12 @@ export default function AdminDashboard() {
 
           {activeTab === 'players' && (
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-text-primary">Player Management</h2>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-text-primary">Player Management</h2>
                 <button
                   type="button"
                   onClick={handleCreatePlayer}
-                  className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg text-text-primary font-medium transition-all duration-200"
+                  className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg text-text-primary text-sm sm:text-base font-medium transition-all duration-200"
                 >
                   Add Player
                 </button>
@@ -1101,31 +1088,31 @@ export default function AdminDashboard() {
 
               {/* Pagination Controls */}
               {playersPagination.totalElements > 0 && (
-                <div className="flex items-center justify-between mt-6 p-4 bg-secondary-50 rounded-lg">
-                  <div className="text-sm text-text-secondary">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6 p-4 bg-secondary-50 rounded-lg">
+                  <div className="text-xs sm:text-sm text-text-secondary text-center sm:text-left">
                     Showing {playersPagination.page * playersPagination.size + 1} to {Math.min((playersPagination.page + 1) * playersPagination.size, playersPagination.totalElements)} of {playersPagination.totalElements} players
                   </div>
-                  
+
                   {playersPagination.totalPages > 1 && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       <button
                         type="button"
                         onClick={() => setPlayersPagination(prev => ({ ...prev, page: Math.max(0, prev.page - 1) }))}
                         disabled={playersPagination.page === 0}
-                        className="px-3 py-1 bg-background hover:bg-background/20 disabled:opacity-50 disabled:cursor-not-allowed rounded text-text-primary text-sm transition-colors"
+                        className="px-3 py-1 bg-background hover:bg-background/20 disabled:opacity-50 disabled:cursor-not-allowed rounded text-text-primary text-xs sm:text-sm transition-colors"
                       >
                         Previous
                       </button>
-                      
-                      <span className="text-sm text-text-secondary">
+
+                      <span className="text-xs sm:text-sm text-text-secondary whitespace-nowrap">
                         Page {playersPagination.page + 1} of {playersPagination.totalPages}
                       </span>
-                      
+
                       <button
                         type="button"
                         onClick={() => setPlayersPagination(prev => ({ ...prev, page: Math.min(prev.totalPages - 1, prev.page + 1) }))}
                         disabled={playersPagination.page >= playersPagination.totalPages - 1}
-                        className="px-3 py-1 bg-background hover:bg-background/20 disabled:opacity-50 disabled:cursor-not-allowed rounded text-text-primary text-sm transition-colors"
+                        className="px-3 py-1 bg-background hover:bg-background/20 disabled:opacity-50 disabled:cursor-not-allowed rounded text-text-primary text-xs sm:text-sm transition-colors"
                       >
                         Next
                       </button>
