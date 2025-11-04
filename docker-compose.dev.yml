@@ -32,7 +32,7 @@ services:
 
   # Spring Boot Backend (Development mode)
   backend:
-    image: openjdk:17-jdk-slim
+    image: eclipse-temurin:17-jdk-alpine
     container_name: batal-backend-dev
     working_dir: /app
     volumes:
