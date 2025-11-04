@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { logout } from "@/store/authSlice";
 import { RoleGuard } from "@/components/RoleGuard";
 import { UserRole } from "@/types/auth";
+import { ResponsiveLayout } from "@/components/responsive";
 import {
   UserCircleIcon,
   DocumentChartBarIcon,
@@ -55,76 +56,103 @@ export default function PlayerLayout({ children }: PlayerLayoutProps) {
 
   const isActive = (path: string) => pathname === path;
 
+  const navItemsForMobile = navigation.map((item) => ({
+    href: item.href,
+    label: item.name,
+    icon: <item.icon className="h-5 w-5" />,
+  }));
+
+  const logoComponent = (
+    <Link href="/player/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+      <div className="relative w-8 h-8">
+        <Image
+          src="/Logo.jpeg"
+          alt="Batal Sports Academy"
+          fill
+          className="object-contain"
+        />
+      </div>
+      <span className="text-lg font-bold text-gray-900">Batal</span>
+    </Link>
+  );
+
+  const sidebarContent = (
+    <>
+      {/* Logo for desktop sidebar */}
+      <div className="p-4 border-b border-gray-200">
+        <Link href="/player/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <div className="relative w-10 h-10">
+            <Image
+              src="/Logo.jpeg"
+              alt="Batal Sports Academy"
+              fill
+              className="object-contain"
+            />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">
+              Batal Academy
+            </h1>
+            <p className="text-xs text-gray-500">Player Portal</p>
+          </div>
+        </Link>
+      </div>
+
+      {/* Navigation */}
+      <nav className="p-4 space-y-2">
+        {navigation.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                isActive(item.href)
+                  ? "bg-blue-50 text-blue-600 shadow-sm"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+              <span>{item.name}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    </>
+  );
+
+  const topNavContent = (
+    <div className="flex justify-between items-center h-16 pl-14 lg:pl-0">
+      <div className="flex items-center">
+        <span className="text-sm sm:text-base text-gray-700">
+          Welcome, <span className="font-semibold">{user?.firstName || "Player"}</span>
+        </span>
+      </div>
+      <button
+        onClick={handleLogout}
+        className="flex items-center gap-2 px-3 py-2 sm:px-4 text-xs sm:text-sm text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-all duration-200"
+      >
+        <ArrowRightOnRectangleIcon className="h-4 w-4" />
+        <span className="hidden sm:inline">Logout</span>
+      </button>
+    </div>
+  );
+
   return (
     <RoleGuard allowedRoles={[UserRole.PARENT]}>
-      <div className="min-h-screen bg-background">
-        {/* Top Navigation Bar */}
-        <nav className="bg-background border-b border-border shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex items-center gap-3">
-                <Link href="/player/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                  <div className="relative w-10 h-10">
-                    <Image
-                      src="/Logo.jpeg"
-                      alt="Batal Sports Academy"
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <h1 className="text-2xl font-bold text-text-primary">
-                    Batal Academy
-                  </h1>
-                </Link>
-                <span className="ml-1 text-sm text-text-secondary">Player Portal</span>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <span className="text-text-primary">
-                  Welcome, {user?.firstName || "Player"}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-text-secondary hover:text-text-primary bg-secondary-100 hover:bg-secondary rounded-lg transition-all duration-200"
-                >
-                  <ArrowRightOnRectangleIcon className="h-4 w-4" />
-                  Logout
-                </button>
-              </div>
-            </div>
-          </div>
-        </nav>
-
-        <div className="flex">
-          {/* Sidebar */}
-          <aside className="w-64 min-h-[calc(100vh-4rem)] bg-secondary-50 border-r border-border">
-            <nav className="p-4 space-y-2">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                      isActive(item.href)
-                        ? "bg-primary/10 text-primary shadow-lg"
-                        : "text-text-primary hover:bg-secondary-100 hover:text-text-primary"
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span>{item.name}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-          </aside>
-
-          {/* Main Content */}
-          <main className="flex-1 p-8">
-            <div className="max-w-6xl mx-auto">{children}</div>
-          </main>
-        </div>
-      </div>
+      <ResponsiveLayout
+        sidebar={sidebarContent}
+        navItems={navItemsForMobile}
+        userInfo={{
+          name: user?.firstName || "Player",
+          role: "Player",
+        }}
+        onLogout={handleLogout}
+        logo={logoComponent}
+        topNav={topNavContent}
+      >
+        <div className="max-w-6xl mx-auto">{children}</div>
+      </ResponsiveLayout>
     </RoleGuard>
   );
 }
