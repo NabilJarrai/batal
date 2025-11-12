@@ -225,7 +225,6 @@ export const authAPI = {
     return apiRequest("/auth/resend-setup-email-by-email", {
       method: "POST",
       body: JSON.stringify({ email }),
-      requiresAuth: false, // Public endpoint
     });
   },
 

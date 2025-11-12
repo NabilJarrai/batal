@@ -42,6 +42,7 @@ export interface UserResponse {
   inactiveReason?: string;
   createdAt: string; // ISO datetime string
   updatedAt: string; // ISO datetime string
+  passwordSetAt?: string; // ISO datetime string - when user first set their password
   roles: string[];
   children?: ChildSummaryDTO[]; // For PARENT user type
 }
