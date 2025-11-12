@@ -4,6 +4,7 @@ import com.batal.dto.ForgotPasswordRequest;
 import com.batal.dto.LoginRequest;
 import com.batal.dto.LoginResponse;
 import com.batal.dto.RegisterRequest;
+import com.batal.dto.ResendSetupEmailRequest;
 import com.batal.dto.ResetPasswordRequest;
 import com.batal.dto.SetPasswordRequest;
 import com.batal.dto.UserResponse;
@@ -90,6 +91,34 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(500)
                     .body(Map.of("error", "Failed to send email", "message", e.getMessage()));
+        }
+    }
+
+    /**
+     * Resend password setup email by email address - public endpoint
+     * Used by unauthenticated users whose original setup link has expired.
+     *
+     * Security: Always returns success (doesn't reveal if email exists)
+     * Rate limiting: 5-minute cooldown between requests per email
+     */
+    @PostMapping("/resend-setup-email-by-email")
+    public ResponseEntity<?> resendSetupEmailByEmail(@Valid @RequestBody ResendSetupEmailRequest request) {
+        try {
+            authService.resendPasswordSetupEmailByEmail(request.getEmail());
+            return ResponseEntity.ok(Map.of(
+                    "message", "If your account exists and hasn't been set up yet, you will receive a new password setup link shortly.",
+                    "email", request.getEmail()
+            ));
+        } catch (com.batal.exception.BusinessRuleException e) {
+            // Rate limiting error - return specific message
+            return ResponseEntity.status(429)
+                    .body(Map.of("error", "Too many requests", "message", e.getMessage()));
+        } catch (Exception e) {
+            // For any other error, still return success for security
+            return ResponseEntity.ok(Map.of(
+                    "message", "If your account exists and hasn't been set up yet, you will receive a new password setup link shortly.",
+                    "email", request.getEmail()
+            ));
         }
     }
 

@@ -219,6 +219,16 @@ export const authAPI = {
     });
   },
 
+  resendSetupEmailByEmail: async (
+    email: string
+  ): Promise<{ message: string; email: string }> => {
+    return apiRequest("/auth/resend-setup-email-by-email", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+      requiresAuth: false, // Public endpoint
+    });
+  },
+
   // Password reset (forgot password)
   forgotPassword: async (
     email: string
