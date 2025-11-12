@@ -84,6 +84,9 @@ public class User {
     @Column(name = "password_set_at")
     private LocalDateTime passwordSetAt;
 
+    @Column(name = "password_setup_email_last_sent_at")
+    private LocalDateTime passwordSetupEmailLastSentAt;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_roles",
@@ -225,6 +228,14 @@ public class User {
 
     public void setPasswordSetAt(LocalDateTime passwordSetAt) {
         this.passwordSetAt = passwordSetAt;
+    }
+
+    public LocalDateTime getPasswordSetupEmailLastSentAt() {
+        return passwordSetupEmailLastSentAt;
+    }
+
+    public void setPasswordSetupEmailLastSentAt(LocalDateTime passwordSetupEmailLastSentAt) {
+        this.passwordSetupEmailLastSentAt = passwordSetupEmailLastSentAt;
     }
 
     public Set<Role> getRoles() {

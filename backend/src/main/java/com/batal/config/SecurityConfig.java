@@ -78,6 +78,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/reset-password").permitAll()
                         .requestMatchers("/auth/validate-setup-token").permitAll()
                         .requestMatchers("/auth/setup-password").permitAll()
+                        .requestMatchers("/auth/resend-setup-email-by-email").permitAll()
                         .requestMatchers("/public/**").permitAll()
                         .requestMatchers("/health").permitAll()
                         .requestMatchers("/error").permitAll()

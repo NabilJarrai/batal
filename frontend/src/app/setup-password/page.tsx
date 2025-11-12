@@ -27,6 +27,15 @@ function SetupPasswordForm() {
 
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
+  // Resend email state
+  const [resend, setResend] = useState({
+    email: '',
+    isResending: false,
+    success: false,
+    error: '',
+    cooldownSeconds: 0,
+  });
+
   // Redirect when authenticated
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -74,6 +83,73 @@ function SetupPasswordForm() {
       });
   }, [token]);
 
+  // Pre-fill email from validation response
+  useEffect(() => {
+    if (validation.userEmail && !resend.email) {
+      setResend((prev) => ({ ...prev, email: validation.userEmail }));
+    }
+  }, [validation.userEmail, resend.email]);
+
+  // Cooldown timer
+  useEffect(() => {
+    if (resend.cooldownSeconds > 0) {
+      const timer = setTimeout(() => {
+        setResend((prev) => ({ ...prev, cooldownSeconds: prev.cooldownSeconds - 1 }));
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resend.cooldownSeconds]);
+
+  const handleResendEmail = async () => {
+    if (!resend.email || resend.isResending || resend.cooldownSeconds > 0) return;
+
+    setResend((prev) => ({ ...prev, isResending: true, error: '', success: false }));
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/auth/resend-setup-email-by-email`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: resend.email }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.status === 429) {
+        // Rate limit error - extract seconds from message
+        const match = data.message.match(/(\d+) seconds/);
+        const seconds = match ? parseInt(match[1]) : 300;
+        setResend((prev) => ({
+          ...prev,
+          isResending: false,
+          error: data.message,
+          cooldownSeconds: seconds,
+        }));
+      } else if (response.ok) {
+        setResend((prev) => ({
+          ...prev,
+          isResending: false,
+          success: true,
+          cooldownSeconds: 300, // 5 minutes
+        }));
+      } else {
+        setResend((prev) => ({
+          ...prev,
+          isResending: false,
+          error: data.message || 'Failed to resend email',
+        }));
+      }
+    } catch (err) {
+      setResend((prev) => ({
+        ...prev,
+        isResending: false,
+        error: 'Network error. Please try again.',
+      }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -117,20 +193,91 @@ function SetupPasswordForm() {
   if (!validation.isValid) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-secondary-50">
-        <div className="max-w-md w-full bg-background rounded-2xl shadow-xl p-8 border border-border text-center">
-          <div className="mx-auto mb-4 p-3 bg-red-100 rounded-full w-fit">
-            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+        <div className="max-w-md w-full bg-background rounded-2xl shadow-xl p-8 border border-border">
+          <div className="text-center mb-6">
+            <div className="mx-auto mb-4 p-3 bg-red-100 rounded-full w-fit">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-text-primary mb-2">Invalid or Expired Link</h2>
+            <p className="text-text-secondary mb-4">{validation.message}</p>
           </div>
-          <h2 className="text-2xl font-bold text-text-primary mb-2">Invalid or Expired Link</h2>
-          <p className="text-text-secondary mb-6">{validation.message}</p>
-          <p className="text-sm text-text-secondary mb-6">
-            Please contact your administrator for a new password setup link.
-          </p>
-          <button onClick={() => router.push('/login')} className="btn-primary">
-            Go to Login
-          </button>
+
+          {/* Success Message */}
+          {resend.success && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-green-600 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-green-800">Email sent successfully!</p>
+                  <p className="text-sm text-green-700 mt-1">
+                    If your account exists, you'll receive a new setup link shortly. Please check your email.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {resend.error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <p className="text-sm text-red-800">{resend.error}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Resend Form */}
+          {!resend.success && (
+            <div className="mb-6">
+              <p className="text-sm text-text-secondary text-center mb-4">
+                Need a new link? Enter your email below:
+              </p>
+              <input
+                type="email"
+                value={resend.email}
+                onChange={(e) => setResend((prev) => ({ ...prev, email: e.target.value }))}
+                placeholder="your.email@example.com"
+                className="input-field w-full mb-4"
+                disabled={resend.isResending || resend.cooldownSeconds > 0}
+              />
+              <button
+                onClick={handleResendEmail}
+                disabled={!resend.email || resend.isResending || resend.cooldownSeconds > 0}
+                className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {resend.isResending ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Sending...
+                  </span>
+                ) : resend.cooldownSeconds > 0 ? (
+                  `Wait ${Math.floor(resend.cooldownSeconds / 60)}:${String(resend.cooldownSeconds % 60).padStart(2, '0')}`
+                ) : (
+                  'Resend Setup Email'
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Alternative Options */}
+          <div className="text-center">
+            <p className="text-sm text-text-secondary mb-4">
+              Or contact your administrator for assistance
+            </p>
+            <button onClick={() => router.push('/login')} className="btn-secondary w-full">
+              Go to Login
+            </button>
+          </div>
         </div>
       </div>
     );

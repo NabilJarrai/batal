@@ -22,7 +22,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
 import { useAuth } from '@/store/hooks';
 import { useNotification } from '@/contexts/NotificationContext';
-import { groupsAPI, usersAPI, playersAPI } from '@/lib/api';
+import { groupsAPI, usersAPI, playersAPI, authAPI } from '@/lib/api';
 import {
   GroupResponse,
   UserResponse,
@@ -457,6 +457,17 @@ export default function AdminDashboard() {
 
   const handleEditGroup = (groupId: number) => {
     setEditGroupModal({ isOpen: true, groupId });
+  };
+
+  // Resend setup email handler
+  const handleResendSetupEmail = async (userId: number) => {
+    try {
+      const user = users.find(u => u.id === userId);
+      const response = await authAPI.resendSetupEmail(userId);
+      showSuccess(`Password setup email sent to ${user?.email || 'user'}`);
+    } catch (error: any) {
+      showError(error.message || 'Failed to send password setup email');
+    }
   };
 
   // Delete handlers
@@ -988,6 +999,7 @@ export default function AdminDashboard() {
                       onActivate={(userId) => handleUserStatusUpdate(userId, true)}
                       onAssignChild={handleAssignChild}
                       onUnassignChild={handleUnassignChild}
+                      onResendSetupEmail={handleResendSetupEmail}
                       showActions={true}
                       assignedGroupsCount={coachInfo.assignedGroupsCount}
                       assignedGroupNames={coachInfo.assignedGroupNames}

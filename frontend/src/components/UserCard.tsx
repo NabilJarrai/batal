@@ -12,6 +12,7 @@ interface UserCardProps {
   onViewDetails?: (userId: number) => void;
   onAssignChild?: (userId: number) => void;
   onUnassignChild?: (userId: number, playerId: number) => void;
+  onResendSetupEmail?: (userId: number) => void;
   showActions?: boolean;
   isSelectable?: boolean;
   isSelected?: boolean;
@@ -29,6 +30,7 @@ export default function UserCard({
   onViewDetails,
   onAssignChild,
   onUnassignChild,
+  onResendSetupEmail,
   showActions = true,
   isSelectable = false,
   isSelected = false,
@@ -283,6 +285,22 @@ export default function UserCard({
               className="btn-outline btn-sm flex-1"
             >
               View Details
+            </button>
+          )}
+
+          {onResendSetupEmail && !user.passwordSetAt && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onResendSetupEmail(user.id);
+              }}
+              className="btn-primary btn-sm"
+              title="Resend password setup email"
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              Resend Email
             </button>
           )}
 

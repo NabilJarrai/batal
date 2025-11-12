@@ -283,6 +283,75 @@ public class AuthService {
 
         // Send email
         emailService.sendPasswordSetupEmail(user, tokenString);
+
+        // Update last sent timestamp
+        user.setPasswordSetupEmailLastSentAt(LocalDateTime.now());
+        userRepository.save(user);
+    }
+
+    /**
+     * Resend password setup email by email address (public endpoint)
+     * This method is called by unauthenticated users who need a new setup link.
+     *
+     * Security considerations:
+     * - Always returns success (doesn't reveal if email exists)
+     * - Enforces 5-minute rate limiting to prevent abuse
+     * - Only sends email if user exists, hasn't set password, and cooldown elapsed
+     */
+    @Transactional
+    public void resendPasswordSetupEmailByEmail(String email) {
+        // Find user by email - if not found, silently succeed (security best practice)
+        var userOpt = userRepository.findByEmail(email);
+
+        if (userOpt.isEmpty()) {
+            // Don't reveal that email doesn't exist - just return
+            // This prevents email enumeration attacks
+            return;
+        }
+
+        User user = userOpt.get();
+
+        // Check if user has already set password
+        if (user.getPasswordSetAt() != null) {
+            // User already set password, silently succeed
+            // They should use forgot-password flow instead
+            return;
+        }
+
+        // Check rate limiting (5-minute cooldown)
+        LocalDateTime lastSent = user.getPasswordSetupEmailLastSentAt();
+        if (lastSent != null) {
+            LocalDateTime cooldownExpires = lastSent.plusMinutes(5);
+            if (LocalDateTime.now().isBefore(cooldownExpires)) {
+                // Still in cooldown period - throw exception
+                long secondsRemaining = java.time.Duration.between(
+                    LocalDateTime.now(), cooldownExpires
+                ).getSeconds();
+                throw new BusinessRuleException(
+                    "Please wait " + secondsRemaining + " seconds before requesting another setup email"
+                );
+            }
+        }
+
+        // Invalidate existing tokens
+        tokenRepository.invalidateAllUserTokens(user.getId(), LocalDateTime.now());
+
+        // Generate new token
+        String tokenString = generateSecureToken();
+
+        PasswordSetupToken token = new PasswordSetupToken();
+        token.setUser(user);
+        token.setToken(tokenString);
+        token.setTokenType(TokenType.SETUP);
+        token.setExpiresAt(LocalDateTime.now().plusHours(tokenExpiryHours));
+        tokenRepository.save(token);
+
+        // Send email
+        emailService.sendPasswordSetupEmail(user, tokenString);
+
+        // Update last sent timestamp
+        user.setPasswordSetupEmailLastSentAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 
     /**
