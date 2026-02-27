@@ -101,4 +101,13 @@ public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
            "LEFT JOIN FETCH ss.skill " +
            "WHERE a.id = :assessmentId")
     Optional<Assessment> findByIdWithAllRelations(@Param("assessmentId") Long assessmentId);
+
+    // Fetch the most recent assessment for a player with skill scores eagerly loaded
+    @Query("SELECT a FROM Assessment a " +
+            "LEFT JOIN FETCH a.skillScores ss " +
+            "LEFT JOIN FETCH ss.skill " +
+            "WHERE a.player.id = :playerId " +
+            "ORDER BY a.assessmentDate DESC " +
+            "LIMIT 1")
+    Optional<Assessment> findLatestByPlayerIdWithSkillScores(@Param("playerId") Long playerId);
 }

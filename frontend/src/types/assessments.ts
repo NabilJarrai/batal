@@ -75,6 +75,21 @@ export interface AssessmentResponse {
   skillScores: SkillScore[];
 }
 
+// Latest scores response for pre-filling new assessments
+export interface LatestSkillScoresResponse {
+  isFirstAssessment: boolean;
+  lastAssessmentDate: string | null;
+  skillScores: LatestSkillScoreEntry[];
+}
+
+export interface LatestSkillScoreEntry {
+  skillId: number;
+  skillName: string;
+  skillCategory: SkillCategory;
+  score: number;
+  notes: string | null;
+}
+
 // UI specific types
 export interface AssessmentFormData {
   playerId: number | null;

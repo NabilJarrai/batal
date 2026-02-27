@@ -223,6 +223,32 @@ public class AssessmentController {
         }
     }
 
+    // ===== LATEST SCORES =====
+
+    /**
+     * Get the latest skill scores for a player to pre-fill new assessments.
+     * Returns scores from the most recent assessment, or defaults (score 1) for first-time players.
+     */
+    @GetMapping("/player/{playerId}/latest-scores")
+    public ResponseEntity<?> getLatestScoresForPlayer(@PathVariable Long playerId) {
+        try {
+            LatestSkillScoresResponse response = assessmentService.getLatestScoresForPlayer(playerId);
+            return ResponseEntity.ok(response);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "error", "Forbidden",
+                "message", "Access denied",
+                "status", 403
+            ));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", "Not Found",
+                "message", e.getMessage(),
+                "status", 404
+            ));
+        }
+    }
+
     // ===== ANALYTICS OPERATIONS =====
 
     /**

@@ -382,6 +382,51 @@ public class AssessmentService {
         );
     }
 
+    // ===== LATEST SCORES =====
+
+    @PreAuthorize("hasRole('COACH') or hasRole('ADMIN') or hasRole('MANAGER')")
+    @Transactional(readOnly = true)
+    public LatestSkillScoresResponse getLatestScoresForPlayer(Long playerId) {
+        User currentUser = getCurrentAuthenticatedUser();
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new EntityNotFoundException("Player not found with ID: " + playerId));
+
+        validateCanViewPlayerAssessments(currentUser, player.getUser());
+
+        Optional<Assessment> latestAssessment = assessmentRepository.findLatestByPlayerIdWithSkillScores(playerId);
+
+        if (latestAssessment.isPresent()) {
+            Assessment assessment = latestAssessment.get();
+            List<LatestSkillScoresResponse.SkillScoreEntry> entries = assessment.getSkillScores().stream()
+                    .map(ss -> new LatestSkillScoresResponse.SkillScoreEntry(
+                            ss.getSkill().getId(),
+                            ss.getSkill().getName(),
+                            ss.getSkill().getCategory(),
+                            ss.getScore(),
+                            ss.getNotes()
+                    ))
+                    .collect(Collectors.toList());
+
+            return new LatestSkillScoresResponse(false, assessment.getAssessmentDate(), entries);
+        } else {
+            // First assessment — return all applicable skills with score 1
+            List<Skill> applicableSkills = skillRepository
+                    .findByApplicableLevelsContainingAndIsActiveTrue(player.getUser().getLevel());
+
+            List<LatestSkillScoresResponse.SkillScoreEntry> entries = applicableSkills.stream()
+                    .map(skill -> new LatestSkillScoresResponse.SkillScoreEntry(
+                            skill.getId(),
+                            skill.getName(),
+                            skill.getCategory(),
+                            1,
+                            null
+                    ))
+                    .collect(Collectors.toList());
+
+            return new LatestSkillScoresResponse(true, null, entries);
+        }
+    }
+
     // ===== HELPER METHODS =====
 
     private Assessment findAssessmentById(Long assessmentId) {
@@ -572,7 +617,7 @@ public class AssessmentService {
                     .orElseThrow(() -> new EntityNotFoundException("Skill not found with ID: " + rating.getSkillId()));
 
             // Get previous score if exists
-            Integer previousScore = getPreviousSkillScore(assessment.getPlayer().getUser(), skill);
+            Integer previousScore = getPreviousSkillScore(assessment.getPlayer(), skill);
 
             SkillScore skillScore = new SkillScore();
             skillScore.setAssessment(assessment);
@@ -607,7 +652,7 @@ public class AssessmentService {
                 existingScore.setNotes(rating.getNotes());
             } else {
                 // Create new skill score
-                Integer previousScore = getPreviousSkillScore(assessment.getPlayer().getUser(), skill);
+                Integer previousScore = getPreviousSkillScore(assessment.getPlayer(), skill);
 
                 SkillScore skillScore = new SkillScore();
                 skillScore.setAssessment(assessment);
@@ -631,10 +676,13 @@ public class AssessmentService {
         }
     }
 
-    private Integer getPreviousSkillScore(User player, Skill skill) {
-        // TODO: Update SkillScoreRepository to work with User entities
-        // For now, return null - previous scores will be calculated differently
-        return null;
+    private Integer getPreviousSkillScore(Player player, Skill skill) {
+        return assessmentRepository.findLatestByPlayerIdWithSkillScores(player.getId())
+                .flatMap(assessment -> assessment.getSkillScores().stream()
+                        .filter(ss -> ss.getSkill().getId().equals(skill.getId()))
+                        .map(SkillScore::getScore)
+                        .findFirst())
+                .orElse(null);
     }
 
     private void updateAssessmentFields(Assessment assessment, AssessmentUpdateRequest request) {

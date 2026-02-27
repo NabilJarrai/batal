@@ -7,7 +7,8 @@ import {
   AssessmentFilters,
   AssessmentSummary,
   AssessmentHistory,
-  AssessmentPeriod
+  AssessmentPeriod,
+  LatestSkillScoresResponse
 } from '@/types/assessments';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
@@ -304,6 +305,16 @@ class AssessmentsAPI {
     });
     
     return this.handleResponse<Assessment[]>(response);
+  }
+
+  // Latest scores for pre-filling new assessments
+  async getLatestScores(playerId: number): Promise<LatestSkillScoresResponse> {
+    const response = await fetch(`${API_BASE}/assessments/player/${playerId}/latest-scores`, {
+      method: 'GET',
+      headers: await this.getAuthHeaders(),
+    });
+
+    return this.handleResponse<LatestSkillScoresResponse>(response);
   }
 
   // Player-specific operations

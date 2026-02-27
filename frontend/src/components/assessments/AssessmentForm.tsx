@@ -138,7 +138,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
             const skillsForLevel = await skillsAPI.getSkillsForAssessment(player.level as any);
             setSkills(skillsForLevel);
 
-            // Initialize skill scores for new assessments or when player changes
+            // Initialize and pre-fill skill scores for new assessments
             if (isCreating || !assessment) {
               const initialScores: { [skillId: number]: SkillScoreFormData } = {};
               skillsForLevel.forEach(skill => {
@@ -148,6 +148,20 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                   notes: ''
                 };
               });
+
+              // Pre-fill from latest assessment scores
+              try {
+                const latest = await assessmentsAPI.getLatestScores(player.id);
+                latest.skillScores.forEach(entry => {
+                  if (initialScores[entry.skillId]) {
+                    initialScores[entry.skillId].score = entry.score;
+                    initialScores[entry.skillId].notes = entry.notes || '';
+                  }
+                });
+              } catch (err) {
+                console.error('Failed to load latest scores for pre-fill:', err);
+              }
+
               setFormData(prev => ({ ...prev, skillScores: initialScores }));
             }
           } catch (err) {
