@@ -53,7 +53,7 @@ public class AssessmentService {
         validateCoachCanAssessPlayer(currentUser, player.getUser());
 
         // Check for duplicate assessments in the same month
-        validateNoDuplicateAssessment(player.getUser(), request.getAssessmentDate(), null);
+        validateNoDuplicateAssessment(player, request.getAssessmentDate(), null);
 
         // Validate skills belong to player's level
         validateSkillsForPlayerLevel(request.getSkillRatings(), player.getUser().getLevel());
@@ -177,7 +177,7 @@ public class AssessmentService {
         // Validate no duplicate if date is being changed
         if (request.getAssessmentDate() != null && 
             !request.getAssessmentDate().equals(assessment.getAssessmentDate())) {
-            validateNoDuplicateAssessment(assessment.getPlayer().getUser(), request.getAssessmentDate(), assessmentId);
+            validateNoDuplicateAssessment(assessment.getPlayer(), request.getAssessmentDate(), assessmentId);
         }
 
         // Update fields
@@ -533,23 +533,23 @@ public class AssessmentService {
         throw new SecurityException("Access denied to edit this assessment");
     }
 
-    private void validateNoDuplicateAssessment(User player, LocalDate assessmentDate, Long excludeAssessmentId) {
-        int year = assessmentDate.getYear();
-        int month = assessmentDate.getMonthValue();
-        
+    private void validateNoDuplicateAssessment(Player player, LocalDate assessmentDate, Long excludeAssessmentId) {
+        LocalDate startOfMonth = assessmentDate.withDayOfMonth(1);
+        LocalDate startOfNextMonth = startOfMonth.plusMonths(1);
+
         boolean exists;
         if (excludeAssessmentId != null) {
-            exists = assessmentRepository.existsByPlayerIdAndYearAndMonthAndIdNot(
-                player.getId(), year, month, excludeAssessmentId);
+            exists = assessmentRepository.existsByPlayerIdInMonthExcluding(
+                player.getId(), startOfMonth, startOfNextMonth, excludeAssessmentId);
         } else {
-            exists = assessmentRepository.existsByPlayerIdAndYearAndMonth(
-                player.getId(), year, month);
+            exists = assessmentRepository.existsByPlayerIdInMonth(
+                player.getId(), startOfMonth, startOfNextMonth);
         }
-        
+
         if (exists) {
             throw new IllegalStateException(
-                "An assessment already exists for this player in " + 
-                assessmentDate.getMonth() + " " + year);
+                "An assessment already exists for this player in " +
+                assessmentDate.getMonth() + " " + assessmentDate.getYear());
         }
     }
 

@@ -59,25 +59,25 @@ public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
     @Query("SELECT COUNT(a) FROM Assessment a WHERE a.assessor = :assessor")
     long countByAssessor(@Param("assessor") User assessor);
     
-    // Duplicate prevention methods (using Player ID)
+    // Duplicate prevention methods (using Player ID with portable date-range comparisons)
     @Query("SELECT a FROM Assessment a WHERE a.player.id = :playerId AND " +
-           "YEAR(a.assessmentDate) = :year AND MONTH(a.assessmentDate) = :month")
-    List<Assessment> findByPlayerIdAndYearAndMonth(@Param("playerId") Long playerId, 
-                                                 @Param("year") int year, 
-                                                 @Param("month") int month);
-    
+           "a.assessmentDate >= :startOfMonth AND a.assessmentDate < :startOfNextMonth")
+    List<Assessment> findByPlayerIdAndMonth(@Param("playerId") Long playerId,
+                                           @Param("startOfMonth") LocalDate startOfMonth,
+                                           @Param("startOfNextMonth") LocalDate startOfNextMonth);
+
     @Query("SELECT COUNT(a) > 0 FROM Assessment a WHERE a.player.id = :playerId AND " +
-           "YEAR(a.assessmentDate) = :year AND MONTH(a.assessmentDate) = :month")
-    boolean existsByPlayerIdAndYearAndMonth(@Param("playerId") Long playerId, 
-                                          @Param("year") int year, 
-                                          @Param("month") int month);
-    
+           "a.assessmentDate >= :startOfMonth AND a.assessmentDate < :startOfNextMonth")
+    boolean existsByPlayerIdInMonth(@Param("playerId") Long playerId,
+                                   @Param("startOfMonth") LocalDate startOfMonth,
+                                   @Param("startOfNextMonth") LocalDate startOfNextMonth);
+
     @Query("SELECT COUNT(a) > 0 FROM Assessment a WHERE a.player.id = :playerId AND " +
-           "YEAR(a.assessmentDate) = :year AND MONTH(a.assessmentDate) = :month AND a.id != :assessmentId")
-    boolean existsByPlayerIdAndYearAndMonthAndIdNot(@Param("playerId") Long playerId, 
-                                                  @Param("year") int year, 
-                                                  @Param("month") int month, 
-                                                  @Param("assessmentId") Long assessmentId);
+           "a.assessmentDate >= :startOfMonth AND a.assessmentDate < :startOfNextMonth AND a.id != :assessmentId")
+    boolean existsByPlayerIdInMonthExcluding(@Param("playerId") Long playerId,
+                                            @Param("startOfMonth") LocalDate startOfMonth,
+                                            @Param("startOfNextMonth") LocalDate startOfNextMonth,
+                                            @Param("assessmentId") Long assessmentId);
     
     List<Assessment> findByAssessorIdOrderByAssessmentDateDesc(Long assessorId);
     

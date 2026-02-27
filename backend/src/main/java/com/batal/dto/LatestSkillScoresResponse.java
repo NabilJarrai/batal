@@ -1,6 +1,7 @@
 package com.batal.dto;
 
 import com.batal.entity.enums.SkillCategory;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -54,6 +55,7 @@ public class LatestSkillScoresResponse {
     }
 
     // Getters and Setters
+    @JsonProperty("isFirstAssessment")
     public boolean getIsFirstAssessment() { return isFirstAssessment; }
     public void setIsFirstAssessment(boolean isFirstAssessment) { this.isFirstAssessment = isFirstAssessment; }
 
