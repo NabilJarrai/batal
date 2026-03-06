@@ -1,10 +1,10 @@
 "use client";
 
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition, Listbox } from '@headlessui/react';
 import { PlayerDTO, Level, BasicFoot } from '@/types/players';
 import { AgeGroup } from '@/types/groups';
-import { apiClient } from '@/lib/apiClient';
+import { playersAPI, usersAPI } from '@/lib/api';
 import { AssignmentService } from '@/services/assignmentService';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -16,51 +16,114 @@ interface CreatePlayerModalProps {
   onComplete: (player: PlayerDTO) => void;
 }
 
-export default function CreatePlayerModal({ 
-  isOpen, 
-  onClose, 
-  onComplete 
+export default function CreatePlayerModal({
+  isOpen,
+  onClose,
+  onComplete
 }: CreatePlayerModalProps) {
-  const [formData, setFormData] = useState<Partial<PlayerDTO>>({
+  // Player form data (no email/phone — contact info lives on parent)
+  const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: '',
-    phone: '',
-    parentName: '',
     dateOfBirth: '',
     basicFoot: BasicFoot.RIGHT,
     level: Level.DEVELOPMENT,
     isActive: true,
-    joiningDate: new Date().toISOString().split('T')[0]
+    joiningDate: new Date().toISOString().split('T')[0],
+    emergencyContactName: '',
+    emergencyContactPhone: '',
   });
-  
+
   const [birthDate, setBirthDate] = useState<Date | null>(null);
   const [joiningDate, setJoiningDate] = useState<Date | null>(new Date());
+
+  // Parent state
+  const [parentSearchQuery, setParentSearchQuery] = useState('');
+  const [parentSearchResults, setParentSearchResults] = useState<any[]>([]);
+  const [selectedParent, setSelectedParent] = useState<any | null>(null);
+  const [isCreatingNewParent, setIsCreatingNewParent] = useState(false);
+  const [newParentData, setNewParentData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    gender: 'MALE' as string,
+  });
+  const [isSearchingParents, setIsSearchingParents] = useState(false);
 
   const [autoAssign, setAutoAssign] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Debounced parent search
+  useEffect(() => {
+    if (parentSearchQuery.length < 2 || isCreatingNewParent) {
+      setParentSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearchingParents(true);
+      try {
+        const results = await usersAPI.searchParents(parentSearchQuery);
+        setParentSearchResults(results);
+      } catch (err) {
+        console.error('Failed to search parents:', err);
+      } finally {
+        setIsSearchingParents(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [parentSearchQuery, isCreatingNewParent]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
-    
-    console.log('Submitting player data:', formData);
 
     try {
-      // Create the player
-      const createdPlayer = await apiClient.post<PlayerDTO>('/players', formData);
-      console.log('Player created successfully:', createdPlayer);
-      
-      // Auto-assign if requested
+      let parentId: number;
+
+      // Step 1: Create parent if new
+      if (isCreatingNewParent) {
+        if (!newParentData.firstName || !newParentData.lastName || !newParentData.email) {
+          setError('Please fill in parent first name, last name, and email');
+          setIsSubmitting(false);
+          return;
+        }
+        const createdParent = await usersAPI.create({
+          firstName: newParentData.firstName,
+          lastName: newParentData.lastName,
+          email: newParentData.email,
+          phone: newParentData.phone,
+          gender: newParentData.gender,
+          userType: 'PARENT',
+        });
+        parentId = createdParent.id;
+      } else if (selectedParent) {
+        parentId = selectedParent.id;
+      } else {
+        setError('Please select or create a parent');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Step 2: Create player with parentId
+      const createdPlayer = await playersAPI.create({
+        ...formData,
+        parentId,
+      });
+
+      // Step 3: Assign child to parent via join table
+      await usersAPI.assignChild(parentId, createdPlayer.id);
+
+      // Auto-assign group if requested
       if (autoAssign && formData.dateOfBirth) {
-        const group = await AssignmentService.autoAssignPlayer(createdPlayer);
-        if (group) {
-          console.log(`Player assigned to group: ${group.name}`);
-          // Update the player with the assigned group
-          createdPlayer.groupId = group.id;
-          createdPlayer.groupName = group.name;
+        try {
+          const updatedPlayer = await playersAPI.autoAssignGroup(createdPlayer.id);
+          createdPlayer.groupId = updatedPlayer.groupId;
+          createdPlayer.groupName = updatedPlayer.groupName;
+        } catch (err) {
+          console.error('Auto-assign failed:', err);
         }
       }
 
@@ -78,17 +141,21 @@ export default function CreatePlayerModal({
     setFormData({
       firstName: '',
       lastName: '',
-      email: '',
-      phone: '',
-      parentName: '',
       dateOfBirth: '',
       basicFoot: BasicFoot.RIGHT,
       level: Level.DEVELOPMENT,
       isActive: true,
-      joiningDate: new Date().toISOString().split('T')[0]
+      joiningDate: new Date().toISOString().split('T')[0],
+      emergencyContactName: '',
+      emergencyContactPhone: '',
     });
     setBirthDate(null);
     setJoiningDate(new Date());
+    setParentSearchQuery('');
+    setParentSearchResults([]);
+    setSelectedParent(null);
+    setIsCreatingNewParent(false);
+    setNewParentData({ firstName: '', lastName: '', email: '', phone: '', gender: 'MALE' });
     setAutoAssign(true);
     setError(null);
     onClose();
@@ -137,7 +204,148 @@ export default function CreatePlayerModal({
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* Personal Information */}
+                  {/* ===== Section 1: Parent ===== */}
+                  <div className="border border-border rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-text-primary mb-3">Parent / Guardian</h4>
+
+                    {!isCreatingNewParent ? (
+                      <>
+                        {/* Parent Search */}
+                        {!selectedParent ? (
+                          <div>
+                            <input
+                              type="text"
+                              value={parentSearchQuery}
+                              onChange={(e) => setParentSearchQuery(e.target.value)}
+                              placeholder="Search existing parent by name or email..."
+                              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                            {isSearchingParents && (
+                              <p className="text-xs text-text-secondary mt-1">Searching...</p>
+                            )}
+                            {parentSearchResults.length > 0 && (
+                              <div className="mt-2 border border-border rounded-lg max-h-40 overflow-y-auto">
+                                {parentSearchResults.map((parent) => (
+                                  <button
+                                    key={parent.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedParent(parent);
+                                      setParentSearchQuery('');
+                                      setParentSearchResults([]);
+                                    }}
+                                    className="w-full p-2 text-left hover:bg-secondary border-b border-border last:border-b-0 transition-colors"
+                                  >
+                                    <p className="text-sm font-medium text-text-primary">
+                                      {parent.firstName} {parent.lastName}
+                                    </p>
+                                    <p className="text-xs text-text-secondary">{parent.email}</p>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                            {parentSearchQuery.length >= 2 && !isSearchingParents && parentSearchResults.length === 0 && (
+                              <p className="text-xs text-text-secondary mt-1">No parents found</p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                            <div>
+                              <p className="text-sm font-medium text-text-primary">
+                                {selectedParent.firstName} {selectedParent.lastName}
+                              </p>
+                              <p className="text-xs text-text-secondary">{selectedParent.email}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedParent(null)}
+                              className="text-xs text-accent-red hover:underline"
+                            >
+                              Change
+                            </button>
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsCreatingNewParent(true);
+                            setSelectedParent(null);
+                            setParentSearchQuery('');
+                            setParentSearchResults([]);
+                          }}
+                          className="mt-2 text-xs text-primary hover:underline"
+                        >
+                          + Create new parent
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {/* New Parent Form */}
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-text-secondary mb-1">First Name *</label>
+                              <input
+                                type="text"
+                                required
+                                value={newParentData.firstName}
+                                onChange={(e) => setNewParentData({...newParentData, firstName: e.target.value})}
+                                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                placeholder="Parent first name"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-text-secondary mb-1">Last Name *</label>
+                              <input
+                                type="text"
+                                required
+                                value={newParentData.lastName}
+                                onChange={(e) => setNewParentData({...newParentData, lastName: e.target.value})}
+                                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                placeholder="Parent last name"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-text-secondary mb-1">Email *</label>
+                              <input
+                                type="email"
+                                required
+                                value={newParentData.email}
+                                onChange={(e) => setNewParentData({...newParentData, email: e.target.value})}
+                                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                placeholder="parent@example.com"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-text-secondary mb-1">Phone</label>
+                              <input
+                                type="tel"
+                                value={newParentData.phone}
+                                onChange={(e) => setNewParentData({...newParentData, phone: e.target.value})}
+                                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                placeholder="+1234567890"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsCreatingNewParent(false);
+                            setNewParentData({ firstName: '', lastName: '', email: '', phone: '', gender: 'MALE' });
+                          }}
+                          className="mt-2 text-xs text-text-secondary hover:underline"
+                        >
+                          ← Search existing parent instead
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* ===== Section 2: Player Details ===== */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-text-secondary mb-1">
@@ -168,52 +376,7 @@ export default function CreatePlayerModal({
                     </div>
                   </div>
 
-                  {/* Contact Information */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-secondary mb-1">
-                        Email *
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        value={formData.email}
-                        onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="player@example.com"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-text-secondary mb-1">
-                        Phone
-                      </label>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="+1234567890"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Parent Information */}
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-1">
-                      Parent/Guardian Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.parentName}
-                      onChange={(e) => setFormData({...formData, parentName: e.target.value})}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Enter parent/guardian name"
-                    />
-                  </div>
-
-                  {/* Player Details */}
+                  {/* Date fields */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-text-secondary mb-1">
@@ -279,8 +442,8 @@ export default function CreatePlayerModal({
                       <label className="block text-sm font-medium text-text-secondary mb-1">
                         Preferred Foot
                       </label>
-                      <Listbox 
-                        value={formData.basicFoot} 
+                      <Listbox
+                        value={formData.basicFoot}
                         onChange={(value) => setFormData({...formData, basicFoot: value})}
                       >
                         <div className="relative">
@@ -322,8 +485,8 @@ export default function CreatePlayerModal({
                       <label className="block text-sm font-medium text-text-secondary mb-1">
                         Level
                       </label>
-                      <Listbox 
-                        value={formData.level} 
+                      <Listbox
+                        value={formData.level}
                         onChange={(value) => setFormData({...formData, level: value})}
                       >
                         <div className="relative">
@@ -362,7 +525,35 @@ export default function CreatePlayerModal({
                     </div>
                   </div>
 
-                  {/* Auto-assign Option */}
+                  {/* Emergency Contact */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
+                        Emergency Contact Name
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.emergencyContactName}
+                        onChange={(e) => setFormData({...formData, emergencyContactName: e.target.value})}
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="Emergency contact name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
+                        Emergency Contact Phone
+                      </label>
+                      <input
+                        type="tel"
+                        value={formData.emergencyContactPhone}
+                        onChange={(e) => setFormData({...formData, emergencyContactPhone: e.target.value})}
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="+1234567890"
+                      />
+                    </div>
+                  </div>
+
+                  {/* ===== Section 3: Auto-assign ===== */}
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
                     <label className="flex items-center space-x-3">
                       <input

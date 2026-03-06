@@ -245,9 +245,11 @@ export default function AutoAssignmentModal({
                                       {player.level}
                                     </span>
                                   </div>
-                                  <p className="text-xs text-text-secondary">
-                                    {player.email}
-                                  </p>
+                                  {player.parentName && (
+                                    <p className="text-xs text-text-secondary">
+                                      Parent: {player.parentName}
+                                    </p>
+                                  )}
                                 </div>
                               </div>
                               <div className="text-right">

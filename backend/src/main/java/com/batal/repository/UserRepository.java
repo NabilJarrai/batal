@@ -47,4 +47,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r.name = 'ADMIN' AND u.isActive = true")
     long countActiveAdminUsers();
 
+    @Query("SELECT u FROM User u WHERE u.userType = 'PARENT' AND (" +
+            "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :search, '%')))")
+    List<User> searchParents(@Param("search") String search);
+
 }

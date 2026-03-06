@@ -4,7 +4,6 @@ import com.batal.entity.enums.Gender;
 import com.batal.entity.enums.Level;
 import com.batal.entity.enums.BasicFoot;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -35,12 +34,6 @@ public class Player {
     @NotBlank
     @Column(name = "last_name", nullable = false, length = 100)
     private String lastName;
-
-    @Email
-    @Column(unique = true, nullable = false)
-    private String email;
-
-    private String phone;
 
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
@@ -207,7 +200,6 @@ public class Player {
                 "id=" + id +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
-                ", email='" + email + '\'' +
                 ", playerNumber='" + playerNumber + '\'' +
                 ", position='" + position + '\'' +
                 '}';

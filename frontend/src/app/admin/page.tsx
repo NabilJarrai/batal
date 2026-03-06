@@ -1063,7 +1063,7 @@ export default function AdminDashboard() {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search players by name or email..."
+                    placeholder="Search players by name..."
                     value={playersPagination.search}
                     onChange={(e) => {
                       setPlayersPagination(prev => ({

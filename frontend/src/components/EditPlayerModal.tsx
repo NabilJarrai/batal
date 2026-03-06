@@ -25,12 +25,9 @@ export default function EditPlayerModal({
   const [formData, setFormData] = useState<Partial<PlayerDTO>>({
     firstName: '',
     lastName: '',
-    email: '',
-    phone: '',
-    parentName: '',
     dateOfBirth: '',
-    joiningDate: '', // Add joiningDate field
-    groupId: undefined, // Add groupId field to preserve group assignment
+    joiningDate: '',
+    groupId: undefined,
     basicFoot: BasicFoot.RIGHT,
     level: Level.DEVELOPMENT,
     isActive: true
@@ -57,16 +54,12 @@ export default function EditPlayerModal({
       setFormData({
         firstName: player.firstName || '',
         lastName: player.lastName || '',
-        email: player.email || '',
-        phone: player.phone || '',
-        parentName: player.parentName || '',
         dateOfBirth: player.dateOfBirth || '',
-        joiningDate: player.joiningDate || '', // Preserve existing joining date
-        groupId: player.groupId, // Preserve existing group assignment
+        joiningDate: player.joiningDate || '',
+        groupId: player.groupId,
         basicFoot: player.basicFoot || BasicFoot.RIGHT,
         level: player.level || Level.DEVELOPMENT,
         isActive: player.isActive,
-        // Preserve additional fields that might not be in the edit form
         gender: player.gender,
         address: player.address,
         emergencyContactName: player.emergencyContactName,
@@ -115,12 +108,9 @@ export default function EditPlayerModal({
     setFormData({
       firstName: '',
       lastName: '',
-      email: '',
-      phone: '',
-      parentName: '',
       dateOfBirth: '',
-      joiningDate: '', // Reset joiningDate as well
-      groupId: undefined, // Reset groupId as well
+      joiningDate: '',
+      groupId: undefined,
       basicFoot: BasicFoot.RIGHT,
       level: Level.DEVELOPMENT,
       isActive: true
@@ -242,51 +232,6 @@ export default function EditPlayerModal({
                         placeholder="Enter last name"
                       />
                     </div>
-                  </div>
-
-                  {/* Contact Information */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-caption mb-1">
-                        Email *
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        value={formData.email}
-                        onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        className="input-base"
-                        placeholder="player@example.com"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-caption mb-1">
-                        Phone
-                      </label>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        className="input-base"
-                        placeholder="+1234567890"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Parent Information */}
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-1">
-                      Parent/Guardian Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.parentName}
-                      onChange={(e) => setFormData({...formData, parentName: e.target.value})}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Enter parent/guardian name"
-                    />
                   </div>
 
                   {/* Player Details */}

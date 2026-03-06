@@ -18,12 +18,11 @@ export interface PlayerDTO {
   id?: number;
   firstName: string;
   lastName: string;
-  email: string;
-  phone?: string;
   dateOfBirth?: string; // ISO date string
   gender?: Gender;
   address?: string;
-  parentName: string;
+  parentId?: number;
+  parentName?: string;
   joiningDate?: string; // ISO date string
   level: Level;
   basicFoot?: BasicFoot;
@@ -33,7 +32,7 @@ export interface PlayerDTO {
   inactiveReason?: string;
   createdAt?: string; // ISO datetime string
   updatedAt?: string; // ISO datetime string
-  
+
   // Group information
   groupId?: number;
   groupName?: string;

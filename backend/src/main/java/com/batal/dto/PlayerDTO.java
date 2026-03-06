@@ -16,14 +16,6 @@ public class PlayerDTO {
     @Size(max = 100, message = "Last name must not exceed 100 characters")
     private String lastName;
     
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
-    @Size(max = 255, message = "Email must not exceed 255 characters")
-    private String email;
-    
-    @Size(max = 20, message = "Phone must not exceed 20 characters")
-    private String phone;
-    
     private LocalDate dateOfBirth;
     
     private Gender gender;
@@ -32,6 +24,7 @@ public class PlayerDTO {
     private String address;
 
     // Parent relationship (computed from parent User entity)
+    @NotNull(message = "Parent is required")
     private Long parentId;
 
     @Size(max = 200, message = "Parent name must not exceed 200 characters")
@@ -72,10 +65,9 @@ public class PlayerDTO {
     // Constructors
     public PlayerDTO() {}
     
-    public PlayerDTO(String firstName, String lastName, String email, String parentName, Level level) {
+    public PlayerDTO(String firstName, String lastName, String parentName, Level level) {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.email = email;
         this.parentName = parentName;
         this.level = level;
         this.isActive = true;
@@ -91,12 +83,6 @@ public class PlayerDTO {
     
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
-    
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-    
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
     
     public LocalDate getDateOfBirth() { return dateOfBirth; }
     public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
@@ -163,7 +149,6 @@ public class PlayerDTO {
                 "id=" + id +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
-                ", email='" + email + '\'' +
                 ", level=" + level +
                 ", isActive=" + isActive +
                 '}';

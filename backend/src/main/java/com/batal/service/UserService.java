@@ -369,6 +369,19 @@ public class UserService {
     }
 
     /**
+     * Search for parents by name or email
+     */
+    @Transactional(readOnly = true)
+    public List<UserResponse> searchParents(String search) {
+        List<User> parents = userRepository.searchParents(search);
+        return parents.stream()
+                .map(user -> new UserResponse(user, user.getRoles().stream()
+                        .map(Role::getName)
+                        .collect(Collectors.toList())))
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Helper method to map Player entity to ChildSummaryDTO
      */
     private ChildSummaryDTO mapPlayerToChildSummary(Player player) {

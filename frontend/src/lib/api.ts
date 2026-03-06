@@ -332,6 +332,11 @@ export const usersAPI = {
     return apiRequest<UserResponse>("/users/me");
   },
 
+  // Parent search
+  searchParents: async (search: string): Promise<UserResponse[]> => {
+    return apiRequest<UserResponse[]>(`/users/parents/search?search=${encodeURIComponent(search)}`);
+  },
+
   // Parent-child management endpoints
   assignChild: async (
     parentId: number,
