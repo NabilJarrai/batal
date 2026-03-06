@@ -240,6 +240,23 @@ public class AssessmentController {
         }
     }
 
+    // ===== LATEST SCORES =====
+
+    /**
+     * Get the latest finalized scores for a player (one score per skill)
+     */
+    @GetMapping("/player/{playerId}/latest-scores")
+    public ResponseEntity<Map<Long, Integer>> getLatestScoresForPlayer(@PathVariable Long playerId) {
+        try {
+            Map<Long, Integer> latestScores = assessmentService.getLatestScoresForPlayer(playerId);
+            return ResponseEntity.ok(latestScores);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
     // ===== UTILITY ENDPOINTS =====
 
     /**

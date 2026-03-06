@@ -11,6 +11,7 @@ interface SkillRatingInputProps {
   disabled?: boolean;
   showDescription?: boolean;
   compact?: boolean;
+  previousScore?: number;
 }
 
 export const SkillRatingInput: React.FC<SkillRatingInputProps> = ({
@@ -19,7 +20,8 @@ export const SkillRatingInput: React.FC<SkillRatingInputProps> = ({
   onChange,
   disabled = false,
   showDescription = false,
-  compact = false
+  compact = false,
+  previousScore
 }) => {
   const [hoveredScore, setHoveredScore] = useState<number>(0);
 
@@ -54,6 +56,11 @@ export const SkillRatingInput: React.FC<SkillRatingInputProps> = ({
         <div className="flex items-center justify-between mb-2">
           <div className="flex-1 min-w-0">
             <h4 className="font-medium text-text-primary text-sm truncate">{skill.name}</h4>
+            {previousScore !== undefined && (
+              <span className="ml-2 px-1.5 py-0.5 bg-gray-100 text-gray-500 text-xs rounded flex-shrink-0">
+                Prev: {previousScore}
+              </span>
+            )}
             {showDescription && skill.description && (
               <p className="text-xs text-text-secondary mt-1 line-clamp-1">{skill.description}</p>
             )}
@@ -116,6 +123,11 @@ export const SkillRatingInput: React.FC<SkillRatingInputProps> = ({
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <h3 className="font-bold text-xl text-text-primary">{skill.name}</h3>
+            {previousScore !== undefined && (
+              <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full">
+                Previous: {previousScore}
+              </span>
+            )}
             <div className={`
               px-3 py-1 rounded-full text-xs font-semibold transition-all
               ${currentScore > 0

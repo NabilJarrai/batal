@@ -58,6 +58,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isDraft, setIsDraft] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
+  const [previousScores, setPreviousScores] = useState<Record<number, number>>({});
 
   const isReadOnly = mode === 'view' || (assessment?.isFinalized && mode !== 'create');
   const isEditing = mode === 'edit';
@@ -149,6 +150,17 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 };
               });
               setFormData(prev => ({ ...prev, skillScores: initialScores }));
+
+              // Fetch latest scores for previous assessment recall
+              if (isCreating) {
+                try {
+                  const latestScores = await assessmentsAPI.getLatestScores(player.id);
+                  setPreviousScores(latestScores);
+                } catch (err) {
+                  console.error('Failed to load previous scores:', err);
+                  setPreviousScores({});
+                }
+              }
             }
           } catch (err) {
             console.error('Failed to load skills for player level:', err);
@@ -159,6 +171,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
         // Clear skills and selected player when no player is selected
         setSelectedPlayer(null);
         setSkills([]);
+        setPreviousScores({});
         if (isCreating) {
           setFormData(prev => ({ ...prev, skillScores: {} }));
         }
@@ -450,6 +463,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                           disabled={isReadOnly}
                           showDescription={false}
                           compact={true}
+                          previousScore={isCreating ? (previousScores[skill.id] ?? 1) : undefined}
                         />
                       ))}
                     </div>

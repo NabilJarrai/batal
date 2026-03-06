@@ -382,6 +382,22 @@ public class AssessmentService {
         );
     }
 
+    // ===== LATEST SCORES =====
+
+    @PreAuthorize("hasRole('COACH') or hasRole('ADMIN') or hasRole('MANAGER')")
+    @Transactional(readOnly = true)
+    public Map<Long, Integer> getLatestScoresForPlayer(Long playerId) {
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new EntityNotFoundException("Player not found with ID: " + playerId));
+
+        List<Object[]> results = skillScoreRepository.findLatestScoresByPlayerId(playerId);
+        Map<Long, Integer> latestScores = new HashMap<>();
+        for (Object[] row : results) {
+            latestScores.put((Long) row[0], (Integer) row[1]);
+        }
+        return latestScores;
+    }
+
     // ===== HELPER METHODS =====
 
     private Assessment findAssessmentById(Long assessmentId) {
@@ -630,9 +646,8 @@ public class AssessmentService {
     }
 
     private Integer getPreviousSkillScore(Player player, Skill skill) {
-        // TODO: Update SkillScoreRepository to work with Player entities
-        // For now, return null - previous scores will be calculated differently
-        return null;
+        List<Integer> scores = skillScoreRepository.findPreviousScoresByPlayerAndSkill(player.getId(), skill.getId());
+        return scores.isEmpty() ? null : scores.get(0);
     }
 
     private void updateAssessmentFields(Assessment assessment, AssessmentUpdateRequest request) {

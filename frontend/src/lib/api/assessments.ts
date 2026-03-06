@@ -121,6 +121,15 @@ class AssessmentsAPI {
     return this.handleResponse<AssessmentSummary>(response);
   }
 
+  // Latest scores for previous assessment recall
+  async getLatestScores(playerId: number): Promise<Record<number, number>> {
+    const response = await fetch(`${API_BASE}/assessments/player/${playerId}/latest-scores`, {
+      method: 'GET',
+      headers: await this.getAuthHeaders(),
+    });
+    return this.handleResponse<Record<number, number>>(response);
+  }
+
   // Coach-specific operations
   async getCoachAssessments(): Promise<Assessment[]> {
     const response = await fetch(`${API_BASE}/assessments/my-assessments`, {

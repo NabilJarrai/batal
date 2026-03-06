@@ -32,6 +32,8 @@ export interface SkillScore {
   skillCategory: SkillCategory;
   score: number; // 1-10 scale
   notes?: string;
+  previousScore?: number;
+  improvement?: number;
 }
 
 // Request DTOs for API calls
