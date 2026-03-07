@@ -17,5 +17,22 @@ import java.util.Optional;
 
 @Repository
 public interface SkillScoreRepository extends JpaRepository<SkillScore, Long> {
-    
+
+    @Query("SELECT ss.score FROM SkillScore ss " +
+           "WHERE ss.assessment.player.id = :playerId " +
+           "AND ss.skill.id = :skillId " +
+           "ORDER BY ss.assessment.assessmentDate DESC")
+    List<Integer> findLatestScoreByPlayerIdAndSkillId(
+        @Param("playerId") Long playerId,
+        @Param("skillId") Long skillId);
+
+    @Query("SELECT ss.score FROM SkillScore ss " +
+           "WHERE ss.assessment.player.id = :playerId " +
+           "AND ss.skill.id = :skillId " +
+           "AND ss.assessment.id != :excludeAssessmentId " +
+           "ORDER BY ss.assessment.assessmentDate DESC")
+    List<Integer> findLatestScoreByPlayerIdAndSkillIdExcludingAssessment(
+        @Param("playerId") Long playerId,
+        @Param("skillId") Long skillId,
+        @Param("excludeAssessmentId") Long excludeAssessmentId);
 }

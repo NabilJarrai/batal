@@ -76,8 +76,6 @@ public class PlayerController {
                 return "firstName";
             case "lastname":
                 return "lastName";
-            case "email":
-                return "email";
             case "fullname":
                 // For full name, we'll use firstName as the primary sort
                 return "firstName";

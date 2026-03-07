@@ -16,7 +16,6 @@ interface Player {
   id: number;
   firstName: string;
   lastName: string;
-  email: string;
   dateOfBirth?: string;
   groupName?: string;
   level?: string;
@@ -53,8 +52,7 @@ export default function AssignChildModal({
         const fullName = `${player.firstName || ""} ${
           player.lastName || ""
         }`.toLowerCase();
-        const email = (player.email || "").toLowerCase();
-        return fullName.includes(term) || email.includes(term);
+        return fullName.includes(term);
       });
       setFilteredPlayers(filtered);
     }
@@ -186,7 +184,7 @@ export default function AssignChildModal({
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Search by name or email..."
+                      placeholder="Search by name..."
                       className="input-base w-full"
                     />
                   </div>

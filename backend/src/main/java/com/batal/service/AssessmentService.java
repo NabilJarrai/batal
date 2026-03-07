@@ -105,6 +105,22 @@ public class AssessmentService {
     }
 
     @PreAuthorize("hasRole('COACH') or hasRole('ADMIN') or hasRole('MANAGER')")
+    public AssessmentResponse getLatestAssessmentByPlayerId(Long playerId) {
+        User currentUser = getCurrentAuthenticatedUser();
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new EntityNotFoundException("Player not found with ID: " + playerId));
+
+        validateCanViewPlayerAssessments(currentUser, player);
+
+        List<Assessment> assessments = assessmentRepository
+            .findByPlayerIdWithAllRelationsOrderByAssessmentDateDesc(playerId);
+        if (assessments.isEmpty()) {
+            return null;
+        }
+        return convertToAssessmentResponse(assessments.get(0));
+    }
+
+    @PreAuthorize("hasRole('COACH') or hasRole('ADMIN') or hasRole('MANAGER')")
     public List<AssessmentResponse> getAssessmentsByCoachId(Long coachId) {
         User currentUser = getCurrentAuthenticatedUser();
 
@@ -569,8 +585,8 @@ public class AssessmentService {
             Skill skill = skillRepository.findById(rating.getSkillId())
                     .orElseThrow(() -> new EntityNotFoundException("Skill not found with ID: " + rating.getSkillId()));
 
-            // Get previous score if exists
-            Integer previousScore = getPreviousSkillScore(assessment.getPlayer(), skill);
+            // Get previous score if exists (null = don't exclude any assessment)
+            Integer previousScore = getPreviousSkillScore(assessment.getPlayer(), skill, null);
 
             SkillScore skillScore = new SkillScore();
             skillScore.setAssessment(assessment);
@@ -604,8 +620,8 @@ public class AssessmentService {
                 existingScore.setScore(rating.getScore());
                 existingScore.setNotes(rating.getNotes());
             } else {
-                // Create new skill score
-                Integer previousScore = getPreviousSkillScore(assessment.getPlayer(), skill);
+                // Create new skill score (exclude current assessment to avoid self-reference)
+                Integer previousScore = getPreviousSkillScore(assessment.getPlayer(), skill, assessment.getId());
 
                 SkillScore skillScore = new SkillScore();
                 skillScore.setAssessment(assessment);
@@ -629,10 +645,16 @@ public class AssessmentService {
         }
     }
 
-    private Integer getPreviousSkillScore(Player player, Skill skill) {
-        // TODO: Update SkillScoreRepository to work with Player entities
-        // For now, return null - previous scores will be calculated differently
-        return null;
+    private Integer getPreviousSkillScore(Player player, Skill skill, Long excludeAssessmentId) {
+        List<Integer> scores;
+        if (excludeAssessmentId != null) {
+            scores = skillScoreRepository.findLatestScoreByPlayerIdAndSkillIdExcludingAssessment(
+                player.getId(), skill.getId(), excludeAssessmentId);
+        } else {
+            scores = skillScoreRepository.findLatestScoreByPlayerIdAndSkillId(
+                player.getId(), skill.getId());
+        }
+        return scores.isEmpty() ? null : scores.get(0);
     }
 
     private void updateAssessmentFields(Assessment assessment, AssessmentUpdateRequest request) {

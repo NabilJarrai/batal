@@ -113,6 +113,24 @@ public class AssessmentController {
     }
 
     /**
+     * Get the latest assessment for a player (used for pre-filling new assessments)
+     */
+    @GetMapping("/player/{playerId}/latest")
+    public ResponseEntity<AssessmentResponse> getLatestAssessmentByPlayerId(@PathVariable Long playerId) {
+        try {
+            AssessmentResponse response = assessmentService.getLatestAssessmentByPlayerId(playerId);
+            if (response == null) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(response);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    /**
      * Get assessments by coach ID
      */
     @GetMapping("/coach/{coachId}")

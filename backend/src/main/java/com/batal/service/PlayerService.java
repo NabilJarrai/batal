@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -50,22 +51,10 @@ public class PlayerService {
      * Create a new player with option for automatic group assignment
      */
     public PlayerDTO createPlayer(PlayerDTO playerDTO, boolean autoAssignGroup) {
-        // Check if email already exists
-        if (playerRepository.existsByEmail(playerDTO.getEmail())) {
-            throw new RuntimeException("Player with email " + playerDTO.getEmail() + " already exists");
-        }
-
-        // Check if user with this email already exists
-        if (userRepository.existsByEmail(playerDTO.getEmail())) {
-            throw new RuntimeException("User with email " + playerDTO.getEmail() + " already exists");
-        }
-
         // Create Player entity directly (no User needed - players don't authenticate)
         Player player = new Player();
         player.setFirstName(playerDTO.getFirstName());
         player.setLastName(playerDTO.getLastName());
-        player.setEmail(playerDTO.getEmail());
-        player.setPhone(playerDTO.getPhone());
         player.setDateOfBirth(playerDTO.getDateOfBirth());
         player.setGender(playerDTO.getGender());
         player.setAddress(playerDTO.getAddress());
@@ -90,7 +79,19 @@ public class PlayerService {
                 throw new RuntimeException("User with id " + playerDTO.getParentId() + " is not a parent");
             }
 
-            player.setParent(parent);
+            player.addParent(parent);
+        }
+
+        // Set second parent if provided
+        if (playerDTO.getParent2Id() != null) {
+            User parent2 = userRepository.findById(playerDTO.getParent2Id())
+                    .orElseThrow(() -> new RuntimeException("Parent not found with id: " + playerDTO.getParent2Id()));
+
+            if (parent2.getUserType() != UserType.PARENT) {
+                throw new RuntimeException("User with id " + playerDTO.getParent2Id() + " is not a parent");
+            }
+
+            player.addParent(parent2);
         }
 
         // Set group if provided, otherwise auto-assign if enabled
@@ -156,26 +157,11 @@ public class PlayerService {
     }
 
     /**
-     * Get player by email
-     */
-    @Transactional(readOnly = true)
-    public Optional<PlayerDTO> getPlayerByEmail(String email) {
-        Optional<Player> player = playerRepository.findByEmailWithGroup(email);
-        return player.map(this::convertToDTO);
-    }
-
-    /**
      * Update player
      */
     public PlayerDTO updatePlayer(Long id, PlayerDTO playerDTO) {
         Player existingPlayer = playerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Player not found with id: " + id));
-
-        // Check if email is being changed and if new email already exists
-        if (!existingPlayer.getEmail().equals(playerDTO.getEmail()) &&
-                playerRepository.existsByEmail(playerDTO.getEmail())) {
-            throw new RuntimeException("Player with email " + playerDTO.getEmail() + " already exists");
-        }
 
         // Update fields
         updatePlayerFields(existingPlayer, playerDTO);
@@ -378,8 +364,6 @@ public class PlayerService {
         // Get data directly from Player entity
         dto.setFirstName(player.getFirstName());
         dto.setLastName(player.getLastName());
-        dto.setEmail(player.getEmail());
-        dto.setPhone(player.getPhone());
         dto.setDateOfBirth(player.getDateOfBirth());
         dto.setGender(player.getGender());
         dto.setAddress(player.getAddress());
@@ -401,10 +385,17 @@ public class PlayerService {
             dto.setGroupName(player.getGroup().getName());
         }
 
-        // Set parent information
-        if (player.getParent() != null) {
-            dto.setParentId(player.getParent().getId());
-            dto.setParentName(player.getParent().getFullName());
+        // Set parent information (from many-to-many relationship)
+        if (player.hasParents()) {
+            List<User> parentList = player.getParents().stream()
+                    .sorted(Comparator.comparing(User::getId))
+                    .toList();
+            dto.setParentId(parentList.get(0).getId());
+            dto.setParentName(parentList.get(0).getFullName());
+            if (parentList.size() > 1) {
+                dto.setParent2Id(parentList.get(1).getId());
+                dto.setParent2Name(parentList.get(1).getFullName());
+            }
         }
 
         dto.setCreatedAt(player.getCreatedAt());
@@ -430,8 +421,6 @@ public class PlayerService {
         // Update all fields directly on Player entity
         player.setFirstName(dto.getFirstName());
         player.setLastName(dto.getLastName());
-        player.setEmail(dto.getEmail());
-        player.setPhone(dto.getPhone());
         player.setDateOfBirth(dto.getDateOfBirth());
         player.setGender(dto.getGender());
         player.setAddress(dto.getAddress());
@@ -445,19 +434,27 @@ public class PlayerService {
         player.setPlayerNumber(dto.getPlayerNumber());
         player.setPosition(dto.getPosition());
 
-        // Update parent relationship if provided
+        // Update parent relationships
+        player.getParents().clear();
         if (dto.getParentId() != null) {
             User parent = userRepository.findById(dto.getParentId())
                     .orElseThrow(() -> new RuntimeException("Parent not found with id: " + dto.getParentId()));
 
-            // Validate parent is actually a PARENT user type
             if (parent.getUserType() != UserType.PARENT) {
                 throw new RuntimeException("User with id " + dto.getParentId() + " is not a parent");
             }
 
-            player.setParent(parent);
-        } else {
-            player.setParent(null);  // Allow un-assigning parent
+            player.addParent(parent);
+        }
+        if (dto.getParent2Id() != null) {
+            User parent2 = userRepository.findById(dto.getParent2Id())
+                    .orElseThrow(() -> new RuntimeException("Parent not found with id: " + dto.getParent2Id()));
+
+            if (parent2.getUserType() != UserType.PARENT) {
+                throw new RuntimeException("User with id " + dto.getParent2Id() + " is not a parent");
+            }
+
+            player.addParent(parent2);
         }
 
         if (dto.getIsActive() != null) {

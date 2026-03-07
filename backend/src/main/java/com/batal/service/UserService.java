@@ -297,6 +297,25 @@ public class UserService {
         return new UserResponse(savedUser, roles);
     }
 
+    // ========== PARENT SEARCH ==========
+
+    /**
+     * Search parent users by name or email
+     */
+    @Transactional(readOnly = true)
+    public List<UserResponse> searchParentUsers(String query) {
+        List<User> parents;
+        if (query != null && !query.trim().isEmpty()) {
+            parents = userRepository.findParentUsersWithSearch(query.trim());
+        } else {
+            parents = userRepository.findByUserType(UserType.PARENT);
+        }
+        return parents.stream()
+                .map(user -> new UserResponse(user, user.getRoles().stream()
+                        .map(Role::getName).collect(Collectors.toList())))
+                .collect(Collectors.toList());
+    }
+
     // ========== PARENT-CHILD MANAGEMENT ==========
 
     /**
@@ -321,7 +340,13 @@ public class UserService {
                     " is already assigned to parent " + parent.getFullName());
         }
 
-        // Assign parent to player (now supports multiple parents)
+        // Check max 2 parents
+        if (player.getParents().size() >= 2) {
+            throw new BusinessRuleException("Player " + player.getFullName() +
+                    " already has 2 parents assigned");
+        }
+
+        // Assign parent to player
         player.addParent(parent);
         playerRepository.save(player);
 

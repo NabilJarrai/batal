@@ -116,8 +116,6 @@ public class ParentService {
         dto.setId(player.getId());
         dto.setFirstName(player.getFirstName());
         dto.setLastName(player.getLastName());
-        dto.setEmail(player.getEmail());
-        dto.setPhone(player.getPhone());
         dto.setDateOfBirth(player.getDateOfBirth());
         dto.setGender(player.getGender());
         dto.setAddress(player.getAddress());

@@ -142,6 +142,15 @@ public class UserController {
         return ResponseEntity.ok(availableCoaches);
     }
 
+    // GET /api/users/parents/search - Search parent users
+    @GetMapping("/parents/search")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<List<UserResponse>> searchParents(
+            @RequestParam(required = false) String query) {
+        List<UserResponse> parents = userService.searchParentUsers(query);
+        return ResponseEntity.ok(parents);
+    }
+
     // ========== PARENT-CHILD MANAGEMENT ENDPOINTS ==========
 
     // POST /api/users/{parentId}/children - Assign a child to a parent

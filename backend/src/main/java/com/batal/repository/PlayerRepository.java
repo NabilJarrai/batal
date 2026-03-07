@@ -14,12 +14,6 @@ import java.util.Optional;
 @Repository
 public interface PlayerRepository extends JpaRepository<Player, Long> {
 
-    // ========== EMAIL-BASED QUERIES ==========
-    boolean existsByEmail(String email);
-
-    @Query("SELECT p FROM Player p LEFT JOIN FETCH p.group WHERE p.email = :email")
-    Optional<Player> findByEmailWithGroup(@Param("email") String email);
-
     // ========== ID-BASED QUERIES WITH RELATIONSHIPS ==========
     @Query("SELECT p FROM Player p LEFT JOIN FETCH p.group WHERE p.id = :id")
     Optional<Player> findByIdWithGroup(@Param("id") Long id);
@@ -49,7 +43,6 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     @Query("SELECT p FROM Player p LEFT JOIN FETCH p.group WHERE " +
             "LOWER(p.firstName) LIKE LOWER(CONCAT('%', :search, '%')) " +
             "OR LOWER(p.lastName) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "OR LOWER(p.email) LIKE LOWER(CONCAT('%', :search, '%')) " +
             "OR LOWER(CONCAT(p.firstName, ' ', p.lastName)) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<Player> findAllWithGroupAndSearch(@Param("search") String search, Pageable pageable);
 

@@ -32,6 +32,8 @@ export interface SkillScore {
   skillCategory: SkillCategory;
   score: number; // 1-10 scale
   notes?: string;
+  previousScore?: number | null;
+  improvement?: number | null;
 }
 
 // Request DTOs for API calls
@@ -89,6 +91,7 @@ export interface SkillScoreFormData {
   skillId: number;
   score: number;
   notes: string;
+  previousScore?: number | null;
 }
 
 export interface AssessmentFilters {

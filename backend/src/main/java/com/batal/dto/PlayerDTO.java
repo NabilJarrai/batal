@@ -16,14 +16,6 @@ public class PlayerDTO {
     @Size(max = 100, message = "Last name must not exceed 100 characters")
     private String lastName;
     
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
-    @Size(max = 255, message = "Email must not exceed 255 characters")
-    private String email;
-    
-    @Size(max = 20, message = "Phone must not exceed 20 characters")
-    private String phone;
-    
     private LocalDate dateOfBirth;
     
     private Gender gender;
@@ -36,6 +28,12 @@ public class PlayerDTO {
 
     @Size(max = 200, message = "Parent name must not exceed 200 characters")
     private String parentName;  // Computed field for display only
+
+    // Second parent (optional)
+    private Long parent2Id;
+
+    @Size(max = 200, message = "Parent 2 name must not exceed 200 characters")
+    private String parent2Name;  // Computed field for display only
 
     private LocalDate joiningDate;
     
@@ -72,11 +70,9 @@ public class PlayerDTO {
     // Constructors
     public PlayerDTO() {}
     
-    public PlayerDTO(String firstName, String lastName, String email, String parentName, Level level) {
+    public PlayerDTO(String firstName, String lastName, Level level) {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.email = email;
-        this.parentName = parentName;
         this.level = level;
         this.isActive = true;
         this.joiningDate = LocalDate.now();
@@ -91,12 +87,6 @@ public class PlayerDTO {
     
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
-    
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-    
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
     
     public LocalDate getDateOfBirth() { return dateOfBirth; }
     public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
@@ -146,6 +136,12 @@ public class PlayerDTO {
     public Long getParentId() { return parentId; }
     public void setParentId(Long parentId) { this.parentId = parentId; }
 
+    public Long getParent2Id() { return parent2Id; }
+    public void setParent2Id(Long parent2Id) { this.parent2Id = parent2Id; }
+
+    public String getParent2Name() { return parent2Name; }
+    public void setParent2Name(String parent2Name) { this.parent2Name = parent2Name; }
+
     public String getPlayerNumber() { return playerNumber; }
     public void setPlayerNumber(String playerNumber) { this.playerNumber = playerNumber; }
 
@@ -163,7 +159,6 @@ public class PlayerDTO {
                 "id=" + id +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
-                ", email='" + email + '\'' +
                 ", level=" + level +
                 ", isActive=" + isActive +
                 '}';
