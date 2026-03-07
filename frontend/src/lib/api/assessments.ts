@@ -93,6 +93,17 @@ class AssessmentsAPI {
     return this.handleResponse<Assessment[]>(response);
   }
 
+  async getLatestByPlayer(playerId: number): Promise<Assessment | null> {
+    const response = await fetch(`${API_BASE}/assessments/player/${playerId}/latest`, {
+      method: 'GET',
+      headers: await this.getAuthHeaders(),
+    });
+    if (response.status === 204) {
+      return null;
+    }
+    return this.handleResponse<Assessment>(response);
+  }
+
   // Analytics and reporting
   async getSummary(filters?: AssessmentFilters): Promise<AssessmentSummary> {
     const params = new URLSearchParams();

@@ -350,6 +350,12 @@ export const usersAPI = {
       `/users/${parentId}/children/${playerId}`
     );
   },
+
+  searchParents: async (query?: string): Promise<UserResponse[]> => {
+    const params = new URLSearchParams();
+    if (query) params.append("query", query);
+    return apiRequest<UserResponse[]>(`/users/parents/search?${params.toString()}`);
+  },
 };
 
 // Players API calls

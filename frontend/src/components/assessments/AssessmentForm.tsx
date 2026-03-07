@@ -58,6 +58,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isDraft, setIsDraft] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
+  const [previousScores, setPreviousScores] = useState<{ [skillId: number]: number | null }>({});
 
   const isReadOnly = mode === 'view' || (assessment?.isFinalized && mode !== 'create');
   const isEditing = mode === 'edit';
@@ -140,15 +141,56 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
             // Initialize skill scores for new assessments or when player changes
             if (isCreating || !assessment) {
-              const initialScores: { [skillId: number]: SkillScoreFormData } = {};
-              skillsForLevel.forEach(skill => {
-                initialScores[skill.id] = {
-                  skillId: skill.id,
-                  score: 0,
-                  notes: ''
-                };
-              });
-              setFormData(prev => ({ ...prev, skillScores: initialScores }));
+              // Fetch the latest assessment to pre-fill scores
+              try {
+                const latestAssessment = await assessmentsAPI.getLatestByPlayer(player.id);
+                const initialScores: { [skillId: number]: SkillScoreFormData } = {};
+                const prevScores: { [skillId: number]: number | null } = {};
+
+                if (latestAssessment) {
+                  // Pre-fill from latest assessment scores
+                  const latestScoreMap: { [skillId: number]: number } = {};
+                  latestAssessment.skillScores.forEach(ss => {
+                    latestScoreMap[ss.skillId] = ss.score;
+                  });
+
+                  skillsForLevel.forEach(skill => {
+                    const prevScore = latestScoreMap[skill.id] ?? null;
+                    initialScores[skill.id] = {
+                      skillId: skill.id,
+                      score: prevScore ?? 1,
+                      notes: '',
+                      previousScore: prevScore,
+                    };
+                    prevScores[skill.id] = prevScore;
+                  });
+                } else {
+                  // First assessment — default all scores to 1, no previous scores
+                  skillsForLevel.forEach(skill => {
+                    initialScores[skill.id] = {
+                      skillId: skill.id,
+                      score: 1,
+                      notes: '',
+                    };
+                    prevScores[skill.id] = null;
+                  });
+                }
+
+                setFormData(prev => ({ ...prev, skillScores: initialScores }));
+                setPreviousScores(prevScores);
+              } catch (err) {
+                // Fallback: default all scores to 1 if fetching latest fails
+                const initialScores: { [skillId: number]: SkillScoreFormData } = {};
+                skillsForLevel.forEach(skill => {
+                  initialScores[skill.id] = {
+                    skillId: skill.id,
+                    score: 1,
+                    notes: '',
+                  };
+                });
+                setFormData(prev => ({ ...prev, skillScores: initialScores }));
+                setPreviousScores({});
+              }
             }
           } catch (err) {
             console.error('Failed to load skills for player level:', err);
@@ -450,6 +492,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                           disabled={isReadOnly}
                           showDescription={false}
                           compact={true}
+                          previousScore={previousScores[skill.id] ?? null}
                         />
                       ))}
                     </div>

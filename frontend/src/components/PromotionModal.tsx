@@ -147,10 +147,6 @@ export default function PromotionModal({
                         </span>
                       </div>
                       <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-text-secondary">Email:</span>
-                          <span className="text-text-secondary">{player.email}</span>
-                        </div>
                         {player.dateOfBirth && (
                           <div className="flex justify-between">
                             <span className="text-text-secondary">Age:</span>
