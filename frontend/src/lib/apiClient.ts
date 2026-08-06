@@ -16,21 +16,13 @@ class ApiClient {
     };
 
     const url = `${API_URL}${endpoint}`;
-    console.log('API Request:', options.method || 'GET', url);
-    console.log('Headers:', headers);
-    if (options.body) {
-      console.log('Body:', options.body);
-    }
 
     const response = await fetch(url, {
       ...options,
       headers,
     });
 
-    console.log('Response status:', response.status);
-
     if (response.status === 401) {
-      console.log('Unauthorized - redirecting to login');
       AuthService.clearTokens();
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
