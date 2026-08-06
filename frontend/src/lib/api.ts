@@ -131,6 +131,19 @@ async function apiRequest<T>(
     const response = await fetch(url, config);
 
     if (!response.ok) {
+      // A stored token the backend rejects is unusable: drop it and send the
+      // user to log in, rather than leaving the app authenticated-looking with
+      // no user behind it. Auth endpoints are exempt because a failed login
+      // legitimately answers 401 and needs to surface its error to the form.
+      if (
+        response.status === 401 &&
+        !endpoint.startsWith("/auth/") &&
+        typeof window !== "undefined"
+      ) {
+        tokenManager.removeToken();
+        window.location.href = "/login";
+      }
+
       const errorData = await response.json().catch(() => ({}));
 
       // Handle structured error response from backend (ErrorResponse class)
