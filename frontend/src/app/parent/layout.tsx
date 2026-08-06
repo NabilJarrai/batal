@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { logout } from "@/store/authSlice";
-import { RoleGuard } from "@/components/RoleGuard";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { UserRole } from "@/types/auth";
 import ChildSelector from "@/components/parent/ChildSelector";
 import { ResponsiveLayout } from "@/components/responsive";
@@ -145,7 +145,7 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
   );
 
   return (
-    <RoleGuard allowedRoles={[UserRole.PARENT]}>
+    <ProtectedRoute allowedRoles={[UserRole.PARENT]}>
       <ResponsiveLayout
         sidebar={sidebarContent}
         navItems={navItemsForMobile}
@@ -160,6 +160,6 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
       >
         <div className="max-w-6xl mx-auto">{children}</div>
       </ResponsiveLayout>
-    </RoleGuard>
+    </ProtectedRoute>
   );
 }
