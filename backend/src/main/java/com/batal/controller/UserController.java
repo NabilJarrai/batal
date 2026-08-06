@@ -6,6 +6,7 @@ import com.batal.dto.UserUpdateRequest;
 import com.batal.dto.UserStatusUpdateRequest;
 import com.batal.dto.ChildSummaryDTO;
 import com.batal.dto.AssignChildRequest;
+import com.batal.dto.AdminPasswordResetRequest;
 import com.batal.entity.User;
 import com.batal.repository.UserRepository;
 import com.batal.service.UserService;
@@ -149,6 +150,16 @@ public class UserController {
             @RequestParam(required = false) String query) {
         List<UserResponse> parents = userService.searchParentUsers(query);
         return ResponseEntity.ok(parents);
+    }
+
+    // POST /api/users/{id}/reset-password - Admin sets a user's password directly
+    @PostMapping("/{id}/reset-password")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponse> resetUserPassword(
+            @PathVariable Long id,
+            @Valid @RequestBody AdminPasswordResetRequest request) {
+        UserResponse updatedUser = userService.resetUserPassword(id, request);
+        return ResponseEntity.ok(updatedUser);
     }
 
     // ========== PARENT-CHILD MANAGEMENT ENDPOINTS ==========

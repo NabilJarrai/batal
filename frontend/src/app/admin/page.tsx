@@ -15,6 +15,7 @@ import EditUserModal from '@/components/EditUserModal';
 import EditPlayerModal from '@/components/EditPlayerModal';
 import EditGroupModal from '@/components/EditGroupModal';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
+import ResetPasswordModal from '@/components/ResetPasswordModal';
 import ReassignPlayerModal from '@/components/ReassignPlayerModal';
 import AssignChildModal from '@/components/AssignChildModal';
 import SkillsManagement from '@/components/skills/SkillsManagement';
@@ -108,6 +109,7 @@ export default function AdminDashboard() {
 
   // Edit modals
   const [editUserModal, setEditUserModal] = useState<{ isOpen: boolean; userId: number | null }>({ isOpen: false, userId: null });
+  const [resetPasswordModal, setResetPasswordModal] = useState<{ isOpen: boolean; userId: number | null }>({ isOpen: false, userId: null });
   const [editPlayerModal, setEditPlayerModal] = useState<{ isOpen: boolean; playerId: number | null }>({ isOpen: false, playerId: null });
   const [editGroupModal, setEditGroupModal] = useState<{ isOpen: boolean; groupId: number | null }>({ isOpen: false, groupId: null });
 
@@ -1000,6 +1002,7 @@ export default function AdminDashboard() {
                       onAssignChild={handleAssignChild}
                       onUnassignChild={handleUnassignChild}
                       onResendSetupEmail={handleResendSetupEmail}
+                      onResetPassword={(userId) => setResetPasswordModal({ isOpen: true, userId })}
                       showActions={true}
                       assignedGroupsCount={coachInfo.assignedGroupsCount}
                       assignedGroupNames={coachInfo.assignedGroupNames}
@@ -1229,6 +1232,17 @@ export default function AdminDashboard() {
             setEditUserModal({ isOpen: false, userId: null });
             showSuccess('User updated successfully');
           }}
+        />
+
+        <ResetPasswordModal
+          isOpen={resetPasswordModal.isOpen}
+          userId={resetPasswordModal.userId}
+          userName={users.find(u => u.id === resetPasswordModal.userId)?.firstName
+            ? `${users.find(u => u.id === resetPasswordModal.userId)?.firstName} ${users.find(u => u.id === resetPasswordModal.userId)?.lastName ?? ''}`.trim()
+            : undefined}
+          userEmail={users.find(u => u.id === resetPasswordModal.userId)?.email}
+          onClose={() => setResetPasswordModal({ isOpen: false, userId: null })}
+          onSuccess={() => showSuccess('Password updated successfully')}
         />
 
         <EditPlayerModal
