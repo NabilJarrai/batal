@@ -43,6 +43,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: batal_password
       MINIO_ENDPOINT: http://minio:9000
       SPRING_PROFILES_ACTIVE: dev
+      # Local development only. Never reuse this value for a deployed environment.
+      BATAL_JWT_SECRET: ${JWT_SECRET:-local-development-only-jwt-secret-do-not-deploy}
     ports:
       - "8080:8080"
     depends_on:
