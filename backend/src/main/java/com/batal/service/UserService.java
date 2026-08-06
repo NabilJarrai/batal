@@ -4,6 +4,7 @@ import com.batal.dto.UserCreateRequest;
 import com.batal.dto.UserResponse;
 import com.batal.dto.UserUpdateRequest;
 import com.batal.dto.UserStatusUpdateRequest;
+import com.batal.dto.AdminPasswordResetRequest;
 import com.batal.dto.ChildSummaryDTO;
 import com.batal.entity.User;
 import com.batal.entity.Role;
@@ -13,9 +14,11 @@ import com.batal.exception.ResourceAlreadyExistsException;
 import com.batal.exception.ResourceNotFoundException;
 import com.batal.exception.SelfDeletionException;
 import com.batal.exception.BusinessRuleException;
+import com.batal.exception.ValidationException;
 import com.batal.repository.UserRepository;
 import com.batal.repository.RoleRepository;
 import com.batal.repository.PlayerRepository;
+import com.batal.repository.PasswordSetupTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,6 +47,9 @@ public class UserService {
 
     @Autowired
     private PlayerRepository playerRepository;
+
+    @Autowired
+    private PasswordSetupTokenRepository passwordSetupTokenRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -291,6 +297,35 @@ public class UserService {
         user.setUpdatedAt(LocalDateTime.now());
         
         User savedUser = userRepository.save(user);
+        List<String> roles = savedUser.getRoles().stream()
+                .map(role -> role.getName())
+                .collect(Collectors.toList());
+        return new UserResponse(savedUser, roles);
+    }
+
+    /**
+     * Set a user's password directly, on behalf of an administrator.
+     *
+     * Any outstanding setup or reset tokens for the account are invalidated, so a
+     * link mailed out earlier cannot be used to override what the admin just set.
+     * Note that JWTs already issued to this user stay valid until they expire:
+     * tokens are stateless and are not tracked server-side.
+     */
+    public UserResponse resetUserPassword(Long id, AdminPasswordResetRequest request) {
+        if (!request.isPasswordMatching()) {
+            throw new ValidationException("confirmPassword", "Password and confirmation do not match");
+        }
+
+        User user = userRepository.findByIdWithRoles(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", id));
+
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPasswordSetAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+
+        User savedUser = userRepository.save(user);
+        passwordSetupTokenRepository.invalidateAllUserTokens(savedUser.getId(), LocalDateTime.now());
+
         List<String> roles = savedUser.getRoles().stream()
                 .map(role -> role.getName())
                 .collect(Collectors.toList());

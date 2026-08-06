@@ -336,6 +336,18 @@ export const usersAPI = {
     });
   },
 
+  // Admin sets a user's password directly, without an emailed token
+  resetPassword: async (
+    id: number,
+    password: string,
+    confirmPassword: string
+  ): Promise<UserResponse> => {
+    return apiRequest<UserResponse>(`/users/${id}/reset-password`, {
+      method: "POST",
+      body: JSON.stringify({ password, confirmPassword }),
+    });
+  },
+
   // Coach-specific endpoints
   getAvailableCoaches: async (): Promise<UserResponse[]> => {
     return apiRequest<UserResponse[]>("/users/coaches/available");
