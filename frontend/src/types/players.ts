@@ -23,8 +23,11 @@ export interface PlayerDTO {
   address?: string;
   parentId?: number;
   parentName?: string; // read-only, computed from parent User
-  parent2Id?: number;
-  parent2Name?: string; // read-only, computed from parent User
+  // Second parent, read-only. Owned by the main parent's account, so update
+  // it through the parent, not the player.
+  secondaryParentName?: string;
+  secondaryParentEmail?: string;
+  secondaryParentPhone?: string;
   joiningDate?: string; // ISO date string
   level: Level;
   basicFoot?: BasicFoot;
@@ -46,6 +49,35 @@ export interface PlayerDTO {
 
 // Player Create Request
 export type PlayerCreateRequest = Omit<PlayerDTO, 'id' | 'createdAt' | 'updatedAt'>;
+
+// Details for a main parent who does not exist yet. Email and mobile are
+// required: they are the academy's contact route and the parent's login.
+export interface NewParentDetails {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address?: string;
+  // The family's second guardian. Contact only, so both are optional.
+  secondaryParentName?: string;
+  secondaryParentEmail?: string;
+  secondaryParentPhone?: string;
+}
+
+// Create one or more players under a single main parent, in one transaction.
+// Supply exactly one of parentId or newParent.
+export interface CreatePlayersRequest {
+  parentId?: number;
+  newParent?: NewParentDetails;
+  players: PlayerCreateRequest[];
+  autoAssignGroup?: boolean;
+}
+
+export interface CreatePlayersResponse {
+  players: PlayerDTO[];
+  parent: import('./users').UserResponse;
+  parentCreated: boolean;
+}
 
 // Player Update Request  
 export type PlayerUpdateRequest = Partial<Omit<PlayerDTO, 'id' | 'createdAt' | 'updatedAt'>>;

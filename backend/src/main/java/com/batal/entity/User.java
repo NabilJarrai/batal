@@ -53,6 +53,22 @@ public class User {
     @Column(columnDefinition = "TEXT")
     private String address;
 
+    // ========== SECONDARY PARENT (CONTACT ONLY, PARENT ACCOUNTS) ==========
+    // The other guardian of the family. Deliberately not a User of their own:
+    // their email is optional, and users.email is the login identity so it
+    // cannot be null. They never get an account and cannot sign in.
+    @Size(max = 200)
+    @Column(name = "secondary_parent_name", length = 200)
+    private String secondaryParentName;
+
+    @Size(max = 255)
+    @Column(name = "secondary_parent_email", length = 255)
+    private String secondaryParentEmail;
+
+    @Size(max = 20)
+    @Column(name = "secondary_parent_phone", length = 20)
+    private String secondaryParentPhone;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type", nullable = false)
     private UserType userType; // PARENT, COACH, ADMIN, MANAGER only
@@ -181,7 +197,31 @@ public class User {
     public void setAddress(String address) {
         this.address = address;
     }
-    
+
+    public String getSecondaryParentName() {
+        return secondaryParentName;
+    }
+
+    public void setSecondaryParentName(String secondaryParentName) {
+        this.secondaryParentName = secondaryParentName;
+    }
+
+    public String getSecondaryParentEmail() {
+        return secondaryParentEmail;
+    }
+
+    public void setSecondaryParentEmail(String secondaryParentEmail) {
+        this.secondaryParentEmail = secondaryParentEmail;
+    }
+
+    public String getSecondaryParentPhone() {
+        return secondaryParentPhone;
+    }
+
+    public void setSecondaryParentPhone(String secondaryParentPhone) {
+        this.secondaryParentPhone = secondaryParentPhone;
+    }
+
     public String getEmergencyContactName() {
         return emergencyContactName;
     }

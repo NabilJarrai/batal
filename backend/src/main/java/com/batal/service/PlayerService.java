@@ -1,11 +1,17 @@
 package com.batal.service;
 
+import com.batal.dto.CreatePlayersRequest;
+import com.batal.dto.CreatePlayersResponse;
 import com.batal.dto.GroupCreateRequest;
 import com.batal.dto.PlayerDTO;
+import com.batal.dto.UserCreateRequest;
+import com.batal.dto.UserResponse;
 import com.batal.entity.Player;
 import com.batal.entity.Group;
 import com.batal.entity.enums.AgeGroup;
 import com.batal.entity.enums.Gender;
+import com.batal.exception.BusinessRuleException;
+import com.batal.exception.ResourceNotFoundException;
 import com.batal.repository.PlayerRepository;
 import com.batal.repository.GroupRepository;
 import com.batal.repository.UserRepository;
@@ -19,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +46,61 @@ public class PlayerService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserService userService;
+
+    /**
+     * Create one or more players under a single main parent.
+     *
+     * Everything happens in one transaction, so a failure on the third child
+     * cannot leave behind a parent account with two children and a setup email
+     * already on its way. The setup email itself is published as an after
+     * commit event, so it only goes out if the whole request succeeded.
+     */
+    public CreatePlayersResponse createPlayersWithParent(CreatePlayersRequest request) {
+        User parent;
+        boolean parentCreated = false;
+
+        if (request.getParentId() != null) {
+            parent = userRepository.findById(request.getParentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Parent", request.getParentId()));
+            if (parent.getUserType() != UserType.PARENT) {
+                throw new BusinessRuleException(
+                        "User with id " + request.getParentId() + " is not a parent");
+            }
+        } else {
+            CreatePlayersRequest.NewParent details = request.getNewParent();
+            UserCreateRequest parentRequest = new UserCreateRequest();
+            parentRequest.setFirstName(details.getFirstName());
+            parentRequest.setLastName(details.getLastName());
+            parentRequest.setEmail(details.getEmail());
+            parentRequest.setPhone(details.getPhone());
+            parentRequest.setAddress(details.getAddress());
+            parentRequest.setSecondaryParentName(details.getSecondaryParentName());
+            parentRequest.setSecondaryParentEmail(details.getSecondaryParentEmail());
+            parentRequest.setSecondaryParentPhone(details.getSecondaryParentPhone());
+            parentRequest.setUserType(UserType.PARENT);
+
+            // Throws ResourceAlreadyExistsException on a duplicate email, which
+            // rolls the whole request back before any player is written.
+            UserResponse created = userService.createUser(parentRequest);
+            parent = userRepository.findById(created.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Parent", created.getId()));
+            parentCreated = true;
+        }
+
+        List<PlayerDTO> createdPlayers = new ArrayList<>();
+        for (PlayerDTO player : request.getPlayers()) {
+            player.setParentId(parent.getId());
+            createdPlayers.add(createPlayer(player, request.isAutoAssignGroup()));
+        }
+
+        return new CreatePlayersResponse(
+                createdPlayers,
+                userService.getUserById(parent.getId()),
+                parentCreated);
+    }
 
     /**
      * Create a new player with automatic group assignment if no group specified
@@ -82,17 +144,6 @@ public class PlayerService {
             player.addParent(parent);
         }
 
-        // Set second parent if provided
-        if (playerDTO.getParent2Id() != null) {
-            User parent2 = userRepository.findById(playerDTO.getParent2Id())
-                    .orElseThrow(() -> new RuntimeException("Parent not found with id: " + playerDTO.getParent2Id()));
-
-            if (parent2.getUserType() != UserType.PARENT) {
-                throw new RuntimeException("User with id " + playerDTO.getParent2Id() + " is not a parent");
-            }
-
-            player.addParent(parent2);
-        }
 
         // Set group if provided, otherwise auto-assign if enabled
         if (playerDTO.getGroupId() != null) {
@@ -390,12 +441,14 @@ public class PlayerService {
             List<User> parentList = player.getParents().stream()
                     .sorted(Comparator.comparing(User::getId))
                     .toList();
-            dto.setParentId(parentList.get(0).getId());
-            dto.setParentName(parentList.get(0).getFullName());
-            if (parentList.size() > 1) {
-                dto.setParent2Id(parentList.get(1).getId());
-                dto.setParent2Name(parentList.get(1).getFullName());
-            }
+            User mainParent = parentList.get(0);
+            dto.setParentId(mainParent.getId());
+            dto.setParentName(mainParent.getFullName());
+
+            // Read-only, and owned by the parent account.
+            dto.setSecondaryParentName(mainParent.getSecondaryParentName());
+            dto.setSecondaryParentEmail(mainParent.getSecondaryParentEmail());
+            dto.setSecondaryParentPhone(mainParent.getSecondaryParentPhone());
         }
 
         dto.setCreatedAt(player.getCreatedAt());
@@ -446,16 +499,6 @@ public class PlayerService {
 
             player.addParent(parent);
         }
-        if (dto.getParent2Id() != null) {
-            User parent2 = userRepository.findById(dto.getParent2Id())
-                    .orElseThrow(() -> new RuntimeException("Parent not found with id: " + dto.getParent2Id()));
-
-            if (parent2.getUserType() != UserType.PARENT) {
-                throw new RuntimeException("User with id " + dto.getParent2Id() + " is not a parent");
-            }
-
-            player.addParent(parent2);
-        }
 
         if (dto.getIsActive() != null) {
             player.setIsActive(dto.getIsActive());
@@ -466,5 +509,6 @@ public class PlayerService {
 
         player.setUpdatedAt(LocalDateTime.now());
     }
+
 
 }

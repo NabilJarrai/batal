@@ -1,5 +1,7 @@
 package com.batal.controller;
 
+import com.batal.dto.CreatePlayersRequest;
+import com.batal.dto.CreatePlayersResponse;
 import com.batal.dto.PlayerDTO;
 import com.batal.service.PlayerService;
 import jakarta.validation.Valid;
@@ -41,6 +43,21 @@ public class PlayerController {
         }
     }
     
+    /**
+     * Create one or more players under a single main parent, creating the
+     * parent account too when they are new.
+     *
+     * All of it commits or none of it does, so a half-finished form cannot
+     * leave an orphaned parent account behind.
+     */
+    @PostMapping("/with-parent")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<CreatePlayersResponse> createPlayersWithParent(
+            @Valid @RequestBody CreatePlayersRequest request) {
+        CreatePlayersResponse response = playerService.createPlayersWithParent(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     /**
      * Get all players with pagination and search
      * All authenticated users can view players

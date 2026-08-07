@@ -10,7 +10,11 @@ interface UserCardProps {
   onActivate?: (userId: number) => void;
   onDelete?: (userId: number) => void;
   onViewDetails?: (userId: number) => void;
-  onAssignChild?: (userId: number) => void;
+  /**
+   * Create a new player under this parent. Players are attached to a parent
+   * when they are created, so there is no linking of existing players.
+   */
+  onAddPlayer?: (userId: number) => void;
   onUnassignChild?: (userId: number, playerId: number) => void;
   onResendSetupEmail?: (userId: number) => void;
   onResetPassword?: (userId: number) => void;
@@ -29,7 +33,7 @@ export default function UserCard({
   onActivate,
   onDelete,
   onViewDetails,
-  onAssignChild,
+  onAddPlayer,
   onUnassignChild,
   onResendSetupEmail,
   onResetPassword,
@@ -111,14 +115,26 @@ export default function UserCard({
       </div>
 
       {/* User Type Badge */}
-      {user.userType && (
-        <div className="mb-4">
-          <div className={`
-            inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white
-            bg-gradient-to-r ${getUserTypeColor(user.userType)}
-          `}>
-            {user.userType}
-          </div>
+      {(user.userType || !user.passwordSetAt) && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {user.userType && (
+            <div className={`
+              inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white
+              bg-gradient-to-r ${getUserTypeColor(user.userType)}
+            `}>
+              {user.userType}
+            </div>
+          )}
+          {/* Accounts are active from creation, so "active" does not mean they
+              can sign in. This is what says whether they have set a password. */}
+          {!user.passwordSetAt && (
+            <div
+              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-500/20 text-accent-yellow border border-yellow-500/30"
+              title="This account has not set a password yet and cannot sign in"
+            >
+              Pending setup
+            </div>
+          )}
         </div>
       )}
 
@@ -160,15 +176,15 @@ export default function UserCard({
                   Children ({user.children?.length || 0})
                 </span>
               </div>
-              {onAssignChild && (
+              {onAddPlayer && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onAssignChild(user.id);
+                    onAddPlayer(user.id);
                   }}
                   className="text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-2 py-1 rounded transition-colors"
                 >
-                  + Assign
+                  + Add Player
                 </button>
               )}
             </div>

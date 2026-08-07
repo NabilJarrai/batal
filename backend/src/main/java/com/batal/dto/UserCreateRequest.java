@@ -32,6 +32,19 @@ public class UserCreateRequest {
     
     private String address;
     
+    // Second guardian of the family, for PARENT accounts. Contact details
+    // only - no account is created, so email and phone are optional. Clearing
+    // the name clears the email and phone with it.
+    @Size(max = 200)
+    private String secondaryParentName;
+
+    @Email
+    @Size(max = 255)
+    private String secondaryParentEmail;
+
+    @Size(max = 20)
+    private String secondaryParentPhone;
+
     // Only for authenticated users (Admin, Manager, Coach)
     private UserType userType = UserType.COACH; // Default to COACH
     
@@ -107,7 +120,16 @@ public class UserCreateRequest {
     public void setAddress(String address) {
         this.address = address;
     }
-    
+
+    public String getSecondaryParentName() { return secondaryParentName; }
+    public void setSecondaryParentName(String secondaryParentName) { this.secondaryParentName = secondaryParentName; }
+
+    public String getSecondaryParentEmail() { return secondaryParentEmail; }
+    public void setSecondaryParentEmail(String secondaryParentEmail) { this.secondaryParentEmail = secondaryParentEmail; }
+
+    public String getSecondaryParentPhone() { return secondaryParentPhone; }
+    public void setSecondaryParentPhone(String secondaryParentPhone) { this.secondaryParentPhone = secondaryParentPhone; }
+
     public UserType getUserType() {
         return userType;
     }

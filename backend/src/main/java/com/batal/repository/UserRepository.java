@@ -34,10 +34,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName")
     List<User> findAllByRoleName(@Param("roleName") String roleName);
 
-    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.roles WHERE u.userType IN ('COACH', 'ADMIN', 'MANAGER', 'PARENT')")
+    // Staff means people who work at the academy. Parents are listed and
+    // managed separately, and are deliberately excluded here.
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.roles WHERE u.userType IN ('COACH', 'ADMIN', 'MANAGER')")
     Page<User> findStaffUsers(Pageable pageable);
 
-    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.roles WHERE u.userType IN ('COACH', 'ADMIN', 'MANAGER', 'PARENT') " +
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.roles WHERE u.userType IN ('COACH', 'ADMIN', 'MANAGER') " +
             "AND (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) " +
             "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%')) " +
             "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) " +
@@ -56,5 +58,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
            "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) " +
            "OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :search, '%')))")
     List<User> findParentUsersWithSearch(@Param("search") String search);
+
+    // Paginated counterparts, for the Parents tab.
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.roles WHERE u.userType = 'PARENT'")
+    Page<User> findParentUsers(Pageable pageable);
+
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.roles WHERE u.userType = 'PARENT' " +
+           "AND (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<User> findParentUsersWithSearch(@Param("search") String search, Pageable pageable);
 
 }
