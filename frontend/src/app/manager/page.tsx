@@ -402,7 +402,7 @@ export default function ManagerDashboard() {
                 <select
                   value={timeRange}
                   onChange={(e) => setTimeRange(e.target.value as any)}
-                  className="px-3 py-2 bg-background border border-border text-text-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="select-base"
                 >
                   <option value="week">Last Week</option>
                   <option value="month">Last Month</option>

@@ -293,7 +293,7 @@ export default function CoachDashboard() {
                   <select
                     value={selectedGroup?.id || ''}
                     onChange={(e) => handleGroupSelect(Number(e.target.value))}
-                    className="w-full md:w-64 px-3 py-2 bg-white border border-border shadow-sm text-text-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    className="select-base md:w-64 shadow-sm"
                   >
                     {assignedGroups.map((group) => (
                       <option key={group.id} value={group.id}>

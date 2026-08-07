@@ -287,7 +287,7 @@ export default function GroupPlayersModal({
                       <select
                         value={targetGroupId}
                         onChange={e => setTargetGroupId(e.target.value)}
-                        className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="select-base flex-1"
                       >
                         <option value="">Move to...</option>
                         {otherGroups.map(g => (

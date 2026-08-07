@@ -51,7 +51,7 @@ export default function AssessmentTemplateSelect({ value, onChange }: Assessment
         value={value ?? ''}
         onChange={e => onChange(e.target.value ? Number(e.target.value) : undefined)}
         disabled={isLoading || failed}
-        className="w-full px-4 py-3 bg-background border-2 border-border rounded-lg text-text-primary hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all disabled:opacity-50"
+        className="select-base disabled:opacity-50"
       >
         <option value="">
           {isLoading ? 'Loading assessments...' : 'No assessment assigned'}

@@ -98,6 +98,13 @@ export interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  /**
+   * Whether auth has been resolved at least once since the app loaded.
+   * Distinct from isLoading: on first mount nothing is in flight yet, but the
+   * stored token has not been checked either, so isAuthenticated is not
+   * meaningful and guards must wait rather than redirect.
+   */
+  isInitialized: boolean;
   error: string | null;
   children?: ChildSummary[]; // For parents
   selectedChildId?: number; // Currently selected child for parents

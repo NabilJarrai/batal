@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/hooks";
 
@@ -16,41 +16,72 @@ export default function ProtectedRoute({
   redirectTo = "/login"
 }: ProtectedRouteProps) {
   const router = useRouter();
-  const { isAuthenticated, user, isLoading } = useAuth();
+  const { isAuthenticated, user, isLoading, isInitialized } = useAuth();
+
+  /**
+   * Once the page has been shown to an authenticated user, keep it mounted.
+   *
+   * This guard used to return a spinner whenever isLoading went true, which
+   * unmounts everything below it. Any later auth activity therefore destroyed
+   * the page's state - the admin dashboard would snap back to the Overview tab
+   * mid-task, because its selected tab lives in component state.
+   *
+   * A ref rather than state: it must not itself trigger a render, and it is
+   * only ever read during render.
+   */
+  const hasShownContent = useRef(false);
+
+  const hasPermission =
+    !allowedRoles || allowedRoles.length === 0
+      ? true
+      : Boolean(user?.roles?.some(role => allowedRoles.includes(role)));
+
+  // Comparing contents, not identity: callers pass an inline array literal, so
+  // a new reference arrives on every render and would re-run this effect (and
+  // its router.push calls) constantly.
+  const allowedRolesKey = allowedRoles ? allowedRoles.join(",") : "";
 
   useEffect(() => {
-    // Don't redirect while checking authentication status
-    if (isLoading) return;
+    // Wait for the stored token to be checked. Redirecting before that would
+    // bounce a signed-in user to the login page on every hard refresh, because
+    // isAuthenticated starts false and says nothing until auth resolves.
+    if (!isInitialized) return;
 
-    // Redirect to login if not authenticated
     if (!isAuthenticated) {
       router.push(redirectTo);
       return;
     }
 
-    // Check role-based access if roles are specified
-    if (allowedRoles && allowedRoles.length > 0 && user) {
-      const hasPermission = user.roles?.some(role => 
-        allowedRoles.includes(role)
-      );
-
-      if (!hasPermission) {
-        // Redirect to appropriate dashboard based on user's actual role
-        if (user.roles?.includes('ADMIN')) {
-          router.push('/admin');
-        } else if (user.roles?.includes('MANAGER')) {
-          router.push('/manager');
-        } else if (user.roles?.includes('COACH')) {
-          router.push('/coach');
-        } else {
-          router.push('/');
-        }
+    if (!hasPermission && user) {
+      if (user.roles?.includes('ADMIN')) {
+        router.push('/admin');
+      } else if (user.roles?.includes('MANAGER')) {
+        router.push('/manager');
+      } else if (user.roles?.includes('COACH')) {
+        router.push('/coach');
+      } else if (user.roles?.includes('PARENT')) {
+        router.push('/parent/dashboard');
+      } else {
+        router.push('/');
       }
     }
-  }, [isAuthenticated, user, isLoading, allowedRoles, redirectTo, router]);
+  }, [isInitialized, isAuthenticated, hasPermission, user, allowedRolesKey, redirectTo, router]);
 
-  // Show loading state while checking authentication
-  if (isLoading) {
+  const canShowContent = isAuthenticated && hasPermission;
+
+  if (canShowContent) {
+    hasShownContent.current = true;
+    return <>{children}</>;
+  }
+
+  // Already showing the page: hold it rather than tearing it down over a
+  // transient auth refresh. A genuine sign-out redirects, which unmounts it
+  // anyway.
+  if (hasShownContent.current && (isLoading || !isInitialized)) {
+    return <>{children}</>;
+  }
+
+  if (!isInitialized || isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-secondary-50 flex items-center justify-center">
         <div className="text-center">
@@ -61,21 +92,6 @@ export default function ProtectedRoute({
     );
   }
 
-  // Don't render children until we know user is authenticated
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  // Check role permissions if specified
-  if (allowedRoles && allowedRoles.length > 0 && user) {
-    const hasPermission = user.roles?.some(role => 
-      allowedRoles.includes(role)
-    );
-    
-    if (!hasPermission) {
-      return null;
-    }
-  }
-
-  return <>{children}</>;
+  // Not authenticated, or lacking the role: the effect above is redirecting.
+  return null;
 }
