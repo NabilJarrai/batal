@@ -3,6 +3,7 @@
 import { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { GroupResponse, AgeGroup, Level, AGE_GROUP_METADATA } from '@/types/groups';
+import AssessmentTemplateSelect from '@/components/assessments/AssessmentTemplateSelect';
 import { groupsAPI } from '@/lib/api';
 
 interface EditGroupModalProps {
@@ -25,8 +26,13 @@ export default function EditGroupModal({
     capacity: 20,
     zone: '',
     description: '',
-    isActive: true
+    isActive: true,
+    assessmentTemplateId: undefined as number | undefined
   });
+
+  // Remembered so clearing the template can be told apart from leaving it be:
+  // the update endpoint treats a null id as "no change".
+  const [originalTemplateId, setOriginalTemplateId] = useState<number | undefined>(undefined);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,8 +58,10 @@ export default function EditGroupModal({
         capacity: group.capacity || 20,
         zone: group.zone || '',
         description: group.description || '',
-        isActive: group.isActive
+        isActive: group.isActive,
+        assessmentTemplateId: group.assessmentTemplateId ?? undefined
       });
+      setOriginalTemplateId(group.assessmentTemplateId ?? undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load group data');
     } finally {
@@ -69,7 +77,14 @@ export default function EditGroupModal({
     setError(null);
 
     try {
-      const updatedGroup = await groupsAPI.update(groupId, formData);
+      let updatedGroup = await groupsAPI.update(groupId, formData);
+
+      // A null id means "leave it alone" to the update endpoint, so removing
+      // the template needs its own call.
+      if (originalTemplateId !== undefined && formData.assessmentTemplateId === undefined) {
+        updatedGroup = await groupsAPI.removeAssessmentTemplate(groupId);
+      }
+
       onComplete(updatedGroup);
       handleClose();
     } catch (err) {
@@ -88,8 +103,10 @@ export default function EditGroupModal({
       capacity: 20,
       zone: '',
       description: '',
-      isActive: true
+      isActive: true,
+      assessmentTemplateId: undefined
     });
+    setOriginalTemplateId(undefined);
     setError(null);
     onClose();
   };
@@ -307,6 +324,12 @@ export default function EditGroupModal({
                       placeholder="Optional description for this group..."
                     />
                   </div>
+
+                  {/* Assessment template */}
+                  <AssessmentTemplateSelect
+                    value={formData.assessmentTemplateId}
+                    onChange={(assessmentTemplateId) => setFormData({...formData, assessmentTemplateId})}
+                  />
 
                   {/* Status */}
                   <div>

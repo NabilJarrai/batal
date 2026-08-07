@@ -18,6 +18,9 @@ public class GroupUpdateRequest {
     private Integer capacity;
     
     private Long coachId;
+
+    /** Which template defines what this group's players are assessed on. */
+    private Long assessmentTemplateId;
     
     private Long pitchId;
     
@@ -126,5 +129,13 @@ public class GroupUpdateRequest {
     
     public void setMaxAge(Integer maxAge) {
         this.maxAge = maxAge;
+    }
+
+    public Long getAssessmentTemplateId() {
+        return assessmentTemplateId;
+    }
+
+    public void setAssessmentTemplateId(Long assessmentTemplateId) {
+        this.assessmentTemplateId = assessmentTemplateId;
     }
 }

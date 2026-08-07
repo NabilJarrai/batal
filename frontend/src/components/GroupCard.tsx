@@ -244,6 +244,24 @@ export default function GroupCard({
         )}
       </div>
 
+      {/* Assessment. Without one, this group's players cannot be assessed at
+          all, so its absence is called out rather than left blank. */}
+      <div className="mb-4">
+        <div className="flex items-center text-primary mb-1">
+          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+          </svg>
+          <span className="text-sm font-medium">Assessment</span>
+        </div>
+        {group.assessmentTemplateTitle ? (
+          <p className="text-sm text-text-primary">{group.assessmentTemplateTitle}</p>
+        ) : (
+          <p className="text-sm text-accent-yellow">
+            None assigned &mdash; players cannot be assessed
+          </p>
+        )}
+      </div>
+
       {/* Zone Info */}
       {group.zone && (
         <div className="mb-4">

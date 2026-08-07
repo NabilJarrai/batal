@@ -6,6 +6,7 @@ import { GroupResponse, GroupCreateRequest, AgeGroup, AGE_GROUP_METADATA } from 
 import { Level } from '@/types/players';
 import { UserResponse, UserType } from '@/types/users';
 import { apiClient } from '@/lib/apiClient';
+import AssessmentTemplateSelect from '@/components/assessments/AssessmentTemplateSelect';
 import { groupsAPI, usersAPI } from '@/lib/api';
 
 interface CreateGroupModalProps {
@@ -25,6 +26,7 @@ export default function CreateGroupModal({
     ageGroup: AgeGroup.COOKIES,
     capacity: 20,
     coachId: undefined,
+    assessmentTemplateId: undefined as number | undefined,
     zone: '',
     description: '',
     isActive: true
@@ -79,6 +81,7 @@ export default function CreateGroupModal({
       ageGroup: AgeGroup.COOKIES,
       capacity: 20,
       coachId: undefined,
+      assessmentTemplateId: undefined,
       zone: '',
       description: '',
       isActive: true
@@ -402,6 +405,12 @@ export default function CreateGroupModal({
                       </p>
                     )}
                   </div>
+
+                  {/* Assessment template */}
+                  <AssessmentTemplateSelect
+                    value={formData.assessmentTemplateId}
+                    onChange={(assessmentTemplateId) => setFormData({...formData, assessmentTemplateId})}
+                  />
 
                   {/* Status */}
                   <div className="alert-success">

@@ -23,6 +23,9 @@ public class GroupCreateRequest {
     private Integer capacity = 15;
     
     private Long coachId;
+
+    /** Which template defines what this group's players are assessed on. */
+    private Long assessmentTemplateId;
     
     private Long pitchId;
     
@@ -143,5 +146,13 @@ public class GroupCreateRequest {
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public Long getAssessmentTemplateId() {
+        return assessmentTemplateId;
+    }
+
+    public void setAssessmentTemplateId(Long assessmentTemplateId) {
+        this.assessmentTemplateId = assessmentTemplateId;
     }
 }

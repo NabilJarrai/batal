@@ -1,9 +1,12 @@
 package com.batal.controller;
 
 import com.batal.dto.*;
+import com.batal.exception.ValidationException;
 import com.batal.service.AssessmentService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -17,6 +20,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/assessments")
 public class AssessmentController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AssessmentController.class);
 
     @Autowired
     private AssessmentService assessmentService;
@@ -53,7 +58,18 @@ public class AssessmentController {
                 "status", 404
             );
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        } catch (ValidationException e) {
+            // Carries the reason the coach needs, such as the player's group
+            // having no assessment template. Caught before the catch-all below,
+            // which would otherwise reduce it to "an unexpected error".
+            Map<String, Object> errorResponse = Map.of(
+                "error", "Bad Request",
+                "message", e.getMessage(),
+                "status", 400
+            );
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (Exception e) {
+            logger.error("Unexpected error creating assessment", e);
             Map<String, Object> errorResponse = Map.of(
                 "error", "Internal Server Error",
                 "message", "An unexpected error occurred",
@@ -184,9 +200,10 @@ public class AssessmentController {
             return ResponseEntity.ok(response);
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        } catch (IllegalStateException | IllegalArgumentException e) {
+        } catch (IllegalStateException | IllegalArgumentException | ValidationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
+            logger.error("Unexpected error updating assessment {}", id, e);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }

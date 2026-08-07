@@ -34,6 +34,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -287,6 +288,51 @@ public class AuthService {
         // Update last sent timestamp
         user.setPasswordSetupEmailLastSentAt(LocalDateTime.now());
         userRepository.save(user);
+    }
+
+    /**
+     * Issue a setup link for a newly created account, keeping a mail failure
+     * from taking the token with it.
+     *
+     * EmailService rethrows delivery failures. Letting that escape a
+     * transactional method marks the transaction rollback-only, and the caller
+     * then fails at commit with UnexpectedRollbackException even though it
+     * caught the original exception. Catching the failure inside the
+     * transaction means the token still commits and an admin can resend the
+     * link without reissuing it.
+     *
+     * @return true when the email was accepted for delivery
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public boolean issuePasswordSetupLink(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+
+        if (user.getPasswordSetAt() != null) {
+            throw new BusinessRuleException("User has already set their password");
+        }
+
+        tokenRepository.invalidateAllUserTokens(userId, LocalDateTime.now());
+
+        String tokenString = generateSecureToken();
+        PasswordSetupToken token = new PasswordSetupToken();
+        token.setUser(user);
+        token.setToken(tokenString);
+        token.setTokenType(TokenType.SETUP);
+        token.setExpiresAt(LocalDateTime.now().plusHours(tokenExpiryHours));
+        tokenRepository.save(token);
+
+        try {
+            emailService.sendPasswordSetupEmail(user, tokenString);
+        } catch (RuntimeException e) {
+            // Deliberately swallowed so this transaction is not poisoned. The
+            // caller logs it; the token stays valid for a resend.
+            return false;
+        }
+
+        user.setPasswordSetupEmailLastSentAt(LocalDateTime.now());
+        userRepository.save(user);
+        return true;
     }
 
     /**

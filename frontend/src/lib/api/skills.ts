@@ -125,6 +125,19 @@ class SkillsAPI {
     return result;
   }
 
+  /**
+   * The whole library, unfiltered and unpaginated. Used by the assessment
+   * template picker, which must offer every skill regardless of level.
+   */
+  async getAllList(): Promise<Skill[]> {
+    const response = await fetch(`${API_BASE}/skills/list`, {
+      method: 'GET',
+      headers: await this.getAuthHeaders(),
+    });
+
+    return this.handleResponse<Skill[]>(response);
+  }
+
   async getSkillsForAssessment(playerLevel: SkillLevel): Promise<Skill[]> {
     const response = await fetch(`${API_BASE}/skills/list?level=${playerLevel}&activeOnly=true`, {
       method: 'GET',
