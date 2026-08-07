@@ -205,7 +205,7 @@ export default function GroupList({
 
       {/* Filters */}
       <div className="bg-background border border-border shadow-sm rounded-xl p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-3 items-center">
           {/* Search */}
           <div className="md:col-span-2">
             <input
@@ -213,7 +213,7 @@ export default function GroupList({
               placeholder="Search groups..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 bg-background border border-border shadow-sm placeholder-text-secondary text-text-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="input-base shadow-sm"
             />
           </div>
 
@@ -222,7 +222,7 @@ export default function GroupList({
             <select
               value={selectedLevel}
               onChange={(e) => setSelectedLevel(e.target.value as Level | 'ALL')}
-              className="w-full px-3 py-2 bg-background border border-border shadow-sm text-text-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="select-base shadow-sm"
             >
               <option value="ALL">All Levels</option>
               <option value={Level.DEVELOPMENT}>Development</option>
@@ -235,7 +235,7 @@ export default function GroupList({
             <select
               value={selectedAgeGroup}
               onChange={(e) => setSelectedAgeGroup(e.target.value as AgeGroup | 'ALL')}
-              className="w-full px-3 py-2 bg-background border border-border shadow-sm text-text-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="select-base shadow-sm"
             >
               <option value="ALL">All Ages</option>
               <option value={AgeGroup.COOKIES}>Cookies (4-6)</option>
@@ -246,8 +246,8 @@ export default function GroupList({
           </div>
 
           {/* Show Inactive Toggle */}
-          <div className="flex items-center">
-            <label className="flex items-center text-text-primary text-sm">
+          <div className="flex items-center justify-center md:justify-start h-full">
+            <label className="flex items-center text-text-primary text-sm whitespace-nowrap cursor-pointer">
               <input
                 type="checkbox"
                 checked={showInactive}
@@ -262,7 +262,7 @@ export default function GroupList({
           <div>
             <button
               onClick={clearFilters}
-              className="w-full px-3 py-2 bg-secondary-100 hover:bg-secondary-50 border border-border rounded-lg text-text-primary text-sm transition-colors duration-200"
+              className="w-full px-4 py-2.5 bg-secondary-100 hover:bg-secondary-50 border border-border rounded-lg text-text-primary text-sm font-medium transition-colors duration-200"
             >
               Clear Filters
             </button>

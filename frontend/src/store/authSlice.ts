@@ -31,6 +31,7 @@ const initialState: AuthState = {
   token: null,
   isAuthenticated: false,
   isLoading: false,
+  isInitialized: false,
   error: null,
   children: undefined,
   selectedChildId: undefined,
@@ -240,6 +241,10 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    // No stored token, so there is nothing to check and guards may proceed.
+    markAuthInitialized: (state) => {
+      state.isInitialized = true;
+    },
     setCredentials: (
       state,
       action: PayloadAction<{ user: UserResponse; token: string }>
@@ -339,6 +344,7 @@ const authSlice = createSlice({
       })
       .addCase(initializeAuth.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.isInitialized = true;
         if (action.payload) {
           state.token = action.payload.token;
           state.user = action.payload.user;
@@ -349,6 +355,7 @@ const authSlice = createSlice({
       })
       .addCase(initializeAuth.rejected, (state) => {
         state.isLoading = false;
+        state.isInitialized = true;
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
@@ -356,5 +363,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError, setCredentials, selectChild } = authSlice.actions;
+export const { logout, clearError, setCredentials, selectChild, markAuthInitialized } = authSlice.actions;
 export default authSlice.reducer;

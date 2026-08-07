@@ -256,7 +256,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
               <select
                 value={filters.period || ''}
                 onChange={(e) => setFilters(prev => ({ ...prev, period: e.target.value as AssessmentPeriod || undefined }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="select-base"
               >
                 <option value="">All periods</option>
                 {ASSESSMENT_PERIODS.map(period => (
@@ -273,7 +273,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
                   ...prev, 
                   isFinalized: e.target.value === '' ? undefined : e.target.value === 'true'
                 }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="select-base"
               >
                 <option value="">All statuses</option>
                 <option value="false">Draft</option>
@@ -287,7 +287,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
                 type="date"
                 value={filters.dateFrom || ''}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value || undefined }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="select-base"
               />
             </div>
 
@@ -297,7 +297,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
                 type="date"
                 value={filters.dateTo || ''}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value || undefined }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="select-base"
               />
             </div>
           </div>

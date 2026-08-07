@@ -418,7 +418,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 value={formData.playerId || ''}
                 onChange={(e) => handleInputChange('playerId', parseInt(e.target.value) || null)}
                 disabled={isReadOnly || isEditing}
-                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-text-primary focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors disabled:bg-gray-50 disabled:text-text-secondary"
+                className="select-base disabled:opacity-50"
               >
                 <option value="">Select a player...</option>
                 {players.map(player => (
@@ -438,7 +438,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 value={formData.assessmentDate}
                 onChange={(e) => handleInputChange('assessmentDate', e.target.value)}
                 disabled={isReadOnly}
-                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-text-primary focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors disabled:bg-gray-50 disabled:text-text-secondary"
+                className="select-base disabled:opacity-50"
               />
             </div>
 
@@ -450,7 +450,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 value={formData.period}
                 onChange={(e) => handleInputChange('period', e.target.value as AssessmentPeriod)}
                 disabled={isReadOnly}
-                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-text-primary focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors disabled:bg-gray-50 disabled:text-text-secondary"
+                className="select-base disabled:opacity-50"
               >
                 {ASSESSMENT_PERIODS.map(period => (
                   <option key={period.key} value={period.key} className="bg-white text-text-primary">

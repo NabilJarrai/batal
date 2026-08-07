@@ -180,7 +180,7 @@ export default function BulkSkillCreator({
             <select
               value={globalSettings.category}
               onChange={(e) => setGlobalSettings(prev => ({ ...prev, category: e.target.value as SkillCategory }))}
-              className="input-base"
+              className="select-base"
             >
               {SKILL_CATEGORIES.map(category => (
                 <option key={category.key} value={category.key}>
@@ -197,7 +197,7 @@ export default function BulkSkillCreator({
             <select
               value={globalSettings.applicableLevels[0] || SkillLevel.DEVELOPMENT}
               onChange={(e) => setGlobalSettings(prev => ({ ...prev, applicableLevels: [e.target.value as SkillLevel] }))}
-              className="input-base"
+              className="select-base"
             >
               {SKILL_LEVELS.map(level => (
                 <option key={level.key} value={level.key}>
@@ -287,7 +287,7 @@ export default function BulkSkillCreator({
                     value={skill.name}
                     onChange={(e) => updateSkill(index, 'name', e.target.value)}
                     placeholder="Enter skill name"
-                    className="w-full px-2 py-1 bg-background border border-border text-text-primary text-sm rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="select-sm"
                     maxLength={100}
                   />
                 </td>
@@ -296,7 +296,7 @@ export default function BulkSkillCreator({
                   <select
                     value={skill.category}
                     onChange={(e) => updateSkill(index, 'category', e.target.value as SkillCategory)}
-                    className="w-full px-2 py-1 bg-background border border-border text-text-primary text-sm rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="select-sm"
                   >
                     {SKILL_CATEGORIES.map(category => (
                       <option key={category.key} value={category.key}>
@@ -310,7 +310,7 @@ export default function BulkSkillCreator({
                   <select
                     value={skill.applicableLevels[0] || SkillLevel.DEVELOPMENT}
                     onChange={(e) => updateSkill(index, 'applicableLevels', [e.target.value as SkillLevel])}
-                    className="w-full px-2 py-1 bg-background border border-border text-text-primary text-sm rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="select-sm"
                   >
                     {SKILL_LEVELS.map(level => (
                       <option key={level.key} value={level.key}>
@@ -326,7 +326,7 @@ export default function BulkSkillCreator({
                     value={skill.description}
                     onChange={(e) => updateSkill(index, 'description', e.target.value)}
                     placeholder="Optional description"
-                    className="w-full px-2 py-1 bg-background border border-border text-text-primary text-sm rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="select-sm"
                     maxLength={500}
                   />
                 </td>

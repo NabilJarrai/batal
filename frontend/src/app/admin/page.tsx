@@ -35,12 +35,39 @@ import {
   Level
 } from '@/types';
 
+
+const ADMIN_TABS = ['overview', 'groups', 'users', 'parents', 'players', 'assessments', 'skills'] as const;
+type AdminTab = (typeof ADMIN_TABS)[number];
+
+/** The tab named in the URL hash, or Overview when it is missing or unknown. */
+function readTabFromUrl(): AdminTab {
+  if (typeof window === 'undefined') return 'overview';
+  const hash = window.location.hash.replace('#', '');
+  return (ADMIN_TABS as readonly string[]).includes(hash) ? (hash as AdminTab) : 'overview';
+}
+
 export default function AdminDashboard() {
   const { user } = useAuth();
   const { showError, showSuccess } = useNotification();
   
   // State
-  const [activeTab, setActiveTab] = useState<'overview' | 'groups' | 'users' | 'parents' | 'players' | 'assessments' | 'skills'>('overview');
+  const [activeTab, setActiveTabState] = useState<AdminTab>(() => readTabFromUrl());
+
+  // Mirrored into the URL hash so the tab survives a remount, a refresh, or a
+  // shared link, instead of silently snapping back to Overview.
+  const setActiveTab = useCallback((tab: AdminTab) => {
+    setActiveTabState(tab);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', `#${tab}`);
+    }
+  }, []);
+
+  // The hash also changes on back/forward.
+  useEffect(() => {
+    const syncFromUrl = () => setActiveTabState(readTabFromUrl());
+    window.addEventListener('hashchange', syncFromUrl);
+    return () => window.removeEventListener('hashchange', syncFromUrl);
+  }, []);
   const [loading, setLoading] = useState(true);
 
   // Data. `users` is academy staff only; parents are listed separately.
@@ -964,7 +991,7 @@ export default function AdminDashboard() {
             { id: 'skills', label: 'Skills', icon: <span>🎯</span> }
           ]}
           activeTab={activeTab}
-          onChange={(tabId) => setActiveTab(tabId as 'overview' | 'groups' | 'users' | 'parents' | 'players' | 'assessments' | 'skills')}
+          onChange={(tabId) => setActiveTab(tabId as AdminTab)}
           className="mb-6 sm:mb-8"
         />
 

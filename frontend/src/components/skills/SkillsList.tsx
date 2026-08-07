@@ -214,7 +214,7 @@ export default function SkillsList({ category, level, onSkillSelect }: SkillsLis
               <select
                 value={pageSize}
                 onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="select-sm"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
