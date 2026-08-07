@@ -17,6 +17,7 @@ import { Skill, SkillCategory, SKILL_CATEGORIES } from '@/types/skills';
 import { SkillRatingInput } from './SkillRatingInput';
 import { assessmentsAPI } from '@/lib/api/assessments';
 import { skillsAPI } from '@/lib/api/skills';
+import { assessmentTemplatesAPI } from '@/lib/api';
 import { playersAPI, usersAPI, groupsAPI } from '@/lib/api';
 
 interface AssessmentFormProps {
@@ -51,6 +52,10 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
   });
 
   const [skills, setSkills] = useState<Skill[]>([]);
+  /** Title of the group's assessment, shown so the coach knows what they are scoring. */
+  const [templateTitle, setTemplateTitle] = useState<string | null>(null);
+  /** Set when the player's group has no assessment assigned, which blocks scoring. */
+  const [templateError, setTemplateError] = useState<string | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(false);
@@ -84,11 +89,13 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
         // For existing assessments, load the skills and scores
         if (assessment) {
-          // Load skills for the assessment's player level
+          // Skills come from the template assigned to the player's group
           const assessmentPlayer = allPlayers.find(p => p.id === assessment.playerId);
-          if (assessmentPlayer?.level) {
-            const skillsData = await skillsAPI.getSkillsForAssessment(assessmentPlayer.level as any);
-            setSkills(skillsData);
+          if (assessmentPlayer) {
+            const template = await assessmentTemplatesAPI.getForPlayer(assessmentPlayer.id);
+            const skillsData = template.skills as any[];
+            setSkills(skillsData as any);
+            setTemplateTitle(template.title);
 
             // Load existing skill scores
             const existingScores: { [skillId: number]: SkillScoreFormData } = {};
@@ -101,7 +108,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
             });
 
             // Add any missing skills with zero scores
-            skillsData.forEach(skill => {
+            skillsData.forEach((skill: any) => {
               if (!existingScores[skill.id]) {
                 existingScores[skill.id] = {
                   skillId: skill.id,
@@ -133,11 +140,15 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
         const player = players.find(p => p.id === formData.playerId);
         setSelectedPlayer(player || null);
 
-        // Load skills based on player's level
-        if (player?.level) {
+        // Skills come from the template assigned to the player's group, so two
+        // players in different groups can be scored on different things.
+        if (player) {
           try {
-            const skillsForLevel = await skillsAPI.getSkillsForAssessment(player.level as any);
-            setSkills(skillsForLevel);
+            setTemplateError(null);
+            const template = await assessmentTemplatesAPI.getForPlayer(player.id);
+            const skillsForLevel = template.skills as any[];
+            setTemplateTitle(template.title);
+            setSkills(skillsForLevel as any);
 
             // Initialize skill scores for new assessments or when player changes
             if (isCreating || !assessment) {
@@ -193,8 +204,15 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
               }
             }
           } catch (err) {
-            console.error('Failed to load skills for player level:', err);
-            setError('Failed to load skills for selected player');
+            // The usual cause is a group with no assessment assigned, and the
+            // backend explains exactly that, so surface its message verbatim.
+            const message = err instanceof Error
+              ? err.message
+              : 'Failed to load the assessment for this player';
+            console.error('Failed to load assessment template:', err);
+            setSkills([]);
+            setTemplateTitle(null);
+            setTemplateError(message);
           }
         }
       } else if (!formData.playerId) {
@@ -450,14 +468,28 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
             <div className="p-2 bg-accent-teal/10 rounded-lg">
               <FileText className="w-5 h-5 text-accent-teal" />
             </div>
-            <h3 className="text-xl font-semibold text-text-primary">Skill Ratings</h3>
+            <div>
+              <h3 className="text-xl font-semibold text-text-primary">Skill Ratings</h3>
+              {templateTitle && (
+                <p className="text-sm text-text-secondary">
+                  From &ldquo;{templateTitle}&rdquo;, the assessment assigned to this player&apos;s group
+                </p>
+              )}
+            </div>
           </div>
 
           {!formData.playerId ? (
             <div className="text-center py-16 bg-gray-50 rounded-xl">
               <User className="mx-auto h-16 w-16 text-gray-400 mb-4" />
               <p className="text-text-primary text-lg font-medium mb-2">Select a player to load skills</p>
-              <p className="text-text-secondary">Skills will be loaded based on the player's level</p>
+              <p className="text-text-secondary">Skills come from the assessment assigned to their group</p>
+            </div>
+          ) : templateError ? (
+            <div className="text-center py-12 px-6 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+              <p className="text-text-primary text-lg font-medium mb-2">
+                This player cannot be assessed yet
+              </p>
+              <p className="text-accent-yellow">{templateError}</p>
             </div>
           ) : skills.length === 0 ? (
             <div className="text-center py-12">

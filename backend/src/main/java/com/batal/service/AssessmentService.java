@@ -55,8 +55,8 @@ public class AssessmentService {
         // Check for duplicate assessments in the same month
         validateNoDuplicateAssessment(player, request.getAssessmentDate(), null);
 
-        // Validate skills belong to player's level
-        validateSkillsForPlayerLevel(request.getSkillRatings(), player.getLevel());
+        // Validate skills against the template assigned to the player's group
+        validateSkillsAgainstTemplate(request.getSkillRatings(), player);
 
         // Create assessment
         Assessment assessment = new Assessment();
@@ -201,7 +201,7 @@ public class AssessmentService {
 
         // Update skill scores if provided
         if (request.getSkillRatings() != null) {
-            validateSkillsForPlayerLevel(request.getSkillRatings(), assessment.getPlayer().getLevel());
+            validateSkillsAgainstTemplate(request.getSkillRatings(), assessment.getPlayer());
             updateSkillScores(assessment, request.getSkillRatings());
         }
 
@@ -522,7 +522,39 @@ public class AssessmentService {
         }
     }
 
-    private void validateSkillsForPlayerLevel(List<SkillRatingRequest> skillRatings, Level playerLevel) {
+    /**
+     * The skills a player can be scored on: exactly those in the assessment
+     * template assigned to their group.
+     *
+     * A player with no group, or a group with no template, cannot be assessed.
+     * Falling back to every skill for their level would silently produce an
+     * assessment nobody chose the contents of.
+     */
+    private Set<Skill> requireTemplateSkills(Player player) {
+        Group group = player.getGroup();
+        if (group == null) {
+            throw new ValidationException(
+                    player.getFullName() + " is not in a group, so there is no assessment template to use. "
+                            + "Assign them to a group first.");
+        }
+
+        AssessmentTemplate template = group.getAssessmentTemplate();
+        if (template == null) {
+            throw new ValidationException(
+                    "Group \"" + group.getName() + "\" has no assessment template assigned, "
+                            + "so its players cannot be assessed yet. "
+                            + "Assign one by editing the group.");
+        }
+
+        return template.getSkills();
+    }
+
+    private void validateSkillsAgainstTemplate(List<SkillRatingRequest> skillRatings, Player player) {
+        Set<Skill> templateSkills = requireTemplateSkills(player);
+        Set<Long> allowedSkillIds = templateSkills.stream()
+                .map(Skill::getId)
+                .collect(Collectors.toSet());
+
         List<Long> skillIds = skillRatings.stream()
                 .map(SkillRatingRequest::getSkillId)
                 .collect(Collectors.toList());
@@ -534,20 +566,16 @@ public class AssessmentService {
         }
 
         for (Skill skill : skills) {
-            if (!skill.isApplicableForLevel(playerLevel)) {
+            if (!allowedSkillIds.contains(skill.getId())) {
                 throw new ValidationException(
-                        "Skill '" + skill.getName() + "' is not applicable for " + playerLevel + " level");
-            }
-            if (!skill.getIsActive()) {
-                throw new ValidationException(
-                        "Skill '" + skill.getName() + "' is not active");
+                        "Skill '" + skill.getName() + "' is not part of the assessment template for "
+                                + player.getGroup().getName() + ".");
             }
         }
     }
 
     private boolean isAssessmentComplete(Assessment assessment) {
-        Level playerLevel = assessment.getPlayer().getLevel();
-        List<Skill> requiredSkills = skillRepository.findByApplicableLevelsContainingAndIsActiveTrue(playerLevel);
+        Set<Skill> requiredSkills = requireTemplateSkills(assessment.getPlayer());
 
         Set<Long> assessedSkillIds = assessment.getSkillScores().stream()
                 .map(ss -> ss.getSkill().getId())
@@ -563,8 +591,7 @@ public class AssessmentService {
 
     private void validateAssessmentComplete(Assessment assessment) {
         if (!isAssessmentComplete(assessment)) {
-            Level playerLevel = assessment.getPlayer().getLevel();
-            List<Skill> requiredSkills = skillRepository.findByApplicableLevelsContainingAndIsActiveTrue(playerLevel);
+            Set<Skill> requiredSkills = requireTemplateSkills(assessment.getPlayer());
 
             Set<Long> assessedSkillIds = assessment.getSkillScores().stream()
                     .map(ss -> ss.getSkill().getId())

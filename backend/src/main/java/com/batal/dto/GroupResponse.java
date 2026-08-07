@@ -27,6 +27,11 @@ public class GroupResponse {
     private LocalDateTime updatedAt;
     
     // Coach information
+    // Assessment template. Null means assessments are blocked for this group's
+    // players until one is assigned.
+    private Long assessmentTemplateId;
+    private String assessmentTemplateTitle;
+
     private UserResponse coach;
 
     // Player information
@@ -52,6 +57,12 @@ public class GroupResponse {
         this.createdAt = group.getCreatedAt();
         this.updatedAt = group.getUpdatedAt();
         
+        // Set assessment template if one is assigned
+        if (group.getAssessmentTemplate() != null) {
+            this.assessmentTemplateId = group.getAssessmentTemplate().getId();
+            this.assessmentTemplateTitle = group.getAssessmentTemplate().getTitle();
+        }
+
         // Set coach information if present
         if (group.getCoach() != null) {
             this.coach = new UserResponse(group.getCoach(),
@@ -187,6 +198,22 @@ public class GroupResponse {
         this.updatedAt = updatedAt;
     }
     
+    public Long getAssessmentTemplateId() {
+        return assessmentTemplateId;
+    }
+
+    public void setAssessmentTemplateId(Long assessmentTemplateId) {
+        this.assessmentTemplateId = assessmentTemplateId;
+    }
+
+    public String getAssessmentTemplateTitle() {
+        return assessmentTemplateTitle;
+    }
+
+    public void setAssessmentTemplateTitle(String assessmentTemplateTitle) {
+        this.assessmentTemplateTitle = assessmentTemplateTitle;
+    }
+
     public UserResponse getCoach() {
         return coach;
     }

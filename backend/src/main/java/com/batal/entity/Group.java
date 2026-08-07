@@ -53,6 +53,15 @@ public class Group {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coach_id")
     private User coach;
+
+    /**
+     * Defines the skills this group's players are assessed on. Null until an
+     * admin assigns one, and assessments are blocked while it is null rather
+     * than falling back to some arbitrary set of skills.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assessment_template_id")
+    private AssessmentTemplate assessmentTemplate;
     
     // Players are now managed through Player entities
     @OneToMany(mappedBy = "group", fetch = FetchType.LAZY)
@@ -153,6 +162,14 @@ public class Group {
         this.capacity = capacity;
     }
     
+    public AssessmentTemplate getAssessmentTemplate() {
+        return assessmentTemplate;
+    }
+
+    public void setAssessmentTemplate(AssessmentTemplate assessmentTemplate) {
+        this.assessmentTemplate = assessmentTemplate;
+    }
+
     public User getCoach() {
         return coach;
     }

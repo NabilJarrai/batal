@@ -39,9 +39,14 @@ export interface GroupResponse {
   createdAt: string; // ISO datetime string
   updatedAt: string; // ISO datetime string
   
+  // Assessment template. Absent means this group's players cannot be
+  // assessed yet, since the template decides which skills are scored.
+  assessmentTemplateId?: number;
+  assessmentTemplateTitle?: string;
+
   // Coach information
   coach?: UserResponse;
-  
+
   // Pitch information
   pitchId?: number;
   pitchName?: string;
@@ -57,6 +62,8 @@ export interface GroupCreateRequest {
   ageGroup: AgeGroup;
   capacity: number;
   coachId?: number;
+  /** Assessment the group's players are scored on. Unset blocks assessments. */
+  assessmentTemplateId?: number;
   zone?: string;
   description?: string;
   isActive?: boolean;
@@ -66,6 +73,9 @@ export interface GroupCreateRequest {
 export interface GroupUpdateRequest {
   name?: string;
   capacity?: number;
+  /** Assessment the group's players are scored on. Null means "leave as is";
+   *  removing it goes through groupsAPI.removeAssessmentTemplate. */
+  assessmentTemplateId?: number;
   zone?: string;
   description?: string;
   isActive?: boolean;

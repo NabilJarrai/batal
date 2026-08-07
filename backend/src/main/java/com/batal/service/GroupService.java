@@ -1,12 +1,16 @@
 package com.batal.service;
 
 import com.batal.dto.*;
+import com.batal.entity.AssessmentTemplate;
 import com.batal.entity.Group;
 import com.batal.entity.Player;
 import com.batal.entity.User;
 import com.batal.entity.enums.AgeGroup;
 import com.batal.entity.enums.Level;
 import com.batal.entity.enums.UserType;
+import com.batal.exception.BusinessRuleException;
+import com.batal.exception.ResourceNotFoundException;
+import com.batal.repository.AssessmentTemplateRepository;
 import com.batal.repository.GroupRepository;
 import com.batal.repository.PlayerRepository;
 import com.batal.repository.UserRepository;
@@ -27,6 +31,9 @@ public class GroupService {
 
     @Autowired
     private GroupRepository groupRepository;
+
+    @Autowired
+    private AssessmentTemplateRepository assessmentTemplateRepository;
 
     @Autowired
     private PlayerRepository playerRepository;
@@ -58,6 +65,11 @@ public class GroupService {
                 throw new RuntimeException("User is not a coach");
             }
             group.setCoach(coach);
+        }
+
+        // Assign assessment template if provided
+        if (request.getAssessmentTemplateId() != null) {
+            group.setAssessmentTemplate(requireActiveTemplate(request.getAssessmentTemplateId()));
         }
 
         Group savedGroup = groupRepository.save(group);
@@ -137,6 +149,13 @@ public class GroupService {
                 throw new RuntimeException("User is not a coach");
             }
             group.setCoach(coach);
+        }
+
+        // Update assessment template if provided. Null means "leave as is";
+        // clearing it goes through removeAssessmentTemplate, because dropping
+        // it blocks assessments for every player in the group.
+        if (request.getAssessmentTemplateId() != null) {
+            group.setAssessmentTemplate(requireActiveTemplate(request.getAssessmentTemplateId()));
         }
 
         group.setUpdatedAt(LocalDateTime.now());
@@ -239,6 +258,35 @@ public class GroupService {
 
         Group savedGroup = groupRepository.save(group);
         return new GroupResponse(savedGroup);
+    }
+
+    /**
+     * Unassign the group's assessment template.
+     *
+     * Separate from updateGroup because a null id there means "leave it alone",
+     * and because removing it blocks assessments for everyone in the group.
+     */
+    public GroupResponse removeAssessmentTemplateFromGroup(Long groupId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new ResourceNotFoundException("Group", groupId));
+
+        group.setAssessmentTemplate(null);
+        group.setUpdatedAt(LocalDateTime.now());
+
+        Group savedGroup = groupRepository.save(group);
+        return new GroupResponse(savedGroup);
+    }
+
+    /** A template must exist and be active before a group can point at it. */
+    private AssessmentTemplate requireActiveTemplate(Long templateId) {
+        AssessmentTemplate template = assessmentTemplateRepository.findById(templateId)
+                .orElseThrow(() -> new ResourceNotFoundException("Assessment template", templateId));
+
+        if (!Boolean.TRUE.equals(template.getIsActive())) {
+            throw new BusinessRuleException(
+                    "Assessment template \"" + template.getTitle() + "\" is inactive and cannot be assigned.");
+        }
+        return template;
     }
 
     // Get available groups (with capacity)

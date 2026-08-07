@@ -6,6 +6,10 @@ import {
   UserResponse,
 } from "@/types/auth";
 import { CreatePlayersRequest, CreatePlayersResponse } from "@/types/players";
+import {
+  AssessmentTemplate,
+  AssessmentTemplateRequest,
+} from "@/types/assessmentTemplates";
 import { apiClient } from "@/lib/apiClient";
 
 const API_BASE_URL =
@@ -517,6 +521,50 @@ export const playersAPI = {
 };
 
 // Groups API calls
+// Assessment templates: the named skill sets assigned to groups.
+export const assessmentTemplatesAPI = {
+  getAll: async (activeOnly = false): Promise<AssessmentTemplate[]> => {
+    return apiRequest<AssessmentTemplate[]>(
+      `/assessment-templates?activeOnly=${activeOnly}`
+    );
+  },
+
+  getById: async (id: number): Promise<AssessmentTemplate> => {
+    return apiRequest<AssessmentTemplate>(`/assessment-templates/${id}`);
+  },
+
+  // The template a player is assessed against, inherited from their group.
+  // Rejects with a message to show the coach when the group has none.
+  getForPlayer: async (playerId: number): Promise<AssessmentTemplate> => {
+    return apiRequest<AssessmentTemplate>(
+      `/assessment-templates/for-player/${playerId}`
+    );
+  },
+
+  create: async (data: AssessmentTemplateRequest): Promise<AssessmentTemplate> => {
+    return apiRequest<AssessmentTemplate>("/assessment-templates", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  update: async (
+    id: number,
+    data: AssessmentTemplateRequest
+  ): Promise<AssessmentTemplate> => {
+    return apiRequest<AssessmentTemplate>(`/assessment-templates/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+
+  delete: async (id: number): Promise<void> => {
+    return apiRequest<void>(`/assessment-templates/${id}`, {
+      method: "DELETE",
+    });
+  },
+};
+
 export const groupsAPI = {
   getAll: async (params?: any): Promise<any> => {
     const queryParams = params ? `?${new URLSearchParams(params)}` : "";
@@ -545,6 +593,14 @@ export const groupsAPI = {
 
   delete: async (id: number): Promise<void> => {
     return apiRequest<void>(`/groups/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  // Unassign the group's assessment template. Separate from update, where a
+  // null id means "leave it alone". Blocks assessments for the whole group.
+  removeAssessmentTemplate: async (groupId: number): Promise<any> => {
+    return apiRequest<any>(`/groups/${groupId}/assessment-template`, {
       method: "DELETE",
     });
   },

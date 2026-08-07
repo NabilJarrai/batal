@@ -198,6 +198,15 @@ public class GroupController {
         }
     }
 
+    // DELETE /api/groups/{groupId}/assessment-template - Unassign the template.
+    // Separate from the update endpoint, where a null id means "leave it alone".
+    // Note this blocks assessments for every player in the group.
+    @DeleteMapping("/{groupId}/assessment-template")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<GroupResponse> removeAssessmentTemplateFromGroup(@PathVariable Long groupId) {
+        return ResponseEntity.ok(groupService.removeAssessmentTemplateFromGroup(groupId));
+    }
+
     // GET /api/groups/coach/{coachId} - Get coach's assigned groups
     @GetMapping("/coach/{coachId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or (hasRole('COACH') and @groupController.isCurrentUserCoach(#coachId))")

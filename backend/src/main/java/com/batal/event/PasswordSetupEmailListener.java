@@ -5,8 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -32,12 +30,17 @@ public class PasswordSetupEmailListener {
     private AuthService authService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onPasswordSetupEmailRequested(PasswordSetupEmailRequestedEvent event) {
         try {
-            authService.sendPasswordSetupEmail(event.getUserId());
+            // Opens its own transaction and handles a mail failure internally,
+            // so nothing here can mark a transaction rollback-only.
+            if (!authService.issuePasswordSetupLink(event.getUserId())) {
+                log.error("Could not email a password setup link to user {}. "
+                        + "The account exists and the link is still valid, so an "
+                        + "admin can resend it.", event.getUserId());
+            }
         } catch (Exception e) {
-            log.error("Failed to send password setup email to user {}. "
+            log.error("Failed to issue a password setup link for user {}. "
                     + "The account was created; an admin can resend the link.",
                     event.getUserId(), e);
         }

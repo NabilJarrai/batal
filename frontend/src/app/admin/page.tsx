@@ -18,6 +18,7 @@ import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import ResetPasswordModal from '@/components/ResetPasswordModal';
 import ReassignPlayerModal from '@/components/ReassignPlayerModal';
 import SkillsManagement from '@/components/skills/SkillsManagement';
+import AssessmentTemplateManagement from '@/components/assessments/AssessmentTemplateManagement';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
 import { useAuth } from '@/store/hooks';
@@ -36,7 +37,7 @@ export default function AdminDashboard() {
   const { showError, showSuccess } = useNotification();
   
   // State
-  const [activeTab, setActiveTab] = useState<'overview' | 'groups' | 'users' | 'parents' | 'players' | 'skills'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'groups' | 'users' | 'parents' | 'players' | 'assessments' | 'skills'>('overview');
   const [loading, setLoading] = useState(true);
 
   // Data. `users` is academy staff only; parents are listed separately.
@@ -230,6 +231,17 @@ export default function AdminDashboard() {
       showError(errorMessage, 'Users Data Error');
     }
   }, [usersPagination.page, usersPagination.size, usersPagination.sortBy, usersPagination.sortDir, usersPagination.search, showError]);
+
+  // Groups carry their assigned assessment template, so anything that changes
+  // templates or assignments needs them re-read.
+  const loadGroupsData = useCallback(async () => {
+    try {
+      setGroups(await groupsAPI.getAll());
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load groups';
+      showError(errorMessage, 'Groups Data Error');
+    }
+  }, [showError]);
 
   const loadParentsData = useCallback(async () => {
     try {
@@ -928,10 +940,11 @@ export default function AdminDashboard() {
             { id: 'users', label: 'Staff', icon: <span>🧑‍💼</span> },
             { id: 'parents', label: 'Parents', icon: <span>👪</span> },
             { id: 'players', label: 'Players', icon: <span>⚽</span> },
+            { id: 'assessments', label: 'Assessments', icon: <span>📝</span> },
             { id: 'skills', label: 'Skills', icon: <span>🎯</span> }
           ]}
           activeTab={activeTab}
-          onChange={(tabId) => setActiveTab(tabId as 'overview' | 'groups' | 'users' | 'parents' | 'players' | 'skills')}
+          onChange={(tabId) => setActiveTab(tabId as 'overview' | 'groups' | 'users' | 'parents' | 'players' | 'assessments' | 'skills')}
           className="mb-6 sm:mb-8"
         />
 
@@ -1300,6 +1313,17 @@ export default function AdminDashboard() {
                 </div>
               )}
             </div>
+          )}
+
+          {activeTab === 'assessments' && (
+            <AssessmentTemplateManagement
+              onError={(message) => showError(message, 'Assessment Error')}
+              onSuccess={showSuccess}
+              groupsWithoutTemplate={groups
+                .filter(group => group.isActive && !group.assessmentTemplateId)
+                .map(group => group.name)}
+              onTemplatesChanged={loadGroupsData}
+            />
           )}
 
           {activeTab === 'skills' && (
