@@ -34,7 +34,7 @@ export default function SkillCategoryTabs({
       color: 'bg-gradient-to-br from-gray-600 to-gray-700',
       bgColor: 'bg-gray-500/20',
       borderColor: 'border-gray-400/30',
-      textColor: 'text-gray-300',
+      textColor: 'text-text-secondary',
       description: 'View all skills across categories'
     },
     ...SKILL_CATEGORIES
@@ -59,7 +59,7 @@ export default function SkillCategoryTabs({
                 hover:z-20 focus:z-20 focus:outline-none focus:ring-2 focus:ring-primary/50
                 active:scale-100
                 ${isActive
-                  ? `${tab.color} text-white shadow-xl scale-105 border-2 border-white/40`
+                  ? `${tab.color} text-white shadow-xl scale-105 border-2 border-border`
                   : 'text-text-primary hover:text-white hover:shadow-lg bg-background border border-border hover:border-transparent hover:bg-gradient-to-br hover:from-primary hover:to-primary-dark'
                 }
               `}
@@ -100,8 +100,8 @@ export default function SkillCategoryTabs({
                       } animate-pulse`} />
                       <span className={`font-medium ${
                         activeCount === totalCount
-                          ? (isActive ? 'text-green-200' : 'text-green-400')
-                          : (isActive ? 'text-yellow-200' : 'text-yellow-400')
+                          ? (isActive ? 'text-green-600' : 'text-green-400')
+                          : (isActive ? 'text-accent-yellow' : 'text-yellow-400')
                       }`}>
                         {activeCount} active
                       </span>
@@ -115,7 +115,7 @@ export default function SkillCategoryTabs({
                 ml-auto px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300
                 flex items-center gap-1.5 shadow-lg
                 ${isActive
-                  ? 'bg-black/20 text-white border border-white/30'
+                  ? 'bg-black/20 text-white border border-border'
                   : 'bg-secondary text-text-primary border border-border'
                 }
                 group-hover:scale-105
@@ -157,7 +157,7 @@ export default function SkillCategoryTabs({
                     <p className="text-text-secondary text-sm">
                       {totalCount} skills in this category
                       {activeCount < totalCount && (
-                        <span className="inline-flex items-center gap-1 ml-2 px-2 py-0.5 bg-yellow-600 border border-yellow-500 rounded-md text-yellow-200 text-xs font-medium">
+                        <span className="inline-flex items-center gap-1 ml-2 px-2 py-0.5 bg-yellow-600 border border-yellow-500 rounded-md text-accent-yellow text-xs font-medium">
                           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92z" clipRule="evenodd" />
                           </svg>

@@ -115,7 +115,7 @@ export default function SkillCard({
             ${skill.isActive ? 'after:bg-green-400/50' : 'after:bg-red-400/50'}
           `} />
           {!skill.isActive && (
-            <span className="text-xs px-2 py-1 bg-red-500/20 text-red-300 rounded-lg border border-red-400/30 backdrop-blur-sm">
+            <span className="text-xs px-2 py-1 bg-red-500/20 text-accent-red rounded-lg border border-red-500/20">
               Inactive
             </span>
           )}
@@ -208,7 +208,7 @@ export default function SkillCard({
                   </button>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-red-300 font-medium">Confirm?</span>
+                    <span className="text-xs text-accent-red font-medium">Confirm?</span>
                     <button
                       onClick={handleConfirmDelete}
                       className="

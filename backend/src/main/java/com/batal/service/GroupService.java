@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -86,7 +87,18 @@ public class GroupService {
             groups = groupRepository.findAll(pageable);
         }
 
-        return groups.map(GroupResponse::new);
+        // Reload this page's groups with their players attached, in one query.
+        // Without it every group would come back with an empty player list,
+        // which is what the cards and the split picker read.
+        List<Long> ids = groups.getContent().stream().map(Group::getId).collect(Collectors.toList());
+        if (ids.isEmpty()) {
+            return groups.map(GroupResponse::new);
+        }
+
+        Map<Long, Group> withPlayers = groupRepository.findAllWithPlayersByIds(ids).stream()
+                .collect(Collectors.toMap(Group::getId, group -> group));
+
+        return groups.map(group -> new GroupResponse(withPlayers.getOrDefault(group.getId(), group)));
     }
 
     // Get group by ID
@@ -161,6 +173,132 @@ public class GroupService {
         group.setUpdatedAt(LocalDateTime.now());
         Group savedGroup = groupRepository.save(group);
         return new GroupResponse(savedGroup);
+    }
+
+    /**
+     * Relieve a full group by splitting it in two.
+     *
+     * The new group is a sibling: same level, age group, age range and
+     * assessment, so the players moved across are assessed on exactly what
+     * they were before. The coach is deliberately not copied, because one
+     * coach usually cannot take both groups, and the card will prompt for one.
+     *
+     * All of it commits together, so a failure cannot leave a half-populated
+     * group behind.
+     */
+    public GroupSplitResponse splitGroup(Long sourceGroupId, GroupSplitRequest request) {
+        Group source = groupRepository.findByIdWithPlayersAndCoach(sourceGroupId)
+                .orElseThrow(() -> new ResourceNotFoundException("Group", sourceGroupId));
+
+        Group newGroup = new Group();
+        newGroup.setName(request.getNewGroupName().trim());
+        newGroup.setLevel(source.getLevel());
+        newGroup.setAgeGroup(source.getAgeGroup());
+        newGroup.setMinAge(source.getMinAge());
+        newGroup.setMaxAge(source.getMaxAge());
+        newGroup.setCapacity(source.getCapacity());
+        newGroup.setZone(source.getZone());
+        newGroup.setAssessmentTemplate(source.getAssessmentTemplate());
+        newGroup.setIsActive(true);
+        final Group createdGroup = groupRepository.save(newGroup);
+
+        int moved = 0;
+        if (request.getPlayerIdsToMove() != null) {
+            for (Long playerId : request.getPlayerIdsToMove()) {
+                Player player = playerRepository.findById(playerId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Player", playerId));
+
+                // Guard against pulling in players from unrelated groups: this
+                // operation is about redistributing one group.
+                if (player.getGroup() == null || !player.getGroup().getId().equals(sourceGroupId)) {
+                    throw new BusinessRuleException(
+                            player.getFullName() + " is not in " + source.getName()
+                                    + " and cannot be moved by splitting it.");
+                }
+
+                // Both sides: currentPlayerCount reads the group's own
+                // collection, so setting only the owning side leaves the
+                // returned counts stale even after a re-read.
+                source.getPlayers().remove(player);
+                createdGroup.getPlayers().add(player);
+                player.setGroup(createdGroup);
+                playerRepository.save(player);
+                moved++;
+            }
+        }
+
+        // The player whose assignment hit the limit, placed wherever the admin
+        // chose. No capacity check: splitting is the deliberate response to
+        // being over, and the admin has already been told.
+        if (request.getNewPlayerId() != null) {
+            Player newPlayer = playerRepository.findById(request.getNewPlayerId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Player", request.getNewPlayerId()));
+
+            boolean joinsNew = request.getNewPlayerJoinsNewGroup() == null
+                    || request.getNewPlayerJoinsNewGroup();
+            Group target = joinsNew ? createdGroup : source;
+
+            if (newPlayer.getGroup() != null) {
+                newPlayer.getGroup().getPlayers().remove(newPlayer);
+            }
+            target.getPlayers().add(newPlayer);
+            newPlayer.setGroup(target);
+            playerRepository.save(newPlayer);
+        }
+
+        return new GroupSplitResponse(
+                new GroupResponse(source),
+                new GroupResponse(createdGroup),
+                moved);
+    }
+
+    /**
+     * Move or unassign several of a group's players at once.
+     *
+     * One transaction, so a selection either lands entirely or not at all.
+     * Capacity is not enforced: the admin picked these players deliberately,
+     * and the alternative is a bulk action that half-succeeds.
+     *
+     * @return the source group, and the destination when there was one
+     */
+    public GroupSplitResponse movePlayers(Long sourceGroupId, BulkPlayerMoveRequest request) {
+        Group source = groupRepository.findByIdWithPlayersAndCoach(sourceGroupId)
+                .orElseThrow(() -> new ResourceNotFoundException("Group", sourceGroupId));
+
+        Group target = null;
+        if (request.getTargetGroupId() != null) {
+            if (request.getTargetGroupId().equals(sourceGroupId)) {
+                throw new BusinessRuleException("Those players are already in " + source.getName() + ".");
+            }
+            target = groupRepository.findByIdWithPlayersAndCoach(request.getTargetGroupId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Group", request.getTargetGroupId()));
+        }
+
+        int moved = 0;
+        for (Long playerId : request.getPlayerIds()) {
+            Player player = playerRepository.findById(playerId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Player", playerId));
+
+            if (player.getGroup() == null || !player.getGroup().getId().equals(sourceGroupId)) {
+                throw new BusinessRuleException(
+                        player.getFullName() + " is not in " + source.getName() + ".");
+            }
+
+            // Both sides, so the counts returned here are correct without a
+            // re-read: currentPlayerCount reads the group's own collection.
+            source.getPlayers().remove(player);
+            if (target != null) {
+                target.getPlayers().add(player);
+            }
+            player.setGroup(target);
+            playerRepository.save(player);
+            moved++;
+        }
+
+        return new GroupSplitResponse(
+                new GroupResponse(source),
+                target != null ? new GroupResponse(target) : null,
+                moved);
     }
 
     // Delete group

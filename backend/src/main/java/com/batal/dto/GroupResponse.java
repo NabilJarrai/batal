@@ -1,12 +1,15 @@
 package com.batal.dto;
 
 import com.batal.entity.Group;
+import com.batal.entity.Player;
 import com.batal.entity.enums.AgeGroup;
 import com.batal.entity.enums.Level;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.hibernate.Hibernate;
 
 public class GroupResponse {
     
@@ -71,9 +74,23 @@ public class GroupResponse {
                     .collect(Collectors.toList()));
         }
 
-        // Set players information - we'll need to convert players to DTOs manually
-        // For now, we'll set this to empty list and let the service layer handle player details
-        this.players = List.of();
+        // Players, when the caller fetched them. The service layer was meant to
+        // fill these in and never did, leaving every group response with an
+        // empty list - which silently emptied the card's player list and any
+        // picker built on it.
+        //
+        // Guarded on initialisation rather than always loading: list endpoints
+        // page over many groups and would otherwise trigger a query per group.
+        // Endpoints that need players use findByIdWithPlayersAndCoach.
+        if (Hibernate.isInitialized(group.getPlayers())) {
+            this.players = group.getPlayers().stream()
+                    .sorted(Comparator.comparing(Player::getFirstName, Comparator.nullsLast(String::compareTo))
+                            .thenComparing(Player::getId, Comparator.nullsLast(Long::compareTo)))
+                    .map(GroupResponse::toPlayerSummary)
+                    .collect(Collectors.toList());
+        } else {
+            this.players = List.of();
+        }
     }
     
     // Getters and Setters
@@ -228,5 +245,22 @@ public class GroupResponse {
     
     public void setPlayers(List<PlayerDTO> players) {
         this.players = players;
+    }
+
+    /**
+     * Enough of a player to list and act on from a group: identity, age and
+     * level. Deliberately not the full PlayerDTO, whose parent lookups would
+     * add queries per player.
+     */
+    private static PlayerDTO toPlayerSummary(Player player) {
+        PlayerDTO dto = new PlayerDTO();
+        dto.setId(player.getId());
+        dto.setFirstName(player.getFirstName());
+        dto.setLastName(player.getLastName());
+        dto.setDateOfBirth(player.getDateOfBirth());
+        dto.setLevel(player.getLevel());
+        dto.setBasicFoot(player.getBasicFoot());
+        dto.setIsActive(player.getIsActive());
+        return dto;
     }
 }

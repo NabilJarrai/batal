@@ -175,8 +175,8 @@ export default function AutoAssignmentModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title as="h3" className="text-lg font-medium text-white mb-4">
+              <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-background-modal p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Title as="h3" className="text-lg font-medium text-text-primary mb-4">
                   Auto-Assign Unassigned Players
                 </Dialog.Title>
 
@@ -221,7 +221,7 @@ export default function AutoAssignmentModal({
                             className={`p-3 rounded-lg border transition-all cursor-pointer ${
                               selectedPlayers.has(player.id!)
                                 ? 'bg-blue-500/20 border-blue-500/40'
-                                : 'bg-gray-700/50 border-gray-600/50 hover:bg-gray-700/70'
+                                : 'bg-secondary-50 border-border hover:bg-secondary-100'
                             }`}
                             onClick={() => togglePlayerSelection(player.id!)}
                           >
@@ -235,10 +235,10 @@ export default function AutoAssignmentModal({
                                 />
                                 <div>
                                   <div className="flex items-center space-x-2">
-                                    <span className="text-white font-medium">
+                                    <span className="text-text-primary font-medium">
                                       {player.firstName} {player.lastName}
                                     </span>
-                                    <span className={`px-2 py-0.5 text-xs rounded-full text-white ${getAgeGroupColor(player)}`}>
+                                    <span className={`px-2 py-0.5 text-xs rounded-full text-text-primary ${getAgeGroupColor(player)}`}>
                                       {player.dateOfBirth && AssignmentService.getAgeGroup(player.dateOfBirth)}
                                     </span>
                                     <span className="px-2 py-0.5 text-xs bg-purple-500 rounded-full text-white">
@@ -281,7 +281,7 @@ export default function AutoAssignmentModal({
                       <div className="flex gap-3">
                         <button
                           onClick={handleClose}
-                          className="px-4 py-2 bg-secondary-600 hover:bg-secondary-700 rounded-lg text-white transition-colors"
+                          className="px-4 py-2 bg-secondary-600 hover:bg-secondary-700 rounded-lg text-text-primary transition-colors"
                         >
                           Cancel
                         </button>
@@ -326,7 +326,7 @@ export default function AutoAssignmentModal({
                     <div className="flex justify-end">
                       <button
                         onClick={handleClose}
-                        className="px-4 py-2 bg-secondary-600 hover:bg-secondary-700 rounded-lg text-white transition-colors"
+                        className="px-4 py-2 bg-secondary-600 hover:bg-secondary-700 rounded-lg text-text-primary transition-colors"
                       >
                         Close
                       </button>

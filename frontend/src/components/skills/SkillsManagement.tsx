@@ -303,7 +303,7 @@ export default function SkillsManagement() {
                 disabled={currentPage === 0}
                 className={`p-2 rounded-lg transition-colors ${
                   currentPage === 0
-                    ? 'bg-white/5 text-disabled cursor-not-allowed'
+                    ? 'bg-secondary-50 text-disabled cursor-not-allowed'
                     : 'bg-secondary-50 text-text-primary hover:bg-secondary-100'
                 }`}
               >
@@ -322,7 +322,7 @@ export default function SkillsManagement() {
                         onClick={() => setCurrentPage(i)}
                         className={`px-3 py-1 rounded-lg transition-colors ${
                           i === currentPage
-                            ? 'bg-cyan-600 text-text-primary'
+                            ? 'bg-cyan-600 text-white'
                             : 'bg-secondary-50 text-text-primary hover:bg-secondary-100'
                         }`}
                       >
@@ -343,7 +343,7 @@ export default function SkillsManagement() {
                 disabled={currentPage === totalPages - 1}
                 className={`p-2 rounded-lg transition-colors ${
                   currentPage === totalPages - 1
-                    ? 'bg-white/5 text-disabled cursor-not-allowed'
+                    ? 'bg-secondary-50 text-disabled cursor-not-allowed'
                     : 'bg-secondary-50 text-text-primary hover:bg-secondary-100'
                 }`}
               >
@@ -461,7 +461,7 @@ export default function SkillsManagement() {
               </button>
               <button
                 onClick={handleInitializeDefaults}
-                className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-text-primary rounded-lg font-medium transition-colors"
+                className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
               >
                 Initialize Skills
               </button>

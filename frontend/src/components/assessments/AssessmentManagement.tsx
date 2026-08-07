@@ -143,10 +143,10 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
       {/* Header */}
       {viewMode === 'list' && (
         <>
-          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
+          <div className="bg-background border border-border rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-white">Assessment Management</h1>
+                <h1 className="text-2xl font-bold text-text-primary">Assessment Management</h1>
                 <p className="text-text-secondary mt-1">
                   {playerId ? 'Player assessment history and progress' : 'Manage player assessments and track progress'}
                 </p>
@@ -156,7 +156,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
                 <button
                   onClick={loadData}
                   disabled={loading}
-                  className="p-2 text-text-secondary hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+                  className="p-2 text-text-secondary hover:text-text-primary hover:bg-secondary-100 rounded-lg transition-colors"
                   title="Refresh"
                 >
                   <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
@@ -164,7 +164,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
 
                 <button
                   onClick={() => setViewMode('analytics')}
-                  className="flex items-center gap-2 px-4 py-2 border border-white/30 text-white rounded-lg hover:bg-white/20 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 border border-border text-text-primary rounded-lg hover:bg-secondary-100 transition-colors"
                 >
                   <BarChart3 size={16} />
                   Analytics
@@ -197,7 +197,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
 
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4">
+            <div className="bg-background border border-border rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Total Assessments</p>
@@ -207,7 +207,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
               </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4">
+            <div className="bg-background border border-border rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Completed</p>
@@ -217,7 +217,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
               </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4">
+            <div className="bg-background border border-border rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">In Progress</p>
@@ -227,7 +227,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
               </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4">
+            <div className="bg-background border border-border rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">This Month</p>
@@ -249,7 +249,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
 
                   return (
                     <div key={category.key} className="text-center">
-                      <div className={`w-12 h-12 rounded-full ${category.color} flex items-center justify-center text-white text-xl mx-auto mb-2`}>
+                      <div className={`w-12 h-12 rounded-full ${category.color} flex items-center justify-center text-text-primary text-xl mx-auto mb-2`}>
                         {category.icon}
                       </div>
                       <p className="font-medium text-gray-900">{category.label}</p>
@@ -276,7 +276,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
       {/* Content Area */}
       <div>
         {viewMode === 'list' && (
-          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl">
+          <div className="bg-background border border-border rounded-xl">
             <div className="p-6">
               <AssessmentList
                 assessments={assessments}

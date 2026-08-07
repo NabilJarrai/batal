@@ -19,6 +19,11 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
     
     List<Group> findByLevelAndAgeGroup(Level level, AgeGroup ageGroup);
     List<Group> findByCoachId(Long coachId);
+    // Players and coach for a page of groups in one query, so listing groups
+    // does not fire a query per group to show their players.
+    @Query("SELECT DISTINCT g FROM Group g LEFT JOIN FETCH g.players LEFT JOIN FETCH g.coach WHERE g.id IN :ids")
+    List<Group> findAllWithPlayersByIds(@Param("ids") List<Long> ids);
+
     @Query("SELECT g FROM Group g LEFT JOIN FETCH g.players LEFT JOIN FETCH g.coach WHERE g.id = :id")
     Optional<Group> findByIdWithPlayersAndCoach(@Param("id") Long id);
     

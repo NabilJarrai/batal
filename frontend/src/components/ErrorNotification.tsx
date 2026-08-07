@@ -92,14 +92,14 @@ export default function ErrorNotification({
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
       >
-        <div className={`${colors.bg} backdrop-blur-lg ${colors.border} border rounded-2xl shadow-2xl p-4`}>
+        <div className={`${colors.bg} ${colors.border} border rounded-2xl shadow-2xl p-4`}>
           <div className="flex">
             <div className="flex-shrink-0">
               {getIcon()}
             </div>
             <div className="ml-3 w-0 flex-1 pt-0.5">
               {title && (
-                <p className="text-sm font-medium text-white">
+                <p className={`text-sm font-medium ${colors.text}`}>
                   {title}
                 </p>
               )}
@@ -120,9 +120,9 @@ export default function ErrorNotification({
           </div>
           {autoClose && (
             <div className="mt-3">
-              <div className={`h-1 ${colors.bg} rounded-full overflow-hidden`}>
+              <div className="h-1 bg-black/10 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-white/30 rounded-full animate-shrink"
+                  className="h-full bg-black/25 rounded-full animate-shrink"
                   style={{ animationDuration: `${autoCloseDelay}ms` }}
                 />
               </div>

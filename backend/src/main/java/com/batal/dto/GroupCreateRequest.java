@@ -20,7 +20,7 @@ public class GroupCreateRequest {
     private AgeGroup ageGroup;
     
     @Min(value = 5, message = "Capacity must be at least 5")
-    private Integer capacity = 15;
+    private Integer capacity = 20;
     
     private Long coachId;
 

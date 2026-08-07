@@ -7,6 +7,9 @@ import UserCard from '@/components/UserCard';
 import PlayerCard from '@/components/PlayerCard';
 import { PlayerAssignmentModal, CoachAssignmentModal } from '@/components/AssignmentModals';
 import AutoAssignmentModal from '@/components/AutoAssignmentModal';
+import GroupOverCapacityModal from '@/components/GroupOverCapacityModal';
+import AssignAssessmentModal from '@/components/AssignAssessmentModal';
+import GroupPlayersModal from '@/components/GroupPlayersModal';
 import PromotionModal from '@/components/PromotionModal';
 import CreatePlayerModal from '@/components/CreatePlayerModal';
 import CreateUserModal from '@/components/CreateUserModal';
@@ -98,6 +101,23 @@ export default function AdminDashboard() {
     groupId?: number;
     selectedGroup?: GroupResponse;
   }>({ isOpen: false });
+
+  // Offered when an assignment lands on a group that is already at its limit.
+  const [overCapacityModal, setOverCapacityModal] = useState<{
+    isOpen: boolean;
+    group: GroupResponse | null;
+    player: PlayerDTO | null;
+  }>({ isOpen: false, group: null, player: null });
+
+  const [assignAssessmentModal, setAssignAssessmentModal] = useState<{
+    isOpen: boolean;
+    group: GroupResponse | null;
+  }>({ isOpen: false, group: null });
+
+  const [groupPlayersModal, setGroupPlayersModal] = useState<{
+    isOpen: boolean;
+    group: GroupResponse | null;
+  }>({ isOpen: false, group: null });
 
   const [autoAssignmentModal, setAutoAssignmentModal] = useState(false);
   const [autoAssignRefreshTrigger, setAutoAssignRefreshTrigger] = useState(0);
@@ -1019,6 +1039,14 @@ export default function AdminDashboard() {
               onRemovePlayer={handleRemovePlayer}
               onUnassignPlayer={handleRemovePlayer}
               onReassignPlayer={handleReassignPlayer}
+              onViewPlayers={(groupId) => {
+                const group = groups.find(g => g.id === groupId);
+                if (group) setGroupPlayersModal({ isOpen: true, group });
+              }}
+              onAssignAssessment={(groupId) => {
+                const group = groups.find(g => g.id === groupId);
+                if (group) setAssignAssessmentModal({ isOpen: true, group });
+              }}
               onEdit={handleEditGroup}
               onDelete={handleDeleteGroup}
               onCreateGroup={handleCreateGroup}
@@ -1340,6 +1368,46 @@ export default function AdminDashboard() {
           selectedPlayer={playerAssignmentModal.selectedPlayer}
           playerPreSelected={playerAssignmentModal.playerPreSelected}
           onAssignmentComplete={handleAssignmentComplete}
+          onGroupFull={(player, group) => {
+            setPlayerAssignmentModal({ isOpen: false });
+            setOverCapacityModal({ isOpen: true, group, player });
+          }}
+        />
+
+        <GroupPlayersModal
+          isOpen={groupPlayersModal.isOpen}
+          group={groupPlayersModal.group}
+          onClose={() => setGroupPlayersModal({ isOpen: false, group: null })}
+          onChanged={async (message) => {
+            await Promise.all([loadGroupsData(), loadPlayersData()]);
+            showSuccess(message);
+          }}
+          onError={(message) => showError(message, 'Group Players')}
+        />
+
+        <AssignAssessmentModal
+          isOpen={assignAssessmentModal.isOpen}
+          group={assignAssessmentModal.group}
+          onClose={() => setAssignAssessmentModal({ isOpen: false, group: null })}
+          onComplete={(updated, message) => {
+            setGroups(prev => prev.map(g => (g.id === updated.id ? updated : g)));
+            setAssignAssessmentModal({ isOpen: false, group: null });
+            showSuccess(message);
+          }}
+          onError={(message) => showError(message, 'Assessment Assignment')}
+        />
+
+        <GroupOverCapacityModal
+          isOpen={overCapacityModal.isOpen}
+          group={overCapacityModal.group}
+          player={overCapacityModal.player}
+          onClose={() => setOverCapacityModal({ isOpen: false, group: null, player: null })}
+          onComplete={async (message) => {
+            setOverCapacityModal({ isOpen: false, group: null, player: null });
+            await Promise.all([loadGroupsData(), loadPlayersData()]);
+            showSuccess(message);
+          }}
+          onError={(message) => showError(message, 'Group Capacity')}
         />
 
         <CoachAssignmentModal

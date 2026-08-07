@@ -28,6 +28,11 @@ interface PlayerAssignmentModalProps {
   selectedPlayer?: PlayerDTO;
   playerPreSelected?: boolean;
   onAssignmentComplete?: (playerId: number, groupId: number) => void;
+  /**
+   * The group is already at its limit. The parent decides what to offer, since
+   * exceeding the limit is a deliberate choice rather than an error.
+   */
+  onGroupFull?: (player: PlayerDTO, group: GroupResponse) => void;
 }
 
 export function PlayerAssignmentModal({ 
@@ -37,7 +42,8 @@ export function PlayerAssignmentModal({
   selectedGroup,
   selectedPlayer: preSelectedPlayer,
   playerPreSelected = false,
-  onAssignmentComplete 
+  onAssignmentComplete,
+  onGroupFull
 }: PlayerAssignmentModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -156,6 +162,15 @@ export function PlayerAssignmentModal({
     } catch (err) {
       console.error('Player assignment failed:', err);
       const errorMessage = err instanceof Error ? err.message : 'Assignment failed';
+
+      // A full group is not a dead end: hand back to the parent, which offers
+      // adding anyway or splitting the group.
+      if (/full capacity/i.test(errorMessage) && onGroupFull) {
+        onGroupFull(selectedPlayer, selectedGroup_);
+        handleClose();
+        return;
+      }
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -201,7 +216,7 @@ export function PlayerAssignmentModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-25 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-black bg-opacity-50" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -215,7 +230,7 @@ export function PlayerAssignmentModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-visible bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-md transform overflow-visible bg-background-modal border border-border rounded-2xl p-6 text-left align-middle shadow-xl transition-all">
                 <Dialog.Title className="text-lg font-medium text-text-primary mb-4">
                   Assign Player to Group
                 </Dialog.Title>
@@ -252,7 +267,7 @@ export function PlayerAssignmentModal({
                         onChange={setSelectedPlayer}
                       >
                         <div className="relative">
-                          <Listbox.Button className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-cyan-400 flex items-center justify-between">
+                          <Listbox.Button className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-cyan-400 flex items-center justify-between">
                             <span>
                               {selectedPlayer 
                                 ? `${selectedPlayer.firstName} ${selectedPlayer.lastName}${selectedPlayer.level ? ` - ${selectedPlayer.level}` : ''}` 
@@ -262,7 +277,7 @@ export function PlayerAssignmentModal({
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                           </Listbox.Button>
-                          <Listbox.Options className="absolute z-50 mt-1 w-full bg-background-modal border border-border border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
+                          <Listbox.Options className="absolute z-50 mt-1 w-full bg-background-modal border border-border rounded-lg shadow-lg max-h-40 overflow-auto">
                             {unassignedPlayers.length === 0 ? (
                               <div className="px-3 py-2 text-text-secondary text-sm">
                                 No unassigned players available
@@ -292,10 +307,10 @@ export function PlayerAssignmentModal({
                       </label>
                       <Listbox value={selectedGroup_} onChange={setSelectedGroup_}>
                         <div className="relative">
-                          <Listbox.Button className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                          <Listbox.Button className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-cyan-400">
                             {selectedGroup_ ? selectedGroup_.name : 'Choose a group...'}
                           </Listbox.Button>
-                          <Listbox.Options className="absolute z-50 mt-1 w-full bg-background-modal border border-border border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
+                          <Listbox.Options className="absolute z-50 mt-1 w-full bg-background-modal border border-border rounded-lg shadow-lg max-h-40 overflow-auto">
                             {availableGroups.map((group) => (
                               <Listbox.Option
                                 key={group.id}
@@ -542,7 +557,7 @@ export function CoachAssignmentModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-25 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-black bg-opacity-50" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -556,7 +571,7 @@ export function CoachAssignmentModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden bg-background-modal border border-border rounded-2xl p-6 text-left align-middle shadow-xl transition-all">
                 <Dialog.Title className="text-lg font-medium text-text-primary mb-4">
                   Assign Coach to Group
                 </Dialog.Title>
@@ -581,10 +596,10 @@ export function CoachAssignmentModal({
                       }}
                     >
                       <div className="relative">
-                        <Listbox.Button className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                        <Listbox.Button className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-cyan-400">
                           {selectedCoach ? selectedCoach.firstName + ' ' + selectedCoach.lastName : 'Choose a coach...'}
                         </Listbox.Button>
-                        <Listbox.Options className="absolute z-10 mt-1 w-full bg-background-modal border border-border border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
+                        <Listbox.Options className="absolute z-10 mt-1 w-full bg-background-modal border border-border rounded-lg shadow-lg max-h-40 overflow-auto">
                           {availableCoaches.map((coach) => (
                             <Listbox.Option
                               key={coach.id}
@@ -607,10 +622,10 @@ export function CoachAssignmentModal({
                       </label>
                       <Listbox value={selectedGroup_} onChange={setSelectedGroup_}>
                         <div className="relative">
-                          <Listbox.Button className="w-full px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                          <Listbox.Button className="w-full px-3 py-2 bg-background border border-border rounded-lg text-text-primary text-left focus:outline-none focus:ring-2 focus:ring-cyan-400">
                             {selectedGroup_ ? selectedGroup_.name : 'Choose a group...'}
                           </Listbox.Button>
-                          <Listbox.Options className="absolute z-50 mt-1 w-full bg-background-modal border border-border border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-auto">
+                          <Listbox.Options className="absolute z-50 mt-1 w-full bg-background-modal border border-border rounded-lg shadow-lg max-h-40 overflow-auto">
                             {availableGroups.map((group) => (
                               <Listbox.Option
                                 key={group.id}
