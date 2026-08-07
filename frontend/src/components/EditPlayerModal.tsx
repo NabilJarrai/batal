@@ -3,7 +3,8 @@
 import { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition, Listbox } from '@headlessui/react';
 import { PlayerDTO, Level, BasicFoot } from '@/types/players';
-import { playersAPI } from '@/lib/api';
+import { UserResponse } from '@/types/users';
+import { playersAPI, usersAPI } from '@/lib/api';
 import { AssignmentService } from '@/services/assignmentService';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -14,6 +15,24 @@ interface EditPlayerModalProps {
   onClose: () => void;
   onComplete: (player: PlayerDTO) => void;
   playerId: number | null;
+}
+
+/**
+ * Format as YYYY-MM-DD in local time. toISOString() converts to UTC first,
+ * which rolls a date picked west of Greenwich back to the previous day.
+ */
+function toLocalISODate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function fromLocalISODate(value?: string): Date | null {
+  if (!value) return null;
+  const [year, month, day] = value.split('-').map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
 }
 
 export default function EditPlayerModal({ 
@@ -38,6 +57,36 @@ export default function EditPlayerModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Reassigning the main parent. Players are attached to a parent when they
+  // are created, so this is the only way to correct a wrong one.
+  const [isChangingParent, setIsChangingParent] = useState(false);
+  const [parentSearch, setParentSearch] = useState('');
+  const [parentResults, setParentResults] = useState<UserResponse[]>([]);
+  const [isSearchingParents, setIsSearchingParents] = useState(false);
+
+  useEffect(() => {
+    if (!isChangingParent) return;
+
+    let cancelled = false;
+    setIsSearchingParents(true);
+    const timer = setTimeout(async () => {
+      try {
+        const query = parentSearch.trim();
+        const results = await usersAPI.searchParents(query.length ? query : undefined);
+        if (!cancelled) setParentResults(results);
+      } catch {
+        if (!cancelled) setParentResults([]);
+      } finally {
+        if (!cancelled) setIsSearchingParents(false);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [parentSearch, isChangingParent]);
+
   // Load player data when modal opens
   useEffect(() => {
     if (isOpen && playerId) {
@@ -58,7 +107,11 @@ export default function EditPlayerModal({
         joiningDate: player.joiningDate || '',
         groupId: player.groupId,
         parentId: player.parentId,
-        parent2Id: player.parent2Id,
+        parentName: player.parentName,
+        // Read-only here; owned by the parent account and ignored on write.
+        secondaryParentName: player.secondaryParentName,
+        secondaryParentEmail: player.secondaryParentEmail,
+        secondaryParentPhone: player.secondaryParentPhone,
         basicFoot: player.basicFoot || BasicFoot.RIGHT,
         level: player.level || Level.DEVELOPMENT,
         isActive: player.isActive,
@@ -68,11 +121,11 @@ export default function EditPlayerModal({
         emergencyContactPhone: player.emergencyContactPhone,
         inactiveReason: player.inactiveReason
       });
-      
+
       // Set birth date for DatePicker
-      if (player.dateOfBirth) {
-        setBirthDate(new Date(player.dateOfBirth));
-      }
+      setBirthDate(fromLocalISODate(player.dateOfBirth));
+      setIsChangingParent(false);
+      setParentSearch('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load player data');
     } finally {
@@ -91,7 +144,7 @@ export default function EditPlayerModal({
       // Ensure joiningDate is not null/empty - use current date as fallback
       const updateData = {
         ...formData,
-        joiningDate: formData.joiningDate || new Date().toISOString().split('T')[0]
+        joiningDate: formData.joiningDate || toLocalISODate(new Date())
       };
       
       console.log('Updating player with data (preserving groupId):', updateData);
@@ -246,7 +299,7 @@ export default function EditPlayerModal({
                         selected={birthDate}
                         onChange={(date) => {
                           setBirthDate(date);
-                          setFormData({...formData, dateOfBirth: date ? date.toISOString().split('T')[0] : ''});
+                          setFormData({...formData, dateOfBirth: date ? toLocalISODate(date) : ''});
                         }}
                         dateFormat="MM/dd/yyyy"
                         maxDate={new Date()}
@@ -324,6 +377,95 @@ export default function EditPlayerModal({
                         </Listbox.Options>
                       </div>
                     </Listbox>
+                  </div>
+
+                  {/* Main Parent */}
+                  <div className="border-t border-border pt-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-caption">Main Parent</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsChangingParent(!isChangingParent);
+                          setParentSearch('');
+                        }}
+                        className="text-xs text-primary hover:text-primary-hover transition-colors"
+                      >
+                        {isChangingParent ? 'Cancel' : 'Change'}
+                      </button>
+                    </div>
+
+                    <p className="text-sm text-text-primary">
+                      {formData.parentName || 'No parent assigned'}
+                    </p>
+
+                    {isChangingParent && (
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          value={parentSearch}
+                          onChange={(e) => setParentSearch(e.target.value)}
+                          placeholder="Search parents by name or email..."
+                          className="input-base"
+                        />
+                        <div className="border border-border rounded-lg max-h-40 overflow-y-auto">
+                          {isSearchingParents ? (
+                            <div className="flex items-center justify-center py-4">
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-400"></div>
+                            </div>
+                          ) : parentResults.length === 0 ? (
+                            <p className="text-xs text-text-secondary text-center py-4">
+                              No parents found
+                            </p>
+                          ) : (
+                            parentResults.map((parent) => (
+                              <button
+                                key={parent.id}
+                                type="button"
+                                onClick={() => {
+                                  setFormData({
+                                    ...formData,
+                                    parentId: parent.id,
+                                    parentName: `${parent.firstName} ${parent.lastName}`,
+                                  });
+                                  setIsChangingParent(false);
+                                }}
+                                className={`w-full px-3 py-2 text-left border-b border-border last:border-b-0 text-sm transition-colors ${
+                                  formData.parentId === parent.id
+                                    ? 'bg-blue-500/20 border-l-4 border-l-blue-500'
+                                    : 'hover:bg-secondary'
+                                }`}
+                              >
+                                <span className="font-medium text-text-primary">
+                                  {parent.firstName} {parent.lastName}
+                                </span>
+                                <span className="text-text-secondary ml-2">{parent.email}</span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Secondary parent, shown read-only: it belongs to the
+                      parent's account and is shared by all their players, so
+                      it is edited from the Parents tab. */}
+                  <div className="border-t border-border pt-4 space-y-2">
+                    <label className="text-caption">Secondary Parent</label>
+                    {formData.secondaryParentName ? (
+                      <p className="text-sm text-text-primary">
+                        {formData.secondaryParentName}
+                        {formData.secondaryParentPhone ? ` • ${formData.secondaryParentPhone}` : ''}
+                        {formData.secondaryParentEmail ? ` • ${formData.secondaryParentEmail}` : ''}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-text-secondary">None</p>
+                    )}
+                    <p className="text-xs text-text-secondary">
+                      Shared by all of this parent&apos;s players. Edit it on the parent in the
+                      Parents tab.
+                    </p>
                   </div>
 
                   {/* Status */}

@@ -17,7 +17,6 @@ import EditGroupModal from '@/components/EditGroupModal';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import ResetPasswordModal from '@/components/ResetPasswordModal';
 import ReassignPlayerModal from '@/components/ReassignPlayerModal';
-import AssignChildModal from '@/components/AssignChildModal';
 import SkillsManagement from '@/components/skills/SkillsManagement';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
@@ -37,12 +36,13 @@ export default function AdminDashboard() {
   const { showError, showSuccess } = useNotification();
   
   // State
-  const [activeTab, setActiveTab] = useState<'overview' | 'groups' | 'users' | 'players' | 'skills'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'groups' | 'users' | 'parents' | 'players' | 'skills'>('overview');
   const [loading, setLoading] = useState(true);
 
-  // Data
+  // Data. `users` is academy staff only; parents are listed separately.
   const [groups, setGroups] = useState<GroupResponse[]>([]);
   const [users, setUsers] = useState<UserResponse[]>([]);
+  const [parents, setParents] = useState<UserResponse[]>([]);
   const [players, setPlayers] = useState<PlayerDTO[]>([]);
   const [stats, setStats] = useState({
     totalGroups: 0,
@@ -54,6 +54,16 @@ export default function AdminDashboard() {
 
   // Pagination and search state
   const [usersPagination, setUsersPagination] = useState({
+    page: 0,
+    size: 12,
+    totalElements: 0,
+    totalPages: 0,
+    sortBy: 'firstName',
+    sortDir: 'asc',
+    search: ''
+  });
+
+  const [parentsPagination, setParentsPagination] = useState({
     page: 0,
     size: 12,
     totalElements: 0,
@@ -102,8 +112,13 @@ export default function AdminDashboard() {
     currentGroupName: string;
   }>({ isOpen: false, player: null, currentGroupId: null, currentGroupName: '' });
 
-  // Creation modals
-  const [createPlayerModal, setCreatePlayerModal] = useState(false);
+  // Creation modals. createPlayerModal.parent is set when the flow starts from
+  // a parent's card, which fixes the parent instead of asking for one.
+  const [createPlayerModal, setCreatePlayerModal] = useState<{
+    isOpen: boolean;
+    parent: UserResponse | null;
+    mode: 'create' | 'edit';
+  }>({ isOpen: false, parent: null, mode: 'create' });
   const [createUserModal, setCreateUserModal] = useState(false);
   const [createGroupModal, setCreateGroupModal] = useState(false);
 
@@ -122,12 +137,6 @@ export default function AdminDashboard() {
     isDeleting: boolean;
   }>({ isOpen: false, type: null, id: null, name: '', isDeleting: false });
 
-  // Assign child modal (for parents)
-  const [assignChildModal, setAssignChildModal] = useState<{
-    isOpen: boolean;
-    parent: UserResponse | null;
-  }>({ isOpen: false, parent: null });
-
   // Load initial data
   useEffect(() => {
     loadDashboardData();
@@ -137,24 +146,32 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       // Load groups and basic data
-      const [groupsResponse, usersResponse, playersResponse, playerStatsResponse] = await Promise.all([
+      const [groupsResponse, usersResponse, parentsResponse, playersResponse, playerStatsResponse] = await Promise.all([
         groupsAPI.getAll(),
         usersAPI.getAll(0, 12), // Initial page
-        playersAPI.getAll(0, 12), // Initial page  
+        usersAPI.getParents(0, 12), // Initial page
+        playersAPI.getAll(0, 12), // Initial page
         playersAPI.getStats()
       ]);
 
       setGroups(groupsResponse);
       setUsers(usersResponse.content);
+      setParents(parentsResponse.content);
       setPlayers(playersResponse.content);
-      
+
       // Update pagination state
       setUsersPagination(prev => ({
         ...prev,
         totalElements: usersResponse.totalElements,
         totalPages: usersResponse.totalPages
       }));
-      
+
+      setParentsPagination(prev => ({
+        ...prev,
+        totalElements: parentsResponse.totalElements,
+        totalPages: parentsResponse.totalPages
+      }));
+
       setPlayersPagination(prev => ({
         ...prev,
         totalElements: playersResponse.totalElements,
@@ -214,6 +231,28 @@ export default function AdminDashboard() {
     }
   }, [usersPagination.page, usersPagination.size, usersPagination.sortBy, usersPagination.sortDir, usersPagination.search, showError]);
 
+  const loadParentsData = useCallback(async () => {
+    try {
+      const response = await usersAPI.getParents(
+        parentsPagination.page,
+        parentsPagination.size,
+        parentsPagination.sortBy,
+        parentsPagination.sortDir,
+        parentsPagination.search || undefined
+      );
+
+      setParents(response.content);
+      setParentsPagination(prev => ({
+        ...prev,
+        totalElements: response.totalElements,
+        totalPages: response.totalPages
+      }));
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load parents data';
+      showError(errorMessage, 'Parents Data Error');
+    }
+  }, [parentsPagination.page, parentsPagination.size, parentsPagination.sortBy, parentsPagination.sortDir, parentsPagination.search, showError]);
+
   const loadPlayersData = useCallback(async () => {
     try {
       const response = await playersAPI.getAll(
@@ -248,6 +287,12 @@ export default function AdminDashboard() {
     if (loading) return; // Don't load during initial load
     loadUsersData();
   }, [loading, loadUsersData]);
+
+  // Reload parents when pagination/search changes
+  useEffect(() => {
+    if (loading) return; // Don't load during initial load
+    loadParentsData();
+  }, [loading, loadParentsData]);
 
   // Reload players when pagination/search changes
   useEffect(() => {
@@ -288,7 +333,7 @@ export default function AdminDashboard() {
   };
 
   const handleCreatePlayer = () => {
-    setCreatePlayerModal(true);
+    setCreatePlayerModal({ isOpen: true, parent: null, mode: 'create' });
   };
 
   const handleAssignmentComplete = async (assignedId: number, groupId: number) => {
@@ -448,6 +493,18 @@ export default function AdminDashboard() {
     }
   };
 
+  // Staff and parents are held in separate lists but share the same card and
+  // handlers, so account lookups have to check both.
+  const findAccountById = (userId: number): UserResponse | undefined =>
+    users.find(u => u.id === userId) ?? parents.find(p => p.id === userId);
+
+  // Applies an update to whichever list holds the account. The other list has
+  // no matching id, so its map is a no-op.
+  const updateAccountInLists = (updated: UserResponse) => {
+    setUsers(prev => prev.map(u => (u.id === updated.id ? updated : u)));
+    setParents(prev => prev.map(p => (p.id === updated.id ? updated : p)));
+  };
+
   // Edit handlers
   const handleEditUser = (userId: number) => {
     setEditUserModal({ isOpen: true, userId });
@@ -464,7 +521,7 @@ export default function AdminDashboard() {
   // Resend setup email handler
   const handleResendSetupEmail = async (userId: number) => {
     try {
-      const user = users.find(u => u.id === userId);
+      const user = findAccountById(userId);
       const response = await authAPI.resendSetupEmail(userId);
       showSuccess(`Password setup email sent to ${user?.email || 'user'}`);
     } catch (error: any) {
@@ -474,7 +531,7 @@ export default function AdminDashboard() {
 
   // Delete handlers
   const handleDeleteUser = (userId: number) => {
-    const user = users.find(u => u.id === userId);
+    const user = findAccountById(userId);
     setDeleteModal({
       isOpen: true,
       type: 'user',
@@ -506,11 +563,22 @@ export default function AdminDashboard() {
     });
   };
 
-  // Parent-child management handlers
-  const handleAssignChild = (userId: number) => {
-    const parent = users.find(u => u.id === userId);
+  // Parent-child management handlers.
+  // Players are attached to their parent at creation, so the card creates a
+  // player rather than linking an existing one.
+  const handleAddPlayerForParent = (userId: number) => {
+    const parent = parents.find(u => u.id === userId);
     if (parent) {
-      setAssignChildModal({ isOpen: true, parent });
+      setCreatePlayerModal({ isOpen: true, parent, mode: 'create' });
+    }
+  };
+
+  // Parents are edited through the same parent-and-players form, not the
+  // staff form, which asks for a user type and job title they do not have.
+  const handleEditParent = (userId: number) => {
+    const parent = parents.find(u => u.id === userId);
+    if (parent) {
+      setCreatePlayerModal({ isOpen: true, parent, mode: 'edit' });
     }
   };
 
@@ -518,17 +586,11 @@ export default function AdminDashboard() {
     try {
       await usersAPI.unassignChild(parentId, playerId);
       showSuccess('Child unassigned successfully');
-      // Refresh the user data to update the children list
-      await loadUsersData();
+      // Refresh the parent data to update the children list
+      await loadParentsData();
     } catch (error: any) {
       showError(error.message || 'Failed to unassign child');
     }
-  };
-
-  const handleAssignChildComplete = async () => {
-    setAssignChildModal({ isOpen: false, parent: null });
-    // Refresh the user data to update the children list
-    await loadUsersData();
   };
 
   // Helper function to get coach assignment info
@@ -551,11 +613,12 @@ export default function AdminDashboard() {
           // Use usersAPI.delete for all users (including coaches)
           await usersAPI.delete(deleteModal.id);
 
-          // Remove user from state
+          // Remove the account from whichever list holds it
           setUsers(prev => prev.filter(user => user.id !== deleteModal.id));
+          setParents(prev => prev.filter(parent => parent.id !== deleteModal.id));
 
           // Check if user was a coach and refresh groups to update coach assignments
-          const userToDelete = users.find(u => u.id === deleteModal.id);
+          const userToDelete = findAccountById(deleteModal.id);
           const isCoach = userToDelete && (
             userToDelete.userType === UserType.COACH ||
             userToDelete.roles.includes('COACH')
@@ -606,10 +669,8 @@ export default function AdminDashboard() {
       });
       
       // Update only the specific user in the state instead of reloading all data
-      setUsers(prev => prev.map(user => 
-        user.id === userId ? { ...user, ...updatedUser } : user
-      ));
-      
+      updateAccountInLists(updatedUser);
+
       showSuccess(`User ${isActive ? 'activated' : 'deactivated'} successfully`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update user status';
@@ -864,12 +925,13 @@ export default function AdminDashboard() {
           tabs={[
             { id: 'overview', label: 'Overview', icon: <span>📊</span> },
             { id: 'groups', label: 'Groups', icon: <span>👥</span> },
-            { id: 'users', label: 'Users', icon: <span>🧑‍💼</span> },
+            { id: 'users', label: 'Staff', icon: <span>🧑‍💼</span> },
+            { id: 'parents', label: 'Parents', icon: <span>👪</span> },
             { id: 'players', label: 'Players', icon: <span>⚽</span> },
             { id: 'skills', label: 'Skills', icon: <span>🎯</span> }
           ]}
           activeTab={activeTab}
-          onChange={(tabId) => setActiveTab(tabId as 'overview' | 'groups' | 'users' | 'players' | 'skills')}
+          onChange={(tabId) => setActiveTab(tabId as 'overview' | 'groups' | 'users' | 'parents' | 'players' | 'skills')}
           className="mb-6 sm:mb-8"
         />
 
@@ -999,8 +1061,6 @@ export default function AdminDashboard() {
                       onDelete={handleDeleteUser}
                       onDeactivate={(userId) => handleUserStatusUpdate(userId, false, 'Deactivated by admin')}
                       onActivate={(userId) => handleUserStatusUpdate(userId, true)}
-                      onAssignChild={handleAssignChild}
-                      onUnassignChild={handleUnassignChild}
                       onResendSetupEmail={handleResendSetupEmail}
                       onResetPassword={(userId) => setResetPasswordModal({ isOpen: true, userId })}
                       showActions={true}
@@ -1037,6 +1097,110 @@ export default function AdminDashboard() {
                         type="button"
                         onClick={() => setUsersPagination(prev => ({ ...prev, page: Math.min(prev.totalPages - 1, prev.page + 1) }))}
                         disabled={usersPagination.page >= usersPagination.totalPages - 1}
+                        className="px-3 py-1 bg-background hover:bg-background/20 disabled:opacity-50 disabled:cursor-not-allowed rounded text-text-primary text-xs sm:text-sm transition-colors"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'parents' && (
+            <div>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-semibold text-text-primary">Parent Management</h2>
+                  <p className="text-xs text-text-secondary mt-1">
+                    Parents are created together with their first player. Use Add Player on a card to
+                    add another child.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCreatePlayer}
+                  className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg text-text-primary text-sm sm:text-base font-medium transition-all duration-200"
+                >
+                  Add Player
+                </button>
+              </div>
+
+              {/* Search Bar */}
+              <div className="mb-6">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search parents by name or email..."
+                    value={parentsPagination.search}
+                    onChange={(e) => {
+                      setParentsPagination(prev => ({
+                        ...prev,
+                        search: e.target.value,
+                        page: 0 // Reset to first page when searching
+                      }));
+                    }}
+                    className="w-full px-4 py-2 pl-10 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                  <svg className="absolute left-3 top-2.5 h-5 w-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+
+              {parents.length === 0 ? (
+                <div className="text-center py-12 text-text-secondary">
+                  {parentsPagination.search
+                    ? 'No parents match your search'
+                    : 'No parents yet. Add a player to create the first one.'}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {parents.map((parent) => (
+                    <UserCard
+                      key={parent.id}
+                      user={parent}
+                      onEdit={handleEditParent}
+                      onDelete={handleDeleteUser}
+                      onDeactivate={(userId) => handleUserStatusUpdate(userId, false, 'Deactivated by admin')}
+                      onActivate={(userId) => handleUserStatusUpdate(userId, true)}
+                      onAddPlayer={handleAddPlayerForParent}
+                      onUnassignChild={handleUnassignChild}
+                      onResendSetupEmail={handleResendSetupEmail}
+                      onResetPassword={(userId) => setResetPasswordModal({ isOpen: true, userId })}
+                      showActions={true}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Pagination Controls */}
+              {parentsPagination.totalElements > 0 && (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6 p-4 bg-secondary-50 rounded-lg">
+                  <div className="text-xs sm:text-sm text-text-secondary text-center sm:text-left">
+                    Showing {parentsPagination.page * parentsPagination.size + 1} to {Math.min((parentsPagination.page + 1) * parentsPagination.size, parentsPagination.totalElements)} of {parentsPagination.totalElements} parents
+                  </div>
+
+                  {parentsPagination.totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setParentsPagination(prev => ({ ...prev, page: Math.max(0, prev.page - 1) }))}
+                        disabled={parentsPagination.page === 0}
+                        className="px-3 py-1 bg-background hover:bg-background/20 disabled:opacity-50 disabled:cursor-not-allowed rounded text-text-primary text-xs sm:text-sm transition-colors"
+                      >
+                        Previous
+                      </button>
+
+                      <span className="text-xs sm:text-sm text-text-secondary whitespace-nowrap">
+                        Page {parentsPagination.page + 1} of {parentsPagination.totalPages}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => setParentsPagination(prev => ({ ...prev, page: Math.min(prev.totalPages - 1, prev.page + 1) }))}
+                        disabled={parentsPagination.page >= parentsPagination.totalPages - 1}
                         className="px-3 py-1 bg-background hover:bg-background/20 disabled:opacity-50 disabled:cursor-not-allowed rounded text-text-primary text-xs sm:text-sm transition-colors"
                       >
                         Next
@@ -1178,14 +1342,26 @@ export default function AdminDashboard() {
 
         {/* Creation Modals */}
         <CreatePlayerModal
-          isOpen={createPlayerModal}
-          onClose={() => setCreatePlayerModal(false)}
-          onComplete={(newPlayer) => {
-            // Add new player to state
-            setPlayers(prev => [...prev, newPlayer]);
-            setStats(prev => ({ ...prev, totalPlayers: prev.totalPlayers + 1 }));
-            setCreatePlayerModal(false);
-            showSuccess('Player created successfully');
+          isOpen={createPlayerModal.isOpen}
+          lockedParent={createPlayerModal.parent}
+          mode={createPlayerModal.mode}
+          onClose={() => setCreatePlayerModal({ isOpen: false, parent: null, mode: 'create' })}
+          onComplete={(newPlayers, parentChanged) => {
+            setPlayers(prev => [...prev, ...newPlayers]);
+            setStats(prev => ({ ...prev, totalPlayers: prev.totalPlayers + newPlayers.length }));
+            setCreatePlayerModal({ isOpen: false, parent: null, mode: 'create' });
+            // The parent is new, edited, or has gained children - all of which
+            // its card displays.
+            loadParentsData();
+            showSuccess(
+              newPlayers.length === 0
+                ? 'Parent updated successfully'
+                : newPlayers.length > 1
+                  ? `${newPlayers.length} players created successfully`
+                  : parentChanged && createPlayerModal.mode === 'edit'
+                    ? 'Parent updated and player created successfully'
+                    : 'Player created successfully'
+            );
           }}
         />
 
@@ -1226,9 +1402,7 @@ export default function AdminDashboard() {
           onClose={() => setEditUserModal({ isOpen: false, userId: null })}
           onComplete={(updatedUser) => {
             // Update only the specific user in the state
-            setUsers(prev => prev.map(user => 
-              user.id === updatedUser.id ? updatedUser : user
-            ));
+            updateAccountInLists(updatedUser);
             setEditUserModal({ isOpen: false, userId: null });
             showSuccess('User updated successfully');
           }}
@@ -1237,10 +1411,10 @@ export default function AdminDashboard() {
         <ResetPasswordModal
           isOpen={resetPasswordModal.isOpen}
           userId={resetPasswordModal.userId}
-          userName={users.find(u => u.id === resetPasswordModal.userId)?.firstName
-            ? `${users.find(u => u.id === resetPasswordModal.userId)?.firstName} ${users.find(u => u.id === resetPasswordModal.userId)?.lastName ?? ''}`.trim()
+          userName={resetPasswordModal.userId && findAccountById(resetPasswordModal.userId)
+            ? `${findAccountById(resetPasswordModal.userId)!.firstName} ${findAccountById(resetPasswordModal.userId)!.lastName ?? ''}`.trim()
             : undefined}
-          userEmail={users.find(u => u.id === resetPasswordModal.userId)?.email}
+          userEmail={resetPasswordModal.userId ? findAccountById(resetPasswordModal.userId)?.email : undefined}
           onClose={() => setResetPasswordModal({ isOpen: false, userId: null })}
           onSuccess={() => showSuccess('Password updated successfully')}
         />
@@ -1293,16 +1467,6 @@ export default function AdminDashboard() {
           itemName={deleteModal.name}
           isLoading={deleteModal.isDeleting}
         />
-
-        {/* Assign Child Modal */}
-        {assignChildModal.parent && (
-          <AssignChildModal
-            isOpen={assignChildModal.isOpen}
-            onClose={() => setAssignChildModal({ isOpen: false, parent: null })}
-            parent={assignChildModal.parent}
-            onComplete={handleAssignChildComplete}
-          />
-        )}
       </div>
     </div>
     </ProtectedRoute>

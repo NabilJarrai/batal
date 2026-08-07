@@ -148,22 +148,23 @@ export default function PlayerCard({
         )}
 
         {/* Parent Info */}
-        {(player.parentName || player.parent2Name) && (
+        {(player.parentName || player.secondaryParentName) && (
           <div className="mb-4">
             <div className="flex items-center text-primary mb-1">
               <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
               </svg>
-              <span className="text-sm font-medium">{player.parent2Name ? 'Parents' : 'Parent'}</span>
+              <span className="text-sm font-medium">{player.secondaryParentName ? 'Parents' : 'Parent'}</span>
             </div>
             {player.parentName && (
               <p className="text-sm text-text-primary">
-                {player.parent2Name ? `Parent 1: ${player.parentName}` : player.parentName}
+                {player.secondaryParentName ? `Main: ${player.parentName}` : player.parentName}
               </p>
             )}
-            {player.parent2Name && (
+            {player.secondaryParentName && (
               <p className="text-sm text-text-primary">
-                Parent 2: {player.parent2Name}
+                Secondary: {player.secondaryParentName}
+                {player.secondaryParentPhone ? ` • ${player.secondaryParentPhone}` : ''}
               </p>
             )}
           </div>

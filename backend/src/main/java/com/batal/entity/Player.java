@@ -84,6 +84,9 @@ public class Player {
     @JoinColumn(name = "parent_id", insertable = false, updatable = false)
     private User parent;
 
+    // The secondary parent is a contact on the main parent's account, not on
+    // the player - see User.secondaryParentName.
+
     // ========== PLAYER-SPECIFIC FIELDS ==========
     @Size(max = 10)
     @Column(name = "player_number", unique = true, length = 10)

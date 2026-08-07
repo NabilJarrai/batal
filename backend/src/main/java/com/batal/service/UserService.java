@@ -10,6 +10,7 @@ import com.batal.entity.User;
 import com.batal.entity.Role;
 import com.batal.entity.Player;
 import com.batal.entity.enums.UserType;
+import com.batal.event.PasswordSetupEmailRequestedEvent;
 import com.batal.exception.ResourceAlreadyExistsException;
 import com.batal.exception.ResourceNotFoundException;
 import com.batal.exception.SelfDeletionException;
@@ -20,6 +21,7 @@ import com.batal.repository.RoleRepository;
 import com.batal.repository.PlayerRepository;
 import com.batal.repository.PasswordSetupTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -57,8 +59,12 @@ public class UserService {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
-    // Get all staff users (excluding PLAYERs) with pagination and search
+
+    // Get academy staff (COACH, ADMIN, MANAGER) with pagination and search.
+    // Parents are listed separately by getAllParentUsers.
     public Page<UserResponse> getAllStaffUsers(Pageable pageable, String search) {
         Page<User> users;
         if (search != null && !search.trim().isEmpty()) {
@@ -66,25 +72,68 @@ public class UserService {
         } else {
             users = userRepository.findStaffUsers(pageable);
         }
-        
-        return users.map(user -> {
-            List<String> roles = user.getRoles().stream()
-                    .map(role -> role.getName())
+
+        return users.map(this::toUserResponseWithChildren);
+    }
+
+    // Get parent users with pagination and search, each with their children.
+    public Page<UserResponse> getAllParentUsers(Pageable pageable, String search) {
+        Page<User> users;
+        if (search != null && !search.trim().isEmpty()) {
+            users = userRepository.findParentUsersWithSearch(search.trim(), pageable);
+        } else {
+            users = userRepository.findParentUsers(pageable);
+        }
+
+        return users.map(this::toUserResponseWithChildren);
+    }
+
+    /**
+     * Set the family's second guardian on a parent account.
+     *
+     * They are contact details, not an account: the email is optional and
+     * users.email cannot be null, so no User is ever created for them. With no
+     * name there is nobody to contact, so the email and phone are dropped too -
+     * which is also what chk_secondary_parent_named requires.
+     */
+    private void applySecondaryParent(User user, String name, String email, String phone) {
+        String trimmedName = trimToNull(name);
+        if (trimmedName == null) {
+            user.setSecondaryParentName(null);
+            user.setSecondaryParentEmail(null);
+            user.setSecondaryParentPhone(null);
+            return;
+        }
+        user.setSecondaryParentName(trimmedName);
+        user.setSecondaryParentEmail(trimToNull(email));
+        user.setSecondaryParentPhone(trimToNull(phone));
+    }
+
+    private static String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private UserResponse toUserResponseWithChildren(User user) {
+        List<String> roles = user.getRoles().stream()
+                .map(role -> role.getName())
+                .collect(Collectors.toList());
+
+        UserResponse response = new UserResponse(user, roles);
+
+        // If user is a parent, populate children
+        if (user.getUserType() == UserType.PARENT) {
+            List<Player> children = playerRepository.findByParentIdWithGroup(user.getId());
+            List<ChildSummaryDTO> childSummaries = children.stream()
+                    .map(this::mapPlayerToChildSummary)
                     .collect(Collectors.toList());
-            
-            UserResponse response = new UserResponse(user, roles);
-            
-            // If user is a parent, populate children
-            if (user.getUserType() == UserType.PARENT) {
-                List<Player> children = playerRepository.findByParentIdWithGroup(user.getId());
-                List<ChildSummaryDTO> childSummaries = children.stream()
-                        .map(this::mapPlayerToChildSummary)
-                        .collect(Collectors.toList());
-                response.setChildren(childSummaries);
-            }
-            
-            return response;
-        });
+            response.setChildren(childSummaries);
+        }
+
+        return response;
     }
     
     // Get all users (only authenticated users: COACH, ADMIN, MANAGER, PARENT)
@@ -144,11 +193,17 @@ public class UserService {
         user.setDateOfBirth(request.getDateOfBirth());
         user.setGender(request.getGender());
         user.setAddress(request.getAddress());
+        applySecondaryParent(user, request.getSecondaryParentName(),
+                request.getSecondaryParentEmail(), request.getSecondaryParentPhone());
         user.setUserType(request.getUserType() != null ? request.getUserType() : UserType.COACH);
         user.setTitle(request.getTitle());
         user.setEmergencyContactName(request.getEmergencyContactName());
         user.setEmergencyContactPhone(request.getEmergencyContactPhone());
-        user.setIsActive(false); // Inactive until password is set via email
+        // Active from the moment the account exists. Login is still impossible
+        // until the setup link is used, because no password is stored and
+        // BCrypt rejects a null hash - so this affects visibility, not access.
+        // "Has this person set a password yet?" is answered by passwordSetAt.
+        user.setIsActive(true);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
         
@@ -185,14 +240,9 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
 
-        // Send password setup email
-        try {
-            authService.sendPasswordSetupEmail(savedUser.getId());
-        } catch (Exception e) {
-            // Log error but don't fail user creation
-            // Admin can resend the email later
-            System.err.println("Failed to send password setup email to " + savedUser.getEmail() + ": " + e.getMessage());
-        }
+        // Sent after this transaction commits. Calling it inline would let a
+        // mail failure mark the transaction rollback-only and lose the account.
+        eventPublisher.publishEvent(new PasswordSetupEmailRequestedEvent(savedUser.getId()));
 
         List<String> roleNames = savedUser.getRoles().stream()
                 .map(role -> role.getName())
@@ -229,6 +279,15 @@ public class UserService {
         }
         if (request.getAddress() != null) {
             user.setAddress(request.getAddress());
+        }
+        // Sent whenever the caller manages this parent's secondary contact. A
+        // blank name means "remove them", which is why this is not guarded on
+        // non-null the way the fields above are.
+        if (request.getSecondaryParentName() != null
+                || request.getSecondaryParentEmail() != null
+                || request.getSecondaryParentPhone() != null) {
+            applySecondaryParent(user, request.getSecondaryParentName(),
+                    request.getSecondaryParentEmail(), request.getSecondaryParentPhone());
         }
         if (request.getUserType() != null) {
             user.setUserType(request.getUserType());
@@ -345,9 +404,10 @@ public class UserService {
         } else {
             parents = userRepository.findByUserType(UserType.PARENT);
         }
+        // With children, so picking a parent shows the players already
+        // attached to them without a second round trip.
         return parents.stream()
-                .map(user -> new UserResponse(user, user.getRoles().stream()
-                        .map(Role::getName).collect(Collectors.toList())))
+                .map(this::toUserResponseWithChildren)
                 .collect(Collectors.toList());
     }
 

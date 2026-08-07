@@ -29,11 +29,12 @@ public class PlayerDTO {
     @Size(max = 200, message = "Parent name must not exceed 200 characters")
     private String parentName;  // Computed field for display only
 
-    // Second parent (optional)
-    private Long parent2Id;
-
-    @Size(max = 200, message = "Parent 2 name must not exceed 200 characters")
-    private String parent2Name;  // Computed field for display only
+    // Second parent, for display only. Owned by the main parent's account, so
+    // these are read here and ignored on write - update them through the
+    // parent. See User.secondaryParentName.
+    private String secondaryParentName;
+    private String secondaryParentEmail;
+    private String secondaryParentPhone;
 
     private LocalDate joiningDate;
     
@@ -136,11 +137,14 @@ public class PlayerDTO {
     public Long getParentId() { return parentId; }
     public void setParentId(Long parentId) { this.parentId = parentId; }
 
-    public Long getParent2Id() { return parent2Id; }
-    public void setParent2Id(Long parent2Id) { this.parent2Id = parent2Id; }
+    public String getSecondaryParentName() { return secondaryParentName; }
+    public void setSecondaryParentName(String secondaryParentName) { this.secondaryParentName = secondaryParentName; }
 
-    public String getParent2Name() { return parent2Name; }
-    public void setParent2Name(String parent2Name) { this.parent2Name = parent2Name; }
+    public String getSecondaryParentEmail() { return secondaryParentEmail; }
+    public void setSecondaryParentEmail(String secondaryParentEmail) { this.secondaryParentEmail = secondaryParentEmail; }
+
+    public String getSecondaryParentPhone() { return secondaryParentPhone; }
+    public void setSecondaryParentPhone(String secondaryParentPhone) { this.secondaryParentPhone = secondaryParentPhone; }
 
     public String getPlayerNumber() { return playerNumber; }
     public void setPlayerNumber(String playerNumber) { this.playerNumber = playerNumber; }

@@ -35,6 +35,11 @@ export interface UserResponse {
   gender?: Gender;
   address?: string;
   userType?: UserType;
+  // The family's second guardian, for PARENT accounts. Contact only - no
+  // account exists for them, so email and phone are optional.
+  secondaryParentName?: string;
+  secondaryParentEmail?: string;
+  secondaryParentPhone?: string;
   title?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
@@ -58,6 +63,11 @@ export interface UserCreateRequest {
   gender?: Gender;
   address?: string;
   userType?: UserType;
+  // The family's second guardian, for PARENT accounts. Contact only - no
+  // account exists for them, so email and phone are optional.
+  secondaryParentName?: string;
+  secondaryParentEmail?: string;
+  secondaryParentPhone?: string;
   title?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
@@ -74,6 +84,11 @@ export interface UserUpdateRequest {
   gender?: Gender;
   address?: string;
   userType?: UserType;
+  // The family's second guardian, for PARENT accounts. Contact only - no
+  // account exists for them, so email and phone are optional.
+  secondaryParentName?: string;
+  secondaryParentEmail?: string;
+  secondaryParentPhone?: string;
   title?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;

@@ -18,6 +18,10 @@ public class UserResponse {
     private Gender gender;
     private String address;
     private UserType userType;
+    // Second guardian of the family, for PARENT accounts. Contact only.
+    private String secondaryParentName;
+    private String secondaryParentEmail;
+    private String secondaryParentPhone;
     private String title;
     private String emergencyContactName;
     private String emergencyContactPhone;
@@ -25,6 +29,10 @@ public class UserResponse {
     private String inactiveReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    // Null until the account holder uses their setup link. Accounts are active
+    // from creation, so this - not isActive - is what tells you whether someone
+    // can actually log in yet.
+    private LocalDateTime passwordSetAt;
     private List<String> roles;
     private List<ChildSummaryDTO> children; // For PARENT user type
 
@@ -40,6 +48,9 @@ public class UserResponse {
         this.gender = user.getGender();
         this.address = user.getAddress();
         this.userType = user.getUserType();
+        this.secondaryParentName = user.getSecondaryParentName();
+        this.secondaryParentEmail = user.getSecondaryParentEmail();
+        this.secondaryParentPhone = user.getSecondaryParentPhone();
         this.title = user.getTitle();
         this.emergencyContactName = user.getEmergencyContactName();
         this.emergencyContactPhone = user.getEmergencyContactPhone();
@@ -47,6 +58,7 @@ public class UserResponse {
         this.inactiveReason = user.getInactiveReason();
         this.createdAt = user.getCreatedAt();
         this.updatedAt = user.getUpdatedAt();
+        this.passwordSetAt = user.getPasswordSetAt();
         this.roles = roles;
     }
     
@@ -123,6 +135,15 @@ public class UserResponse {
         this.userType = userType;
     }
 
+    public String getSecondaryParentName() { return secondaryParentName; }
+    public void setSecondaryParentName(String secondaryParentName) { this.secondaryParentName = secondaryParentName; }
+
+    public String getSecondaryParentEmail() { return secondaryParentEmail; }
+    public void setSecondaryParentEmail(String secondaryParentEmail) { this.secondaryParentEmail = secondaryParentEmail; }
+
+    public String getSecondaryParentPhone() { return secondaryParentPhone; }
+    public void setSecondaryParentPhone(String secondaryParentPhone) { this.secondaryParentPhone = secondaryParentPhone; }
+
     public String getTitle() {
         return title;
     }
@@ -177,6 +198,14 @@ public class UserResponse {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getPasswordSetAt() {
+        return passwordSetAt;
+    }
+
+    public void setPasswordSetAt(LocalDateTime passwordSetAt) {
+        this.passwordSetAt = passwordSetAt;
     }
     
     public List<String> getRoles() {

@@ -152,6 +152,26 @@ public class UserController {
         return ResponseEntity.ok(parents);
     }
 
+    // GET /api/users/parents - Paginated parents for the Parents tab.
+    // Kept apart from GET /api/users, which now returns academy staff only.
+    @GetMapping("/parents")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<Page<UserResponse>> getAllParents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "firstName") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String search) {
+
+        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+            Sort.by(sortBy).descending() :
+            Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<UserResponse> parents = userService.getAllParentUsers(pageable, search);
+        return ResponseEntity.ok(parents);
+    }
+
     // POST /api/users/{id}/reset-password - Admin sets a user's password directly
     @PostMapping("/{id}/reset-password")
     @PreAuthorize("hasRole('ADMIN')")

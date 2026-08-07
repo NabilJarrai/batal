@@ -12,6 +12,12 @@ interface CreateUserModalProps {
   onComplete: (user: UserResponse) => void;
 }
 
+/**
+ * Staff roles only. Parents are not created here - they are created alongside
+ * their first player in the Add Player form, which is what links the two.
+ */
+const STAFF_USER_TYPES = [UserType.ADMIN, UserType.MANAGER, UserType.COACH] as const;
+
 export default function CreateUserModal({ 
   isOpen, 
   onClose, 
@@ -127,7 +133,7 @@ export default function CreateUserModal({
                       User Type *
                     </label>
                     <div className="grid grid-cols-2 gap-3">
-                      {Object.values(UserType).map((type) => (
+                      {STAFF_USER_TYPES.map((type) => (
                         <button
                           key={type}
                           type="button"
@@ -147,7 +153,6 @@ export default function CreateUserModal({
                             {type === UserType.ADMIN && 'Full system access'}
                             {type === UserType.MANAGER && 'Academy oversight'}
                             {type === UserType.COACH && 'Group management'}
-                            {type === UserType.PARENT && 'View children progress'}
                           </p>
                         </button>
                       ))}
@@ -287,7 +292,6 @@ export default function CreateUserModal({
                         placeholder={
                           formData.userType === UserType.COACH ? 'Head Coach, Assistant Coach...' :
                           formData.userType === UserType.MANAGER ? 'Academy Director, Operations Manager...' :
-                          formData.userType === UserType.PARENT ? 'Parent/Guardian' :
                           'System Administrator'
                         }
                       />

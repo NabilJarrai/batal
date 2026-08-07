@@ -5,6 +5,7 @@ import {
   LoginResponse,
   UserResponse,
 } from "@/types/auth";
+import { CreatePlayersRequest, CreatePlayersResponse } from "@/types/players";
 import { apiClient } from "@/lib/apiClient";
 
 const API_BASE_URL =
@@ -381,6 +382,34 @@ export const usersAPI = {
     if (query) params.append("query", query);
     return apiRequest<UserResponse[]>(`/users/parents/search?${params.toString()}`);
   },
+
+  // Parents only. getAll returns academy staff and excludes them.
+  getParents: async (
+    page = 0,
+    size = 10,
+    sortBy = "firstName",
+    sortDir = "asc",
+    search?: string
+  ): Promise<{
+    content: UserResponse[];
+    totalElements: number;
+    totalPages: number;
+    number: number;
+    size: number;
+  }> => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      size: size.toString(),
+      sortBy,
+      sortDir,
+    });
+
+    if (search) {
+      params.append("search", search);
+    }
+
+    return apiRequest(`/users/parents?${params.toString()}`);
+  },
 };
 
 // Players API calls
@@ -420,6 +449,18 @@ export const playersAPI = {
 
   getById: async (id: number): Promise<any> => {
     return apiRequest<any>(`/players/${id}`);
+  },
+
+  // Create one or more players under a main parent, creating the parent
+  // account too when newParent is supplied. One transaction: either every
+  // player and the parent exist afterwards, or none of them do.
+  createWithParent: async (
+    request: CreatePlayersRequest
+  ): Promise<CreatePlayersResponse> => {
+    return apiRequest<CreatePlayersResponse>("/players/with-parent", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
   },
 
   create: async (playerData: any): Promise<any> => {
