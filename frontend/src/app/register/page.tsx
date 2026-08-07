@@ -162,23 +162,23 @@ export default function RegisterPage() {
 
   if (registrationSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 flex items-center justify-center px-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20 max-w-md w-full text-center">
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary-50 flex items-center justify-center px-4">
+        <div className="bg-background border border-border rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
           <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Registration Successful!</h2>
-          <p className="text-blue-200 mb-4">Your account has been created successfully.</p>
-          <p className="text-sm text-blue-300">Redirecting to login...</p>
+          <h2 className="text-2xl font-bold text-text-primary mb-2">Registration Successful!</h2>
+          <p className="text-text-secondary mb-4">Your account has been created successfully.</p>
+          <p className="text-sm text-text-secondary">Redirecting to login...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary-50 flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
@@ -189,7 +189,7 @@ export default function RegisterPage() {
       <div className="max-w-md w-full space-y-8 relative z-10">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto mb-6 p-4 bg-white/10 backdrop-blur-lg rounded-2xl w-fit">
+          <div className="mx-auto mb-6 p-4 bg-background border border-border rounded-2xl w-fit">
             <div className="relative w-24 h-24 mx-auto">
               <Image
                 src="/Logo.jpeg"
@@ -200,23 +200,23 @@ export default function RegisterPage() {
               />
             </div>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">Create Account</h2>
-          <p className="text-blue-200">Join Batal Football Academy</p>
+          <h2 className="text-3xl font-bold text-text-primary mb-2">Create Account</h2>
+          <p className="text-text-secondary">Join Batal Football Academy</p>
           
           {/* Progress Steps */}
           <div className="flex items-center justify-center mt-6 space-x-4">
-            <div className={`flex items-center ${step >= 1 ? 'text-cyan-300' : 'text-gray-400'}`}>
+            <div className={`flex items-center ${step >= 1 ? 'text-primary' : 'text-text-secondary'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                step >= 1 ? 'bg-cyan-500/30 border-2 border-cyan-400' : 'bg-gray-600/30 border-2 border-gray-500'
+                step >= 1 ? 'bg-cyan-500/30 border-2 border-cyan-400' : 'bg-secondary-100 border-2 border-gray-500'
               }`}>
                 1
               </div>
               <span className="ml-2 text-sm">Basic Info</span>
             </div>
             <div className={`w-16 h-0.5 ${step >= 2 ? 'bg-cyan-400' : 'bg-gray-500'}`}></div>
-            <div className={`flex items-center ${step >= 2 ? 'text-cyan-300' : 'text-gray-400'}`}>
+            <div className={`flex items-center ${step >= 2 ? 'text-primary' : 'text-text-secondary'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                step >= 2 ? 'bg-cyan-500/30 border-2 border-cyan-400' : 'bg-gray-600/30 border-2 border-gray-500'
+                step >= 2 ? 'bg-cyan-500/30 border-2 border-cyan-400' : 'bg-secondary-100 border-2 border-gray-500'
               }`}>
                 2
               </div>
@@ -226,12 +226,12 @@ export default function RegisterPage() {
         </div>
 
         {/* Registration Form Container */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
+        <div className="bg-background border border-border rounded-2xl shadow-lg p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Error Message */}
             {error && (
-              <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 backdrop-blur-sm">
-                <p className="text-sm text-red-200">{error}</p>
+              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                <p className="text-sm text-accent-red">{error}</p>
               </div>
             )}
 
@@ -239,7 +239,7 @@ export default function RegisterPage() {
             {step === 1 && (
               <>
                 <div>
-                  <label htmlFor="fullName" className="block text-sm font-medium text-blue-200 mb-2">
+                  <label htmlFor="fullName" className="block text-sm font-medium text-text-secondary mb-2">
                     Full Name
                   </label>
                   <input
@@ -247,18 +247,18 @@ export default function RegisterPage() {
                     type="text"
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    className={`appearance-none relative block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border ${
-                      validationErrors.fullName ? 'border-red-500/50' : 'border-white/20'
-                    } placeholder-blue-300 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200`}
+                    className={`appearance-none relative block w-full px-4 py-3 bg-background border ${
+                      validationErrors.fullName ? 'border-red-500/50' : 'border-border'
+                    } placeholder-text-secondary text-text-primary rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200`}
                     placeholder="Enter your full name"
                   />
                   {validationErrors.fullName && (
-                    <p className="mt-1 text-xs text-red-300">{validationErrors.fullName}</p>
+                    <p className="mt-1 text-xs text-accent-red">{validationErrors.fullName}</p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-blue-200 mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-2">
                     Email Address
                   </label>
                   <input
@@ -266,18 +266,18 @@ export default function RegisterPage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className={`appearance-none relative block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border ${
-                      validationErrors.email ? 'border-red-500/50' : 'border-white/20'
-                    } placeholder-blue-300 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200`}
+                    className={`appearance-none relative block w-full px-4 py-3 bg-background border ${
+                      validationErrors.email ? 'border-red-500/50' : 'border-border'
+                    } placeholder-text-secondary text-text-primary rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200`}
                     placeholder="Enter your email"
                   />
                   {validationErrors.email && (
-                    <p className="mt-1 text-xs text-red-300">{validationErrors.email}</p>
+                    <p className="mt-1 text-xs text-accent-red">{validationErrors.email}</p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-blue-200 mb-2">
+                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-text-secondary mb-2">
                     Phone Number
                   </label>
                   <input
@@ -285,18 +285,18 @@ export default function RegisterPage() {
                     type="tel"
                     value={formData.phoneNumber}
                     onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                    className={`appearance-none relative block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border ${
-                      validationErrors.phoneNumber ? 'border-red-500/50' : 'border-white/20'
-                    } placeholder-blue-300 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200`}
+                    className={`appearance-none relative block w-full px-4 py-3 bg-background border ${
+                      validationErrors.phoneNumber ? 'border-red-500/50' : 'border-border'
+                    } placeholder-text-secondary text-text-primary rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200`}
                     placeholder="+1234567890"
                   />
                   {validationErrors.phoneNumber && (
-                    <p className="mt-1 text-xs text-red-300">{validationErrors.phoneNumber}</p>
+                    <p className="mt-1 text-xs text-accent-red">{validationErrors.phoneNumber}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-blue-200 mb-2">
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
                     Select Role
                   </label>
                   <div className="grid grid-cols-3 gap-2">
@@ -307,8 +307,8 @@ export default function RegisterPage() {
                         onClick={() => setFormData({ ...formData, role })}
                         className={`px-3 py-2 rounded-lg border transition-all ${
                           formData.role === role
-                            ? 'bg-cyan-500/30 border-cyan-400 text-cyan-200'
-                            : 'bg-white/5 border-white/20 text-blue-200 hover:bg-white/10'
+                            ? 'bg-cyan-500/30 border-cyan-400 text-primary'
+                            : 'bg-secondary-50 border-border text-text-secondary hover:bg-secondary-100'
                         }`}
                       >
                         {role}
@@ -331,7 +331,7 @@ export default function RegisterPage() {
             {step === 2 && (
               <>
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-blue-200 mb-2">
+                  <label htmlFor="password" className="block text-sm font-medium text-text-secondary mb-2">
                     Password
                   </label>
                   <input
@@ -339,21 +339,21 @@ export default function RegisterPage() {
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className={`appearance-none relative block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border ${
-                      validationErrors.password ? 'border-red-500/50' : 'border-white/20'
-                    } placeholder-blue-300 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200`}
+                    className={`appearance-none relative block w-full px-4 py-3 bg-background border ${
+                      validationErrors.password ? 'border-red-500/50' : 'border-border'
+                    } placeholder-text-secondary text-text-primary rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200`}
                     placeholder="Create a strong password"
                   />
                   {validationErrors.password && (
-                    <p className="mt-1 text-xs text-red-300">{validationErrors.password}</p>
+                    <p className="mt-1 text-xs text-accent-red">{validationErrors.password}</p>
                   )}
                   
                   {/* Password Strength Indicator */}
                   {formData.password && (
                     <div className="mt-2">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-blue-200">Password strength</span>
-                        <span className="text-xs text-blue-300">{getPasswordStrength().text}</span>
+                        <span className="text-xs text-text-secondary">Password strength</span>
+                        <span className="text-xs text-text-secondary">{getPasswordStrength().text}</span>
                       </div>
                       <div className="h-1.5 bg-gray-600 rounded-full overflow-hidden">
                         <div 
@@ -366,7 +366,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-blue-200 mb-2">
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary mb-2">
                     Confirm Password
                   </label>
                   <input
@@ -374,13 +374,13 @@ export default function RegisterPage() {
                     type="password"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className={`appearance-none relative block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border ${
-                      validationErrors.confirmPassword ? 'border-red-500/50' : 'border-white/20'
-                    } placeholder-blue-300 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200`}
+                    className={`appearance-none relative block w-full px-4 py-3 bg-background border ${
+                      validationErrors.confirmPassword ? 'border-red-500/50' : 'border-border'
+                    } placeholder-text-secondary text-text-primary rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200`}
                     placeholder="Re-enter your password"
                   />
                   {validationErrors.confirmPassword && (
-                    <p className="mt-1 text-xs text-red-300">{validationErrors.confirmPassword}</p>
+                    <p className="mt-1 text-xs text-accent-red">{validationErrors.confirmPassword}</p>
                   )}
                 </div>
 
@@ -390,21 +390,21 @@ export default function RegisterPage() {
                       type="checkbox"
                       checked={formData.termsAccepted}
                       onChange={(e) => setFormData({ ...formData, termsAccepted: e.target.checked })}
-                      className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-white/30 rounded bg-white/10 backdrop-blur-sm mt-0.5"
+                      className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-border rounded bg-background mt-0.5"
                     />
-                    <span className="ml-2 text-sm text-blue-200">
+                    <span className="ml-2 text-sm text-text-secondary">
                       I agree to the{" "}
-                      <Link href="/terms" className="text-cyan-300 hover:text-cyan-200 underline">
+                      <Link href="/terms" className="text-primary hover:text-primary underline">
                         Terms of Service
                       </Link>{" "}
                       and{" "}
-                      <Link href="/privacy" className="text-cyan-300 hover:text-cyan-200 underline">
+                      <Link href="/privacy" className="text-primary hover:text-primary underline">
                         Privacy Policy
                       </Link>
                     </span>
                   </label>
                   {validationErrors.termsAccepted && (
-                    <p className="mt-1 text-xs text-red-300">{validationErrors.termsAccepted}</p>
+                    <p className="mt-1 text-xs text-accent-red">{validationErrors.termsAccepted}</p>
                   )}
                 </div>
 
@@ -420,7 +420,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="w-full py-3 px-4 border border-white/20 rounded-xl text-sm font-medium text-blue-200 hover:bg-white/5 transition-all duration-200"
+                    className="w-full py-3 px-4 border border-border rounded-xl text-sm font-medium text-text-secondary hover:bg-secondary-50 transition-all duration-200"
                   >
                     ← Back
                   </button>
@@ -432,14 +432,14 @@ export default function RegisterPage() {
 
         {/* Links */}
         <div className="text-center space-y-2">
-          <p className="text-sm text-blue-200">
+          <p className="text-sm text-text-secondary">
             Already have an account?{" "}
-            <Link href="/login" className="font-medium text-cyan-300 hover:text-cyan-100 transition-colors duration-200 underline underline-offset-4">
+            <Link href="/login" className="font-medium text-primary hover:text-cyan-100 transition-colors duration-200 underline underline-offset-4">
               Sign in
             </Link>
           </p>
-          <p className="text-sm text-blue-200">
-            <Link href="/" className="font-medium text-cyan-300 hover:text-cyan-100 transition-colors duration-200">
+          <p className="text-sm text-text-secondary">
+            <Link href="/" className="font-medium text-primary hover:text-cyan-100 transition-colors duration-200">
               ← Back to Home
             </Link>
           </p>

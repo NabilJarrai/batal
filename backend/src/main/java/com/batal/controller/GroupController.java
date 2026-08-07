@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -196,6 +197,26 @@ public class GroupController {
             error.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(error);
         }
+    }
+
+    // POST /api/groups/{groupId}/split - Relieve a full group by creating a
+    // sibling and moving chosen players into it.
+    @PostMapping("/{groupId}/split")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<GroupSplitResponse> splitGroup(
+            @PathVariable Long groupId,
+            @Valid @RequestBody GroupSplitRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(groupService.splitGroup(groupId, request));
+    }
+
+    // POST /api/groups/{groupId}/players/move - Move or unassign several
+    // players at once. A null targetGroupId leaves them unassigned.
+    @PostMapping("/{groupId}/players/move")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<GroupSplitResponse> movePlayers(
+            @PathVariable Long groupId,
+            @Valid @RequestBody BulkPlayerMoveRequest request) {
+        return ResponseEntity.ok(groupService.movePlayers(groupId, request));
     }
 
     // DELETE /api/groups/{groupId}/assessment-template - Unassign the template.

@@ -56,7 +56,7 @@ export default function DeleteConfirmationModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden bg-gray-800 border border-gray-700 rounded-2xl p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden bg-background-modal border border-gray-700 rounded-2xl p-6 text-left align-middle shadow-xl transition-all">
                 {/* Warning Icon */}
                 <div className="flex items-center justify-center w-12 h-12 bg-red-500/20 rounded-full mx-auto mb-4">
                   <svg
@@ -74,7 +74,7 @@ export default function DeleteConfirmationModal({
                   </svg>
                 </div>
 
-                <Dialog.Title className="text-lg font-semibold text-white text-center mb-2">
+                <Dialog.Title className="text-lg font-semibold text-text-primary text-center mb-2">
                   {title}
                 </Dialog.Title>
 
@@ -83,7 +83,7 @@ export default function DeleteConfirmationModal({
                     {message}
                   </p>
                   {itemName && (
-                    <p className="text-sm font-medium text-white bg-gray-700/50 px-3 py-2 rounded-lg">
+                    <p className="text-sm font-medium text-text-primary bg-secondary-100 px-3 py-2 rounded-lg">
                       "{itemName}"
                     </p>
                   )}

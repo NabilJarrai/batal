@@ -48,7 +48,7 @@ public class Group {
     @NotNull
     @Min(1)
     @Column(nullable = false)
-    private Integer capacity = 15;
+    private Integer capacity = 20;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coach_id")

@@ -4,8 +4,6 @@ import { useState } from 'react';
 import { GroupResponse, AGE_GROUP_METADATA } from '@/types/groups';
 import { Level } from '@/types/players';
 import { PlayerDTO } from '@/types/players';
-import UnassignPlayerModal from './UnassignPlayerModal';
-import ReassignPlayerModal from './ReassignPlayerModal';
 
 interface GroupCardProps {
   group: GroupResponse;
@@ -13,11 +11,12 @@ interface GroupCardProps {
   onAssignPlayer?: (groupId: number) => void;
   onRemoveCoach?: (groupId: number) => void;
   onRemovePlayer?: (groupId: number, playerId: number) => void;
-  onUnassignPlayer?: (groupId: number, playerId: number) => void;
-  onReassignPlayer?: (playerId: number, fromGroupId: number, toGroupId: number) => void;
   onViewDetails?: (groupId: number) => void;
   onEdit?: (groupId: number) => void;
   onDelete?: (groupId: number) => void;
+  onAssignAssessment?: (groupId: number) => void;
+  /** Opens the dialog listing this group's players, with bulk actions. */
+  onViewPlayers?: (groupId: number) => void;
   onActivate?: (groupId: number) => void;
   onDeactivate?: (groupId: number) => void;
   showActions?: boolean;
@@ -26,17 +25,21 @@ interface GroupCardProps {
   onSelect?: (groupId: number) => void;
 }
 
+// The three primary card actions share a width so they line up, since their
+// labels differ in length and btn-xs alone only matches padding.
+const CARD_ACTION_CLASS = 'btn-xs w-32 justify-center';
+
 export default function GroupCard({ 
   group, 
   onAssignCoach,
   onAssignPlayer,
   onRemoveCoach,
   onRemovePlayer,
-  onUnassignPlayer,
-  onReassignPlayer, 
   onViewDetails, 
   onEdit,
   onDelete,
+  onAssignAssessment,
+  onViewPlayers,
   onActivate,
   onDeactivate,
   showActions = true,
@@ -45,21 +48,6 @@ export default function GroupCard({
   onSelect
 }: GroupCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const [unassignModal, setUnassignModal] = useState<{
-    isOpen: boolean;
-    player: PlayerDTO | null;
-  }>({
-    isOpen: false,
-    player: null
-  });
-  
-  const [reassignModal, setReassignModal] = useState<{
-    isOpen: boolean;
-    player: PlayerDTO | null;
-  }>({
-    isOpen: false,
-    player: null
-  });
   
   const ageGroupMeta = AGE_GROUP_METADATA[group.ageGroup];
   const utilizationPercentage = Math.round((group.currentPlayerCount / group.capacity) * 100);
@@ -74,42 +62,6 @@ export default function GroupCard({
     if (percentage >= 90) return 'text-accent-red';
     if (percentage >= 75) return 'text-accent-yellow';
     return 'text-accent-teal';
-  };
-
-  const handleUnassignClick = (player: PlayerDTO) => {
-    setUnassignModal({
-      isOpen: true,
-      player: player
-    });
-  };
-
-  const handleUnassignConfirm = () => {
-    if (unassignModal.player && unassignModal.player.id && onUnassignPlayer) {
-      onUnassignPlayer(group.id, unassignModal.player.id);
-    }
-    setUnassignModal({ isOpen: false, player: null });
-  };
-
-  const handleUnassignClose = () => {
-    setUnassignModal({ isOpen: false, player: null });
-  };
-
-  const handleReassignClick = (player: PlayerDTO) => {
-    setReassignModal({
-      isOpen: true,
-      player: player
-    });
-  };
-
-  const handleReassignConfirm = (newGroupId: number) => {
-    if (reassignModal.player && reassignModal.player.id && onReassignPlayer) {
-      onReassignPlayer(reassignModal.player.id, group.id, newGroupId);
-    }
-    setReassignModal({ isOpen: false, player: null });
-  };
-
-  const handleReassignClose = () => {
-    setReassignModal({ isOpen: false, player: null });
   };
 
   const handleClick = () => {
@@ -235,7 +187,7 @@ export default function GroupCard({
                   e.stopPropagation();
                   onAssignCoach(group.id);
                 }}
-                className="btn-secondary btn-xs"
+                className={`btn-secondary ${CARD_ACTION_CLASS}`}
               >
                 Assign Coach
               </button>
@@ -254,11 +206,37 @@ export default function GroupCard({
           <span className="text-sm font-medium">Assessment</span>
         </div>
         {group.assessmentTemplateTitle ? (
-          <p className="text-sm text-text-primary">{group.assessmentTemplateTitle}</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm text-text-primary truncate">{group.assessmentTemplateTitle}</p>
+            {showActions && onAssignAssessment && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAssignAssessment(group.id);
+                }}
+                className={`btn-secondary ${CARD_ACTION_CLASS} flex-shrink-0`}
+              >
+                Change
+              </button>
+            )}
+          </div>
         ) : (
-          <p className="text-sm text-accent-yellow">
-            None assigned &mdash; players cannot be assessed
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm text-accent-yellow">
+              None &mdash; players cannot be assessed
+            </p>
+            {showActions && onAssignAssessment && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAssignAssessment(group.id);
+                }}
+                className={`btn-secondary ${CARD_ACTION_CLASS} flex-shrink-0`}
+              >
+                Assign Assessment
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -284,7 +262,7 @@ export default function GroupCard({
             </svg>
             <span className="text-sm font-medium">Players</span>
           </div>
-          {showActions && onAssignPlayer && !group.isFull && (
+          {showActions && onAssignPlayer && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -295,7 +273,7 @@ export default function GroupCard({
                   console.error('onAssignPlayer is not defined');
                 }
               }}
-              className="btn-success btn-xs"
+              className={`btn-success ${CARD_ACTION_CLASS}`}
             >
               Add Player
             </button>
@@ -305,49 +283,29 @@ export default function GroupCard({
           {group.currentPlayerCount} / {group.capacity} players
         </p>
         
-        {/* Players List */}
-        {group.players && group.players.length > 0 && (
-          <div className="space-y-1 max-h-32 overflow-y-auto">
-            {group.players.map((player) => (
-              <div key={player.id} className="flex items-center justify-between bg-secondary-50 rounded px-2 py-1">
-                <span className="text-xs text-text-primary">
-                  {player.firstName} {player.lastName}
-                </span>
-                {showActions && (onUnassignPlayer || onReassignPlayer) && (
-                  <div className="flex gap-1">
-                    {onReassignPlayer && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleReassignClick(player);
-                        }}
-                        className="btn-outline btn-xs"
-                        title={`Reassign ${player.firstName} ${player.lastName} to another group`}
-                      >
-                        ↗
-                      </button>
-                    )}
-                    {onUnassignPlayer && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleUnassignClick(player);
-                        }}
-                        className="btn-destructive btn-xs"
-                        title={`Remove ${player.firstName} ${player.lastName} from group`}
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+        {/* The inline list did not scale: at twenty players it filled the
+            card and buried the actions. The full list, search and bulk
+            actions live in the players dialog instead. */}
+        {showActions && onViewPlayers && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewPlayers(group.id);
+            }}
+            disabled={group.currentPlayerCount === 0}
+            className={`btn-secondary ${CARD_ACTION_CLASS} disabled:opacity-40 disabled:cursor-not-allowed`}
+            title={
+              group.currentPlayerCount === 0
+                ? 'No players in this group yet'
+                : 'View, move or remove this group\'s players'
+            }
+          >
+            View Players
+          </button>
         )}
-        
-        {group.players && group.players.length === 0 && (
-          <p className="text-xs text-text-secondary italic">No players assigned</p>
+
+        {group.currentPlayerCount === 0 && (
+          <p className="text-xs text-text-secondary italic mt-2">No players assigned</p>
         )}
       </div>
 
@@ -416,8 +374,7 @@ export default function GroupCard({
               title="Delete Group"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clipRule="evenodd" />
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v4a1 1 0 11-2 0V7zM12 7a1 1 0 112 0v4a1 1 0 11-2 0V7z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
             </button>
           )}
@@ -431,24 +388,6 @@ export default function GroupCard({
         </div>
       )}
 
-      {/* Unassign Player Modal */}
-      <UnassignPlayerModal
-        isOpen={unassignModal.isOpen}
-        onClose={handleUnassignClose}
-        onConfirm={handleUnassignConfirm}
-        player={unassignModal.player}
-        groupName={group.name}
-      />
-
-      {/* Reassign Player Modal */}
-      <ReassignPlayerModal
-        isOpen={reassignModal.isOpen}
-        onClose={handleReassignClose}
-        onConfirm={handleReassignConfirm}
-        player={reassignModal.player}
-        currentGroupId={group.id}
-        currentGroupName={group.name}
-      />
     </div>
   );
 }

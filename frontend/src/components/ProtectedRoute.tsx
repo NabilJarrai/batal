@@ -52,10 +52,10 @@ export default function ProtectedRoute({
   // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white">Verifying authentication...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-text-primary">Verifying authentication...</p>
         </div>
       </div>
     );

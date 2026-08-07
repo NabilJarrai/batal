@@ -6,6 +6,7 @@ import {
   UserResponse,
 } from "@/types/auth";
 import { CreatePlayersRequest, CreatePlayersResponse } from "@/types/players";
+import { GroupResponse } from "@/types/groups";
 import {
   AssessmentTemplate,
   AssessmentTemplateRequest,
@@ -620,6 +621,44 @@ export const groupsAPI = {
     return apiRequest<any>("/groups/assign-player", {
       method: "POST",
       body: JSON.stringify(assignmentData),
+    });
+  },
+
+  // Relieve a full group by creating a sibling that inherits its level, age
+  // group and assessment, and moving the chosen players across. One
+  // transaction, so a failure cannot leave a half-populated group behind.
+  split: async (
+    groupId: number,
+    request: {
+      newGroupName: string;
+      playerIdsToMove?: number[];
+      newPlayerId?: number;
+      newPlayerJoinsNewGroup?: boolean;
+    }
+  ): Promise<{
+    originalGroup: GroupResponse;
+    newGroup: GroupResponse;
+    playersMoved: number;
+  }> => {
+    return apiRequest(`/groups/${groupId}/split`, {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+  },
+
+  // Move or unassign several of a group's players at once. A null
+  // targetGroupId leaves them unassigned. One transaction.
+  movePlayers: async (
+    groupId: number,
+    request: { playerIds: number[]; targetGroupId?: number | null }
+  ): Promise<{
+    originalGroup: GroupResponse;
+    newGroup: GroupResponse | null;
+    playersMoved: number;
+  }> => {
+    return apiRequest(`/groups/${groupId}/players/move`, {
+      method: "POST",
+      body: JSON.stringify(request),
     });
   },
 

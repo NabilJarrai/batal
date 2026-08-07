@@ -91,13 +91,13 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
   const isEditMode = !!skill;
 
   return (
-    <div className="relative bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-8 max-w-2xl mx-auto overflow-hidden">
+    <div className="relative bg-background-modal rounded-2xl border border-border shadow-lg p-8 max-w-2xl mx-auto overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-green-500/10 to-cyan-500/10 rounded-full blur-2xl" />
 
       <div className="relative z-10">
-        <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/20">
+        <div className="flex items-center justify-between mb-8 pb-6 border-b border-border">
           <div className="flex items-center gap-4">
             <div className="relative p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
               <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,7 +109,7 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
               <h3 className="text-2xl font-bold text-white mb-1">
                 {isEditMode ? 'Edit Skill' : 'Create New Skill'}
               </h3>
-              <p className="text-gray-300 text-sm">
+              <p className="text-text-secondary text-sm">
                 {isEditMode ? 'Update skill details and settings' : 'Add a new skill to the system'}
               </p>
             </div>
@@ -119,9 +119,9 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
             onClick={onCancel}
             disabled={isSubmitting}
             className="
-              p-2 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white
-              transition-all duration-300 hover:scale-105 backdrop-blur-sm
-              border border-white/20 hover:border-white/30
+              p-2 rounded-xl bg-secondary-100 hover:bg-secondary-50 text-text-secondary hover:text-text-primary
+              transition-all duration-300 hover:scale-105
+              border border-border hover:border-border
             "
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,11 +148,11 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
                 onChange={(e) => handleChange('name', e.target.value)}
                 className={`
                   w-full px-4 py-3 pr-16 rounded-xl transition-all duration-300
-                  bg-white/5 border backdrop-blur-sm text-white placeholder-gray-400
+                  bg-background border text-text-primary placeholder-text-secondary
                   focus:outline-none focus:ring-2 focus:scale-[1.02]
                   ${errors.name
                     ? 'border-red-400/50 focus:border-red-400 focus:ring-red-400/30 bg-red-500/5'
-                    : 'border-white/20 focus:border-primary focus:ring-primary/30 hover:border-white/30'
+                    : 'border-border focus:border-primary focus:ring-primary/30 hover:border-border'
                   }
                   group-hover:shadow-lg
                 `}
@@ -160,12 +160,12 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
                 disabled={isSubmitting}
                 maxLength={100}
               />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm transition-colors duration-300 group-focus-within:text-primary">
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-secondary text-sm transition-colors duration-300 group-focus-within:text-primary">
                 {formData.name.length}/100
               </div>
             </div>
             {errors.name && (
-              <div className="mt-3 flex items-center gap-2 text-red-300 text-sm bg-red-500/10 border border-red-400/30 rounded-lg p-3 backdrop-blur-sm">
+              <div className="mt-3 flex items-center gap-2 text-accent-red text-sm bg-red-500/10 border border-red-500/20 rounded-lg p-3">
                 <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
@@ -193,14 +193,14 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
                   disabled={isSubmitting || (isEditMode && skill?.usageCount > 0)}
                   className={`
                     group relative flex items-center gap-4 p-4 rounded-xl transition-all duration-300
-                    backdrop-blur-sm border overflow-hidden
+ border overflow-hidden
                     ${formData.category === category.key
                       ? `${category.color} border-white/30 text-white shadow-2xl scale-105 ring-2 ring-white/20`
                       : `${category.bgColor} ${category.borderColor} ${category.textColor} hover:scale-105 hover:shadow-xl`
                     }
                     ${(isSubmitting || (isEditMode && skill?.usageCount > 0))
                       ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:border-white/40 cursor-pointer'
+                      : 'hover:border-border cursor-pointer'
                     }
                     before:absolute before:inset-0 before:bg-white/5 before:opacity-0
                     before:transition-opacity before:duration-300 hover:before:opacity-100
@@ -220,7 +220,7 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
                     </div>
                   </div>
                   {formData.category === category.key && (
-                    <div className="absolute top-2 right-2 w-6 h-6 bg-white/30 rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg">
+                    <div className="absolute top-2 right-2 w-6 h-6 bg-white/30 rounded-full flex items-center justify-center shadow-lg">
                       <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
@@ -230,7 +230,7 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
               ))}
             </div>
             {isEditMode && skill?.usageCount > 0 && (
-              <div className="mt-4 flex items-center gap-3 text-yellow-300 text-sm bg-yellow-500/10 border border-yellow-400/30 rounded-xl p-4 backdrop-blur-sm">
+              <div className="mt-4 flex items-center gap-3 text-accent-yellow text-sm bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
                 <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
@@ -243,14 +243,14 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
           <div>
             <label className="flex items-center gap-2 text-sm font-semibold text-white mb-4">
               <div className="p-1 bg-green-500/20 rounded-lg">
-                <svg className="w-4 h-4 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
               Applicable Levels *
             </label>
-            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
-              <p className="text-gray-300 text-sm mb-6 text-center font-medium">
+            <div className="bg-secondary-50 rounded-xl p-6 border border-border shadow-lg">
+              <p className="text-text-secondary text-sm mb-6 text-center font-medium">
                 Select which levels this skill applies to
               </p>
               <div className="flex gap-4 justify-center">
@@ -279,10 +279,10 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
                       disabled={isSubmitting || (isEditMode && skill?.usageCount > 0)}
                       className={`
                         relative flex flex-col items-center p-5 rounded-xl border-2 transition-all duration-300
-                        transform hover:scale-110 min-w-[140px] group backdrop-blur-sm shadow-lg
+                        transform hover:scale-110 min-w-[140px] group shadow-lg
                         ${isSelected
                           ? `${level.color} border-white/40 text-white shadow-2xl scale-105 ring-2 ring-white/30`
-                          : `${level.bgColor} ${level.borderColor} ${level.textColor} hover:shadow-xl hover:border-white/30`
+                          : `${level.bgColor} ${level.borderColor} ${level.textColor} hover:shadow-xl hover:border-border`
                         }
                         ${(isSubmitting || (isEditMode && skill?.usageCount > 0))
                           ? 'opacity-50 cursor-not-allowed transform-none'
@@ -298,11 +298,11 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
                     >
                       {/* Selection indicator */}
                       <div className={`
-                        absolute -top-2 -right-2 w-7 h-7 rounded-full border-2 border-white/30
-                        transition-all duration-300 backdrop-blur-sm shadow-lg
+                        absolute -top-2 -right-2 w-7 h-7 rounded-full border-2 border-border
+                        transition-all duration-300 shadow-lg
                         ${isSelected
                           ? 'bg-gradient-to-r from-green-400 to-emerald-500 scale-100'
-                          : 'bg-white/10 scale-0 group-hover:scale-100'
+                          : 'bg-secondary-100 scale-0 group-hover:scale-100'
                         }
                       `}>
                         {isSelected && (
@@ -332,8 +332,8 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
                       {/* Cannot remove indicator */}
                       {isLastSelected && (
                         <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-                          <div className="bg-yellow-400/30 border border-yellow-400/50 rounded-lg px-3 py-1 backdrop-blur-sm shadow-lg">
-                            <span className="text-yellow-200 text-xs font-bold">Required</span>
+                          <div className="bg-yellow-400/30 border border-yellow-400/50 rounded-lg px-3 py-1 shadow-lg">
+                            <span className="text-accent-yellow text-xs font-bold">Required</span>
                           </div>
                         </div>
                       )}
@@ -345,17 +345,17 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
               {/* Both levels selected indicator */}
               {formData.applicableLevels.length === 2 && (
                 <div className="mt-6 text-center">
-                  <div className="inline-flex items-center gap-3 bg-gradient-to-r from-green-500/25 to-cyan-500/25 border border-green-400/40 rounded-xl px-6 py-3 backdrop-blur-sm shadow-lg">
-                    <span className="text-cyan-300 text-xl animate-pulse">✨</span>
-                    <span className="text-cyan-200 text-sm font-bold">Available for all levels</span>
-                    <span className="text-cyan-300 text-xl animate-pulse">✨</span>
+                  <div className="inline-flex items-center gap-3 bg-gradient-to-r from-green-500/25 to-cyan-500/25 border border-green-400/40 rounded-xl px-6 py-3 shadow-lg">
+                    <span className="text-primary text-xl animate-pulse">✨</span>
+                    <span className="text-primary text-sm font-bold">Available for all levels</span>
+                    <span className="text-primary text-xl animate-pulse">✨</span>
                   </div>
                 </div>
               )}
             </div>
 
             {(errors as any).applicableLevels && (
-              <div className="mt-4 flex items-center gap-3 text-red-300 text-sm bg-red-500/10 border border-red-400/30 rounded-xl p-4 backdrop-blur-sm">
+              <div className="mt-4 flex items-center gap-3 text-accent-red text-sm bg-red-500/10 border border-red-500/20 rounded-xl p-4">
                 <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
@@ -364,7 +364,7 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
             )}
 
             {isEditMode && skill?.usageCount > 0 && (
-              <div className="mt-4 flex items-center gap-3 text-yellow-300 text-sm bg-yellow-500/10 border border-yellow-400/30 rounded-xl p-4 backdrop-blur-sm">
+              <div className="mt-4 flex items-center gap-3 text-accent-yellow text-sm bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
                 <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
@@ -390,11 +390,11 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
                 rows={4}
                 className={`
                   w-full px-4 py-3 pr-16 rounded-xl transition-all duration-300 resize-none
-                  bg-white/5 border backdrop-blur-sm text-white placeholder-gray-400
+                  bg-background border text-text-primary placeholder-text-secondary
                   focus:outline-none focus:ring-2 focus:scale-[1.02]
                   ${errors.description
                     ? 'border-red-400/50 focus:border-red-400 focus:ring-red-400/30 bg-red-500/5'
-                    : 'border-white/20 focus:border-amber-400 focus:ring-amber-400/30 hover:border-white/30'
+                    : 'border-border focus:border-amber-400 focus:ring-amber-400/30 hover:border-border'
                   }
                   group-hover:shadow-lg
                 `}
@@ -402,12 +402,12 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
                 disabled={isSubmitting}
                 maxLength={500}
               />
-              <div className="absolute bottom-3 right-3 text-gray-400 text-xs transition-colors duration-300 group-focus-within:text-amber-300">
+              <div className="absolute bottom-3 right-3 text-text-secondary text-xs transition-colors duration-300 group-focus-within:text-amber-300">
                 {formData.description.length}/500
               </div>
             </div>
             {errors.description && (
-              <div className="mt-3 flex items-center gap-2 text-red-300 text-sm bg-red-500/10 border border-red-400/30 rounded-lg p-3 backdrop-blur-sm">
+              <div className="mt-3 flex items-center gap-2 text-accent-red text-sm bg-red-500/10 border border-red-500/20 rounded-lg p-3">
                 <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
@@ -417,18 +417,18 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
           </div>
 
           {/* Active Status */}
-          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/20 shadow-lg">
+          <div className="bg-secondary-50 rounded-xl p-5 border border-border shadow-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className={`
                   p-2 rounded-xl transition-all duration-300
                   ${formData.isActive
                     ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/20'
-                    : 'bg-gradient-to-br from-gray-500/20 to-gray-600/20'
+                    : 'bg-gradient-to-br from-secondary-100 to-secondary-50'
                   }
                 `}>
                   <svg className={`w-6 h-6 transition-colors duration-300 ${
-                    formData.isActive ? 'text-green-300' : 'text-gray-400'
+                    formData.isActive ? 'text-green-600' : 'text-text-secondary'
                   }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d={formData.isActive
@@ -439,11 +439,11 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
                   </svg>
                 </div>
                 <div>
-                  <label htmlFor="isActive" className="text-base font-bold text-white cursor-pointer mb-1 block">
+                  <label htmlFor="isActive" className="text-base font-bold text-text-primary cursor-pointer mb-1 block">
                     Skill Status
                   </label>
                   <p className={`text-sm transition-colors duration-300 ${
-                    formData.isActive ? 'text-green-200' : 'text-gray-400'
+                    formData.isActive ? 'text-green-600' : 'text-text-secondary'
                   }`}>
                     {formData.isActive ? 'Active and available for assessments' : 'Inactive and hidden from assessments'}
                   </p>
@@ -456,7 +456,7 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
                 disabled={isSubmitting}
                 className={`
                   relative inline-flex h-8 w-14 items-center rounded-full border-2 transition-all duration-300
-                  focus:outline-none focus:ring-2 shadow-lg backdrop-blur-sm
+                  focus:outline-none focus:ring-2 shadow-lg
                   ${formData.isActive
                     ? 'bg-gradient-to-r from-green-500 to-emerald-600 border-green-400/50 focus:ring-green-400/50'
                     : 'bg-gradient-to-r from-gray-600 to-gray-700 border-gray-500/50 focus:ring-gray-400/50'
@@ -488,15 +488,15 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end gap-4 pt-8 border-t border-white/20">
+          <div className="flex justify-end gap-4 pt-8 border-t border-border">
             <button
               type="button"
               onClick={onCancel}
               disabled={isSubmitting}
               className="
                 px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300
-                bg-white/10 text-gray-300 border border-white/20 hover:bg-white/20 hover:text-white
-                hover:scale-105 backdrop-blur-sm shadow-lg
+                bg-secondary-100 text-text-primary border border-border hover:bg-secondary-50
+                hover:scale-105 shadow-lg
                 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
               "
             >
@@ -510,11 +510,11 @@ export default function SkillForm({ skill, onSubmit, onCancel, isLoading = false
                 bg-gradient-to-r from-primary to-secondary text-white border border-primary/30
                 hover:from-blue-600 hover:to-purple-700 hover:scale-105 shadow-xl
                 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-                backdrop-blur-sm
+
               "
             >
               {(isSubmitting || isLoading) && (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-border border-t-white rounded-full animate-spin" />
               )}
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}

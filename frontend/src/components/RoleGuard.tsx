@@ -55,8 +55,8 @@ export const withRoleGuard = <P extends object>(
 
       return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-8 border border-white/20 text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">
+          <div className="bg-background rounded-xl p-8 border border-border text-center">
+            <h2 className="text-2xl font-bold text-text-primary mb-4">
               Access Denied
             </h2>
             <p className="text-blue-200 mb-6">

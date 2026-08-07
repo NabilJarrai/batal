@@ -308,7 +308,7 @@ export default function ManagerDashboard() {
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Groups by Level */}
-                  <div className="bg-white/5 rounded-lg p-4">
+                  <div className="bg-secondary-50 rounded-lg p-4">
                     <h3 className="text-lg font-medium text-gray-900 mb-3">Groups by Level</h3>
                     <div className="space-y-3">
                       <div>
@@ -344,7 +344,7 @@ export default function ManagerDashboard() {
                   </div>
 
                   {/* Groups by Age */}
-                  <div className="bg-white/5 rounded-lg p-4">
+                  <div className="bg-secondary-50 rounded-lg p-4">
                     <h3 className="text-lg font-medium text-gray-900 mb-3">Groups by Age Category</h3>
                     <div className="grid grid-cols-2 gap-3">
                       {Object.entries(groupsByAge).map(([age, count]) => (
@@ -361,13 +361,13 @@ export default function ManagerDashboard() {
               {/* Top Performing Groups */}
               <div>
                 <h3 className="text-lg font-medium text-text-primary mb-3">Top Performing Groups</h3>
-                <div className="bg-white/5 rounded-lg">
+                <div className="bg-secondary-50 rounded-lg">
                   <div className="divide-y divide-white/10">
                     {topGroups.map((group, index) => (
                       <div key={group.id} className="p-4 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className={`
-                            w-8 h-8 rounded-full flex items-center justify-center text-white font-bold
+                            w-8 h-8 rounded-full flex items-center justify-center text-text-primary font-bold
                             ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-orange-600' : 'bg-blue-500'}
                           `}>
                             {index + 1}
@@ -380,7 +380,7 @@ export default function ManagerDashboard() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium text-white">
+                          <p className="font-medium text-text-primary">
                             {group.currentPlayerCount}/{group.capacity} players
                           </p>
                           <p className="text-sm text-text-secondary">
@@ -412,7 +412,7 @@ export default function ManagerDashboard() {
               </div>
 
               {/* Player Growth Chart */}
-              <div className="bg-white/5 rounded-lg p-6 mb-6">
+              <div className="bg-secondary-50 rounded-lg p-6 mb-6">
                 <h3 className="text-lg font-medium text-text-primary mb-4">Player Growth Trend</h3>
                 <div className="h-64 flex items-end justify-between gap-2">
                   {playerGrowthData.labels.map((label, index) => (
@@ -434,25 +434,25 @@ export default function ManagerDashboard() {
 
               {/* Key Metrics Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white/5 rounded-lg p-4">
+                <div className="bg-secondary-50 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-text-secondary mb-2">Average Group Size</h4>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-2xl font-bold text-text-primary">
                     {groups.length > 0 ? Math.round(stats.totalPlayers / groups.length) : 0}
                   </p>
                   <p className="text-xs text-text-secondary mt-1">players per group</p>
                 </div>
 
-                <div className="bg-white/5 rounded-lg p-4">
+                <div className="bg-secondary-50 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-text-secondary mb-2">Coach-Player Ratio</h4>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-2xl font-bold text-text-primary">
                     1:{stats.totalCoaches > 0 ? Math.round(stats.totalPlayers / stats.totalCoaches) : 0}
                   </p>
                   <p className="text-xs text-text-secondary mt-1">optimal ratio maintained</p>
                 </div>
 
-                <div className="bg-white/5 rounded-lg p-4">
+                <div className="bg-secondary-50 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-text-secondary mb-2">Retention Rate</h4>
-                  <p className="text-2xl font-bold text-white">94%</p>
+                  <p className="text-2xl font-bold text-text-primary">94%</p>
                   <p className="text-xs text-accent-teal mt-1">+2% from last month</p>
                 </div>
               </div>
@@ -461,17 +461,17 @@ export default function ManagerDashboard() {
 
           {activeTab === 'reports' && (
             <div>
-              <h2 className="text-xl font-semibold text-white mb-6">Generate Reports</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-6">Generate Reports</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <button className="bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg p-6 text-left transition-colors duration-200">
+                <button className="bg-secondary-50 hover:bg-secondary-100 border border-border rounded-lg p-6 text-left transition-colors duration-200">
                   <div className="flex items-center gap-4 mb-3">
                     <div className="p-3 bg-blue-500/20 rounded-full">
                       <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-white">Player Progress Report</h3>
+                    <h3 className="text-lg font-medium text-text-primary">Player Progress Report</h3>
                   </div>
                   <p className="text-sm text-text-secondary mb-2">
                     Comprehensive overview of all player development metrics
@@ -479,14 +479,14 @@ export default function ManagerDashboard() {
                   <span className="text-xs text-text-secondary">Last generated: 2 days ago</span>
                 </button>
 
-                <button className="bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg p-6 text-left transition-colors duration-200">
+                <button className="bg-secondary-50 hover:bg-secondary-100 border border-border rounded-lg p-6 text-left transition-colors duration-200">
                   <div className="flex items-center gap-4 mb-3">
                     <div className="p-3 bg-purple-500/20 rounded-full">
                       <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-white">Coach Performance</h3>
+                    <h3 className="text-lg font-medium text-text-primary">Coach Performance</h3>
                   </div>
                   <p className="text-sm text-text-secondary mb-2">
                     Evaluation of coach effectiveness and group management
@@ -494,14 +494,14 @@ export default function ManagerDashboard() {
                   <span className="text-xs text-text-secondary">Last generated: 1 week ago</span>
                 </button>
 
-                <button className="bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg p-6 text-left transition-colors duration-200">
+                <button className="bg-secondary-50 hover:bg-secondary-100 border border-border rounded-lg p-6 text-left transition-colors duration-200">
                   <div className="flex items-center gap-4 mb-3">
                     <div className="p-3 bg-green-500/20 rounded-full">
                       <svg className="w-6 h-6 text-accent-teal" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-white">Financial Summary</h3>
+                    <h3 className="text-lg font-medium text-text-primary">Financial Summary</h3>
                   </div>
                   <p className="text-sm text-text-secondary mb-2">
                     Revenue, expenses, and payment status overview
@@ -509,14 +509,14 @@ export default function ManagerDashboard() {
                   <span className="text-xs text-text-secondary">Last generated: 3 days ago</span>
                 </button>
 
-                <button className="bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg p-6 text-left transition-colors duration-200">
+                <button className="bg-secondary-50 hover:bg-secondary-100 border border-border rounded-lg p-6 text-left transition-colors duration-200">
                   <div className="flex items-center gap-4 mb-3">
                     <div className="p-3 bg-yellow-500/20 rounded-full">
                       <svg className="w-6 h-6 text-accent-yellow" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-white">Academy Snapshot</h3>
+                    <h3 className="text-lg font-medium text-text-primary">Academy Snapshot</h3>
                   </div>
                   <p className="text-sm text-text-secondary mb-2">
                     Executive summary of all academy operations
@@ -529,18 +529,18 @@ export default function ManagerDashboard() {
 
           {activeTab === 'finances' && (
             <div>
-              <h2 className="text-xl font-semibold text-white mb-6">Financial Overview</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-6">Financial Overview</h2>
               
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                <div className="lg:col-span-2 bg-white/5 rounded-lg p-6">
-                  <h3 className="text-lg font-medium text-white mb-4">Revenue Breakdown</h3>
+                <div className="lg:col-span-2 bg-secondary-50 rounded-lg p-6">
+                  <h3 className="text-lg font-medium text-text-primary mb-4">Revenue Breakdown</h3>
                   <div className="space-y-4">
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-text-secondary">Membership Fees</span>
-                        <span className="text-sm font-medium text-white">AED 95,000</span>
+                        <span className="text-sm font-medium text-text-primary">AED 95,000</span>
                       </div>
-                      <div className="w-full bg-white/10 rounded-full h-2">
+                      <div className="w-full bg-secondary-100 rounded-full h-2">
                         <div className="h-2 rounded-full bg-green-500" style={{ width: '76%' }} />
                       </div>
                     </div>
@@ -548,9 +548,9 @@ export default function ManagerDashboard() {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-text-secondary">Training Programs</span>
-                        <span className="text-sm font-medium text-white">AED 20,000</span>
+                        <span className="text-sm font-medium text-text-primary">AED 20,000</span>
                       </div>
-                      <div className="w-full bg-white/10 rounded-full h-2">
+                      <div className="w-full bg-secondary-100 rounded-full h-2">
                         <div className="h-2 rounded-full bg-blue-500" style={{ width: '16%' }} />
                       </div>
                     </div>
@@ -558,44 +558,44 @@ export default function ManagerDashboard() {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-text-secondary">Equipment & Merchandise</span>
-                        <span className="text-sm font-medium text-white">AED 10,000</span>
+                        <span className="text-sm font-medium text-text-primary">AED 10,000</span>
                       </div>
-                      <div className="w-full bg-white/10 rounded-full h-2">
+                      <div className="w-full bg-secondary-100 rounded-full h-2">
                         <div className="h-2 rounded-full bg-purple-500" style={{ width: '8%' }} />
                       </div>
                     </div>
                   </div>
                   
-                  <div className="mt-6 pt-6 border-t border-white/10">
+                  <div className="mt-6 pt-6 border-t border-border">
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-medium text-white">Total Revenue</span>
-                      <span className="text-2xl font-bold text-white">AED 125,000</span>
+                      <span className="text-lg font-medium text-text-primary">Total Revenue</span>
+                      <span className="text-2xl font-bold text-text-primary">AED 125,000</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white/5 rounded-lg p-6">
-                  <h3 className="text-lg font-medium text-white mb-4">Payment Status</h3>
+                <div className="bg-secondary-50 rounded-lg p-6">
+                  <h3 className="text-lg font-medium text-text-primary mb-4">Payment Status</h3>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
                       <span className="text-sm text-accent-teal">Paid</span>
-                      <span className="text-sm font-medium text-white">165</span>
+                      <span className="text-sm font-medium text-text-primary">165</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                       <span className="text-sm text-accent-yellow">Pending</span>
-                      <span className="text-sm font-medium text-white">12</span>
+                      <span className="text-sm font-medium text-text-primary">12</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
                       <span className="text-sm text-accent-red">Overdue</span>
-                      <span className="text-sm font-medium text-white">3</span>
+                      <span className="text-sm font-medium text-text-primary">3</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Quick Actions */}
-              <div className="bg-white/5 rounded-lg p-6">
-                <h3 className="text-lg font-medium text-white mb-4">Quick Actions</h3>
+              <div className="bg-secondary-50 rounded-lg p-6">
+                <h3 className="text-lg font-medium text-text-primary mb-4">Quick Actions</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <button className="p-3 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-white text-sm font-medium transition-colors duration-200">
                     Send Payment Reminders

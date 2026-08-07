@@ -13,6 +13,8 @@ interface GroupListProps {
   onRemovePlayer?: (groupId: number, playerId: number) => void;
   onUnassignPlayer?: (groupId: number, playerId: number) => void;
   onReassignPlayer?: (playerId: number, fromGroupId: number, toGroupId: number) => void;
+  onAssignAssessment?: (groupId: number) => void;
+  onViewPlayers?: (groupId: number) => void;
   onViewDetails?: (groupId: number) => void;
   onEdit?: (groupId: number) => void;
   onDelete?: (groupId: number) => void;
@@ -36,6 +38,8 @@ export default function GroupList({
   onRemovePlayer,
   onUnassignPlayer,
   onReassignPlayer,
+  onAssignAssessment,
+  onViewPlayers,
   onViewDetails,
   onEdit,
   onDelete,
@@ -152,10 +156,10 @@ export default function GroupList({
       <div className="space-y-4">
         <div className="bg-background border border-border shadow-sm rounded-xl p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-white/20 rounded w-1/4"></div>
+            <div className="h-4 bg-secondary-100 rounded w-1/4"></div>
             <div className="space-y-2">
-              <div className="h-3 bg-white/20 rounded"></div>
-              <div className="h-3 bg-white/20 rounded w-5/6"></div>
+              <div className="h-3 bg-secondary-100 rounded"></div>
+              <div className="h-3 bg-secondary-100 rounded w-5/6"></div>
             </div>
           </div>
         </div>
@@ -163,10 +167,10 @@ export default function GroupList({
           {[...Array(6)].map((_, i) => (
             <div key={i} className="bg-background border border-border shadow-sm rounded-xl p-6">
               <div className="animate-pulse space-y-4">
-                <div className="h-4 bg-white/20 rounded w-3/4"></div>
-                <div className="h-3 bg-white/20 rounded w-1/2"></div>
-                <div className="h-2 bg-white/20 rounded"></div>
-                <div className="h-8 bg-white/20 rounded"></div>
+                <div className="h-4 bg-secondary-100 rounded w-3/4"></div>
+                <div className="h-3 bg-secondary-100 rounded w-1/2"></div>
+                <div className="h-2 bg-secondary-100 rounded"></div>
+                <div className="h-8 bg-secondary-100 rounded"></div>
               </div>
             </div>
           ))}
@@ -248,7 +252,7 @@ export default function GroupList({
                 type="checkbox"
                 checked={showInactive}
                 onChange={(e) => setShowInactive(e.target.checked)}
-                className="mr-2 h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-white/30 rounded bg-white/10"
+                className="mr-2 h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-border rounded bg-secondary-100"
               />
               Show Inactive
             </label>
@@ -258,7 +262,7 @@ export default function GroupList({
           <div>
             <button
               onClick={clearFilters}
-              className="w-full px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-text-primary text-sm transition-colors duration-200"
+              className="w-full px-3 py-2 bg-secondary-100 hover:bg-secondary-50 border border-border rounded-lg text-text-primary text-sm transition-colors duration-200"
             >
               Clear Filters
             </button>
@@ -282,7 +286,7 @@ export default function GroupList({
             <div className="mt-6">
               <button
                 onClick={onCreateGroup}
-                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl text-text-primary font-medium transition-all duration-200"
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl text-white font-medium transition-all duration-200"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -310,8 +314,8 @@ export default function GroupList({
                     onAssignPlayer={onAssignPlayer}
                     onRemoveCoach={onRemoveCoach}
                     onRemovePlayer={onRemovePlayer}
-                    onUnassignPlayer={onUnassignPlayer}
-                    onReassignPlayer={onReassignPlayer}
+                    onAssignAssessment={onAssignAssessment}
+                    onViewPlayers={onViewPlayers}
                     onViewDetails={onViewDetails}
                     onEdit={onEdit}
                     onDelete={onDelete}
@@ -343,8 +347,8 @@ export default function GroupList({
                     onAssignPlayer={onAssignPlayer}
                     onRemoveCoach={onRemoveCoach}
                     onRemovePlayer={onRemovePlayer}
-                    onUnassignPlayer={onUnassignPlayer}
-                    onReassignPlayer={onReassignPlayer}
+                    onAssignAssessment={onAssignAssessment}
+                    onViewPlayers={onViewPlayers}
                     onViewDetails={onViewDetails}
                     onEdit={onEdit}
                     onDelete={onDelete}
