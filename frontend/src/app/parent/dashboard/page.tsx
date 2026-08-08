@@ -257,98 +257,6 @@ export default function ParentDashboard() {
         </div>
       ) : (
         <>
-          {/*
-            The most actionable thing a parent can take away: what is going
-            well, and what to practise before the next assessment.
-          */}
-          {latestScores.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <HighlightCard
-                title="Doing well"
-                tone="positive"
-                skills={strengths}
-                emptyLabel="No scores recorded"
-              />
-              <HighlightCard
-                title="Worth practising"
-                tone="attention"
-                skills={focusAreas}
-                emptyLabel="No scores recorded"
-              />
-            </div>
-          )}
-
-          {/* Four numbers a parent can hold in their head. */}
-          {categoryAverages.length > 0 && (
-            <section className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-lg">
-              <h2 className="text-base sm:text-lg font-bold text-text-primary mb-4">
-                How {childName} scored in each area
-              </h2>
-              <div className="space-y-4">
-                {categoryAverages.map(({ category, average, count }) => {
-                  const info = getCategoryInfo(category);
-                  return (
-                    <div key={category}>
-                      <div className="flex items-center justify-between gap-3 mb-1.5">
-                        <span className="text-sm font-medium text-text-primary min-w-0 truncate">
-                          <span aria-hidden="true">{info?.icon} </span>
-                          {info?.label ?? category}
-                          <span className="text-text-secondary font-normal">
-                            {" "}
-                            ({count} skill{count === 1 ? "" : "s"})
-                          </span>
-                        </span>
-                        <span className="text-sm font-bold text-text-primary flex-shrink-0 tabular-nums">
-                          {average.toFixed(1)}/10
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div
-                          className={`${getScoreBarColor(average)} h-2.5 rounded-full transition-all duration-300`}
-                          style={{ width: `${scoreToPercent(average)}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
-          {/* What the coach actually said, rather than only numbers. */}
-          {(latest.comments || latest.coachNotes) && (
-            <section className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-lg">
-              <div className="flex items-center gap-2 mb-3">
-                <ChatBubbleLeftRightIcon className="h-5 w-5 text-primary flex-shrink-0" />
-                <h2 className="text-base sm:text-lg font-bold text-text-primary">
-                  From the coach
-                </h2>
-              </div>
-              {latest.comments && (
-                <p className="text-sm sm:text-base text-text-primary whitespace-pre-line">
-                  {latest.comments}
-                </p>
-              )}
-              {latest.coachNotes && (
-                <p className="text-sm sm:text-base text-text-primary whitespace-pre-line mt-3">
-                  {latest.coachNotes}
-                </p>
-              )}
-            </section>
-          )}
-
-          <div className="flex">
-            <Link
-              href={`/parent/assessments/${latest.id}`}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl transition-colors font-semibold"
-            >
-              See the full assessment
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-
           {/* Trends need at least two assessments to mean anything. */}
           {assessments.length >= 2 ? (
             <section className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-lg">
@@ -456,6 +364,98 @@ export default function ParentDashboard() {
               </div>
             </section>
           )}
+
+          {/*
+            The most actionable thing a parent can take away: what is going
+            well, and what to practise before the next assessment.
+          */}
+          {latestScores.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <HighlightCard
+                title="Doing well"
+                tone="positive"
+                skills={strengths}
+                emptyLabel="No scores recorded"
+              />
+              <HighlightCard
+                title="Worth practising"
+                tone="attention"
+                skills={focusAreas}
+                emptyLabel="No scores recorded"
+              />
+            </div>
+          )}
+
+          {/* Four numbers a parent can hold in their head. */}
+          {categoryAverages.length > 0 && (
+            <section className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-lg">
+              <h2 className="text-base sm:text-lg font-bold text-text-primary mb-4">
+                How {childName} scored in each area
+              </h2>
+              <div className="space-y-4">
+                {categoryAverages.map(({ category, average, count }) => {
+                  const info = getCategoryInfo(category);
+                  return (
+                    <div key={category}>
+                      <div className="flex items-center justify-between gap-3 mb-1.5">
+                        <span className="text-sm font-medium text-text-primary min-w-0 truncate">
+                          <span aria-hidden="true">{info?.icon} </span>
+                          {info?.label ?? category}
+                          <span className="text-text-secondary font-normal">
+                            {" "}
+                            ({count} skill{count === 1 ? "" : "s"})
+                          </span>
+                        </span>
+                        <span className="text-sm font-bold text-text-primary flex-shrink-0 tabular-nums">
+                          {average.toFixed(1)}/10
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div
+                          className={`${getScoreBarColor(average)} h-2.5 rounded-full transition-all duration-300`}
+                          style={{ width: `${scoreToPercent(average)}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* What the coach actually said, rather than only numbers. */}
+          {(latest.comments || latest.coachNotes) && (
+            <section className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <ChatBubbleLeftRightIcon className="h-5 w-5 text-primary flex-shrink-0" />
+                <h2 className="text-base sm:text-lg font-bold text-text-primary">
+                  From the coach
+                </h2>
+              </div>
+              {latest.comments && (
+                <p className="text-sm sm:text-base text-text-primary whitespace-pre-line">
+                  {latest.comments}
+                </p>
+              )}
+              {latest.coachNotes && (
+                <p className="text-sm sm:text-base text-text-primary whitespace-pre-line mt-3">
+                  {latest.coachNotes}
+                </p>
+              )}
+            </section>
+          )}
+
+          <div className="flex">
+            <Link
+              href={`/parent/assessments/${latest.id}`}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl transition-colors font-semibold"
+            >
+              See the full assessment
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
 
           {/* History, most recent first. */}
           <section className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-lg">
