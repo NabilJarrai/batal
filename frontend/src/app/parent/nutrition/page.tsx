@@ -102,33 +102,37 @@ export default function ParentNutritionPage() {
       )}
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-accent-teal/10 via-white to-accent-yellow/10 rounded-2xl p-8 border border-gray-100 shadow-lg">
-        <div className="flex items-start justify-between gap-6">
-          <div className="flex-1">
+      <div className="bg-gradient-to-r from-accent-teal/10 via-white to-accent-yellow/10 rounded-2xl p-4 sm:p-8 border border-gray-100 shadow-lg">
+        {/*
+          Stacks on a phone. Side by side, the heading block took flex-1 and
+          squeezed the download button off the edge of the screen.
+        */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 bg-accent-teal/10 rounded-xl flex items-center justify-center">
-                <DocumentTextIcon className="w-6 h-6 text-accent-teal" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent-teal/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                <DocumentTextIcon className="w-5 h-5 sm:w-6 sm:h-6 text-accent-teal" />
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-text-primary">
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-3xl font-bold text-text-primary">
                   Nutrition Meal Plan
                 </h1>
-                <p className="text-sm text-text-secondary">
+                <p className="text-xs sm:text-sm text-text-secondary truncate">
                   For {selectedChild.firstName} {selectedChild.lastName} ({age}{" "}
                   years old)
                 </p>
               </div>
             </div>
 
-            <p className="text-text-secondary mb-4">
+            <p className="text-sm sm:text-base text-text-secondary mb-4">
               Personalized nutrition guidance designed to fuel young athletes
               and support their development, energy levels, and performance on
               and off the field.
             </p>
 
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-2 px-4 py-2 bg-accent-teal/10 text-accent-teal rounded-lg text-sm font-medium">
-                <SparklesIcon className="w-4 h-4" />
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <span className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-accent-teal/10 text-accent-teal rounded-lg text-sm font-medium">
+                <SparklesIcon className="w-4 h-4 flex-shrink-0" />
                 {mealPlan.ageRange} Age Group
               </span>
               {age > 12 && (
@@ -139,12 +143,12 @@ export default function ParentNutritionPage() {
             </div>
           </div>
 
-          {/* Download Button */}
+          {/* Full width on a phone so it is a comfortable tap target. */}
           <button
             onClick={handleDownload}
-            className="btn-primary flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
+            className="btn-primary flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all w-full sm:w-auto flex-shrink-0 whitespace-nowrap"
           >
-            <DocumentArrowDownIcon className="w-5 h-5" />
+            <DocumentArrowDownIcon className="w-5 h-5 flex-shrink-0" />
             Download PDF
           </button>
         </div>
@@ -164,24 +168,28 @@ export default function ParentNutritionPage() {
 
         {/* PDF Viewer - Using embed for better default zoom */}
         <div className="relative bg-gray-50 rounded-lg">
+          {/*
+            Height scales with the viewport instead of a fixed 1400px, which on
+            a phone was several screens of scrolling before anything else on the
+            page could be reached.
+          */}
           <embed
             src={`${pdfPath}#zoom=150`}
             type="application/pdf"
-            className={`w-full rounded-lg ${isPdfLoading ? "hidden" : "block"}`}
-            style={{
-              height: "1400px",
-              minHeight: "1200px",
-            }}
+            className={`w-full rounded-lg h-[70vh] sm:h-[900px] lg:h-[1400px] ${
+              isPdfLoading ? "hidden" : "block"
+            }`}
             onLoad={() => setIsPdfLoading(false)}
           />
 
           {/* PDF Controls Bar */}
           {!isPdfLoading && (
-            <div className="absolute top-2 left-2 right-2 flex justify-between items-center bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-sm">
-              <div className="text-xs text-gray-600 font-medium">
+            <div className="absolute top-2 left-2 right-2 flex justify-end sm:justify-between items-center gap-2 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-sm">
+              {/* The name is context, not a control: it yields first when space is tight. */}
+              <div className="hidden sm:block text-xs text-gray-600 font-medium truncate min-w-0">
                 Meal Plan - {selectedChild.firstName} {selectedChild.lastName}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-shrink-0">
                 <button
                   onClick={handleDownload}
                   className="btn-secondary btn-sm flex items-center gap-1 text-xs"

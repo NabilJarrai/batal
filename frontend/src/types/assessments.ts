@@ -19,9 +19,15 @@ export interface Assessment {
   comments?: string;
   coachNotes?: string;
   isFinalized: boolean;
-  createdAt: string; // LocalDateTime as ISO string  
+  createdAt: string; // LocalDateTime as ISO string
   updatedAt: string; // LocalDateTime as ISO string
   skillScores: SkillScore[];
+  // Returned by the API but previously undeclared, so callers recomputed them
+  // by hand. Optional because create/update requests do not carry them.
+  overallAverage?: number;
+  categoryAverages?: Partial<Record<SkillCategory, number>>;
+  playerGroupName?: string;
+  totalSkillsAssessed?: number;
 }
 
 // Skill score within an assessment
@@ -149,6 +155,22 @@ export const getScoreLabel = (score: number): string => {
   if (score >= 4) return 'Needs Improvement';
   return 'Poor';
 };
+
+/**
+ * Background colour for a score bar, on the same 1-3 / 4-5 / 6-7 / 8-10 bands
+ * the coach sees when scoring. A parent reading the bar and the coach who
+ * entered it should be looking at the same colour language.
+ */
+export const getScoreBarColor = (score: number): string => {
+  if (score >= 8) return 'bg-accent-teal';
+  if (score >= 6) return 'bg-accent-yellow';
+  if (score >= 4) return 'bg-orange-500';
+  return 'bg-accent-red';
+};
+
+/** Scores are stored 1-10, so a percentage for bar widths is score * 10. */
+export const scoreToPercent = (score: number): number =>
+  Math.max(0, Math.min(100, score * 10));
 
 export const calculateAverageScore = (skillScores: SkillScore[]): number => {
   if (!skillScores.length) return 0;

@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
 import { parentAPI } from "@/lib/api";
 import { SkillRadarChart } from "@/components/player/SkillRadarChart";
+import { getScoreBarColor, scoreToPercent } from "@/types/assessments";
+import { SkillCategory, getCategoryInfo } from "@/types/skills";
 import {
   ArrowLeftIcon,
   UserCircleIcon,
@@ -28,9 +30,14 @@ interface AssessmentResponse {
     id: number;
     skillId: number;
     skillName: string;
-    category: string;
+    // The API sends skillCategory. This was declared as `category`, so every
+    // skill grouped under the key "undefined" and the page rendered a single
+    // card titled "undefined" instead of one per category.
+    skillCategory: string;
     score: number;
     notes?: string;
+    previousScore?: number | null;
+    improvement?: number | null;
   }>;
 }
 
@@ -74,10 +81,10 @@ export default function AssessmentDetailPage() {
 
     const grouped: Record<string, typeof assessment.skillScores> = {};
     assessment.skillScores.forEach((skill) => {
-      if (!grouped[skill.category]) {
-        grouped[skill.category] = [];
+      if (!grouped[skill.skillCategory]) {
+        grouped[skill.skillCategory] = [];
       }
-      grouped[skill.category].push(skill);
+      grouped[skill.skillCategory].push(skill);
     });
     return grouped;
   };
@@ -139,11 +146,13 @@ export default function AssessmentDetailPage() {
 
   const groupedSkills = groupSkillsByCategory(assessment);
 
-  // Transform skills for radar chart (normalize to 0-10 scale)
+  // Scores are already 1-10 (enforced by skill_scores_score_check), and the
+  // radar chart scales them for plotting itself. Dividing here too shrank every
+  // axis to a tenth of its real value.
   const radarSkills = assessment.skillScores?.map(skill => ({
     skillName: skill.skillName,
-    skillCategory: skill.category,
-    score: skill.score / 10, // Normalize from 0-100 to 0-10
+    skillCategory: skill.skillCategory,
+    score: skill.score,
   })) || [];
 
   return (
@@ -158,27 +167,28 @@ export default function AssessmentDetailPage() {
           Back to Assessments
         </button>
 
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
               {assessment.period} Assessment
             </h1>
-            <p className="text-lg text-gray-700 mb-3">
+            <p className="text-base sm:text-lg text-gray-700 mb-3">
               {selectedChild?.firstName} {selectedChild?.lastName}
             </p>
-            <div className="flex items-center gap-6 text-sm text-gray-600">
+            {/* Wraps: on a phone the date and the assessor's name do not fit on one line. */}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-gray-600">
               <span className="flex items-center gap-1">
-                <CalendarIcon className="h-4 w-4" />
+                <CalendarIcon className="h-4 w-4 flex-shrink-0" />
                 {new Date(assessment.assessmentDate).toLocaleDateString()}
               </span>
-              <span className="flex items-center gap-1">
-                <UserIcon className="h-4 w-4" />
-                Assessed by {assessment.assessorName}
+              <span className="flex items-center gap-1 min-w-0">
+                <UserIcon className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">Assessed by {assessment.assessorName}</span>
               </span>
             </div>
           </div>
 
-          <div className="text-right">
+          <div className="flex items-center justify-between sm:flex-col sm:items-end gap-3 flex-shrink-0">
             <span
               className={`px-3 py-1 rounded-full text-xs font-medium ${
                 assessment.isFinalized
@@ -189,9 +199,9 @@ export default function AssessmentDetailPage() {
               {assessment.isFinalized ? "Finalized" : "Draft"}
             </span>
             {assessment.skillScores && assessment.skillScores.length > 0 && (
-              <div className="mt-3">
+              <div className="text-right">
                 <p className="text-sm text-gray-600">Overall Score</p>
-                <p className="text-3xl font-bold text-gray-900">
+                <p className="text-3xl font-bold text-gray-900 tabular-nums">
                   {getOverallAverage(assessment)}/10
                 </p>
               </div>
@@ -214,11 +224,13 @@ export default function AssessmentDetailPage() {
           {Object.entries(groupedSkills).map(([category, skills]) => (
             <div
               key={category}
-              className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm"
+              className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-sm"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-gray-900">{category}</h3>
-                <span className="text-lg font-bold text-blue-600">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
+                  {getCategoryInfo(category as SkillCategory)?.label ?? category}
+                </h3>
+                <span className="text-base sm:text-lg font-bold text-blue-600 flex-shrink-0 tabular-nums">
                   Avg: {getCategoryAverage(skills)}/10
                 </span>
               </div>
@@ -226,14 +238,29 @@ export default function AssessmentDetailPage() {
               <div className="space-y-3">
                 {skills?.map((skill) => (
                   <div key={skill.skillId}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-gray-600">{skill.skillName}</span>
-                      <span className="text-gray-900 font-medium">{(skill.score / 10).toFixed(1)}/10</span>
+                    <div className="flex items-center justify-between gap-3 mb-1">
+                      <span className="text-sm text-gray-600 min-w-0">{skill.skillName}</span>
+                      <span className="flex items-center gap-2 flex-shrink-0">
+                        {/* The API already computes score - previousScore. A parent
+                            wants the direction of travel, not just today's number. */}
+                        {skill.improvement != null && skill.improvement !== 0 && (
+                          <span
+                            className={`text-xs font-semibold ${
+                              skill.improvement > 0 ? "text-accent-teal" : "text-accent-red"
+                            }`}
+                          >
+                            {skill.improvement > 0 ? "↑" : "↓"} {Math.abs(skill.improvement)}
+                          </span>
+                        )}
+                        <span className="text-gray-900 font-semibold tabular-nums">
+                          {skill.score}/10
+                        </span>
+                      </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
-                        className="bg-gradient-to-r from-blue-400 to-cyan-300 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${skill.score}%` }}
+                        className={`${getScoreBarColor(skill.score)} h-2 rounded-full transition-all duration-300`}
+                        style={{ width: `${scoreToPercent(skill.score)}%` }}
                       />
                     </div>
                     {skill.notes && (
