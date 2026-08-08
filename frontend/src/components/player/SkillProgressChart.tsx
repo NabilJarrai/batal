@@ -2,6 +2,7 @@
 
 import { ProgressChart } from "./ProgressChart";
 import { Assessment } from "@/types/assessments";
+import { SkillCategory, getCategoryInfo } from "@/types/skills";
 
 interface SkillProgressChartProps {
   assessments: Assessment[];
@@ -38,9 +39,13 @@ export function SkillProgressChart({ assessments, skillName, category }: SkillPr
   }
 
   return (
-    <div className="card-base p-6">
-      <h3 className="text-lg font-semibold text-text-primary mb-4">
-        {skillName} Progress ({category})
+    <div className="card-base p-4 sm:p-6">
+      <h3 className="text-base sm:text-lg font-semibold text-text-primary mb-4">
+        {skillName}
+        <span className="text-text-secondary font-normal">
+          {" "}
+          &middot; {getCategoryInfo(category as SkillCategory)?.label ?? category}
+        </span>
       </h3>
       <ProgressChart 
         assessments={skillProgressData} 

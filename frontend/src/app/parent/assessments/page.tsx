@@ -87,8 +87,8 @@ export default function ParentAssessmentsPage() {
   if (error) {
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-sm">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             {selectedChild?.firstName}'s Assessments
           </h1>
           <p className="text-gray-600">Track your child's performance evaluations over time</p>
@@ -117,45 +117,40 @@ export default function ParentAssessmentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+      <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-sm">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
           {selectedChild?.firstName}'s Assessments
         </h1>
         <p className="text-gray-600">Track your child's performance evaluations over time</p>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => setFilter("all")}
-          className={`px-4 py-2 rounded-lg transition-all ${
-            filter === "all"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          All ({assessments.length})
-        </button>
-        <button
-          onClick={() => setFilter("finalized")}
-          className={`px-4 py-2 rounded-lg transition-all ${
-            filter === "finalized"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          Finalized ({assessments.filter(a => a.isFinalized).length})
-        </button>
-        <button
-          onClick={() => setFilter("draft")}
-          className={`px-4 py-2 rounded-lg transition-all ${
-            filter === "draft"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          Draft ({assessments.filter(a => !a.isFinalized).length})
-        </button>
+      {/* Filter tabs. Wrap rather than run off the side of a phone. */}
+      <div className="flex flex-wrap gap-2">
+        {([
+          { key: "all", label: "All", count: assessments.length },
+          {
+            key: "finalized",
+            label: "Finalised",
+            count: assessments.filter((a) => a.isFinalized).length,
+          },
+          {
+            key: "draft",
+            label: "Draft",
+            count: assessments.filter((a) => !a.isFinalized).length,
+          },
+        ] as const).map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setFilter(tab.key)}
+            className={`px-3 sm:px-4 py-2 text-sm rounded-lg transition-all font-medium ${
+              filter === tab.key
+                ? "bg-blue-500 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            {tab.label} ({tab.count})
+          </button>
+        ))}
       </div>
 
       {/* Assessments List */}
@@ -165,30 +160,32 @@ export default function ParentAssessmentsPage() {
             <Link
               key={assessment.id}
               href={`/parent/assessments/${assessment.id}`}
-              className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all group"
+              className="block bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all group"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-4 mb-3">
-                    <DocumentChartBarIcon className="h-8 w-8 text-text-primary" />
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start gap-3 sm:gap-4 mb-2">
+                    <DocumentChartBarIcon className="h-7 w-7 sm:h-8 sm:w-8 text-text-primary flex-shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <h3 className="text-base sm:text-xl font-semibold text-gray-900 truncate">
                         {assessment.period} Assessment
                       </h3>
-                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                      {/* Date and assessor wrap on narrow screens instead of
+                          pushing the score and chevron off the edge. */}
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs sm:text-sm text-gray-600">
                         <span className="flex items-center gap-1">
-                          <CalendarIcon className="h-4 w-4" />
+                          <CalendarIcon className="h-4 w-4 flex-shrink-0" />
                           {new Date(assessment.assessmentDate).toLocaleDateString()}
                         </span>
-                        <span>By {assessment.assessorName}</span>
+                        <span className="truncate">By {assessment.assessorName}</span>
                       </div>
                     </div>
                   </div>
 
                   {assessment.skillScores && assessment.skillScores.length > 0 && (
-                    <div className="flex items-center gap-4 mt-3">
-                      <span className="text-sm text-gray-600">Average Score:</span>
-                      <span className="text-2xl font-bold text-gray-900">
+                    <div className="flex items-baseline gap-2 mt-2">
+                      <span className="text-xs sm:text-sm text-gray-600">Average</span>
+                      <span className="text-xl sm:text-2xl font-bold text-gray-900 tabular-nums">
                         {calculateAverageScore(assessment)}/10
                       </span>
                     </div>
@@ -201,13 +198,13 @@ export default function ParentAssessmentsPage() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
                     assessment.isFinalized
                       ? "bg-green-500/20 text-accent-teal"
                       : "bg-yellow-500/20 text-accent-yellow"
                   }`}>
-                    {assessment.isFinalized ? "Finalized" : "Draft"}
+                    {assessment.isFinalized ? "Final" : "Draft"}
                   </span>
                   <ChevronRightIcon className="h-5 w-5 text-text-secondary group-hover:text-gray-600 transition-colors" />
                 </div>
