@@ -36,8 +36,38 @@ export const SkillRatingInput: React.FC<SkillRatingInputProps> = ({
   };
 
 
-  const currentScore = hoveredScore || value.score;
+  // Hover is a preview of a rating you are about to give, so it must not apply
+  // when the assessment is read-only: hovering a finalized score of 5 would
+  // otherwise display 9/10 and misreport what was actually recorded.
+  const currentScore = (disabled ? 0 : hoveredScore) || value.score;
   const scoreLabel = getScoreLabel(currentScore);
+
+  /**
+   * Fill colour for a filled cell, keyed on the cell's own position, so the
+   * bar runs red -> orange -> yellow -> teal as it fills.
+   *
+   * Kept separate from the disabled state on purpose. Read-only assessments
+   * still need to show which scores were given; disabling only removes the
+   * interactive affordances, never the colour.
+   */
+  const fillClass = (score: number) =>
+    score >= 8
+      ? 'bg-accent-teal'
+      : score >= 6
+        ? 'bg-accent-yellow'
+        : score >= 4
+          ? 'bg-orange-500'
+          : 'bg-accent-red';
+
+  /** Halo on the larger cells, matching the fill. */
+  const ringClass = (score: number) =>
+    score >= 8
+      ? 'ring-2 ring-accent-teal/20'
+      : score >= 6
+        ? 'ring-2 ring-accent-yellow/20'
+        : score >= 4
+          ? 'ring-2 ring-orange-200'
+          : 'ring-2 ring-red-200';
 
   // Initialize if not set
   useEffect(() => {
@@ -91,22 +121,15 @@ export const SkillRatingInput: React.FC<SkillRatingInputProps> = ({
               type="button"
               disabled={disabled}
               onClick={() => handleScoreChange(score)}
-              onMouseEnter={() => setHoveredScore(score)}
-              onMouseLeave={() => setHoveredScore(0)}
+              onMouseEnter={disabled ? undefined : () => setHoveredScore(score)}
+              onMouseLeave={disabled ? undefined : () => setHoveredScore(0)}
               className={`
                 h-8 w-full rounded text-xs font-semibold transition-all duration-200
                 flex items-center justify-center
-                ${disabled
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : score <= currentScore
-                    ? score >= 8
-                      ? 'bg-accent-teal text-white hover:bg-accent-teal/90'
-                      : score >= 6
-                        ? 'bg-accent-yellow text-white hover:bg-accent-yellow/90'
-                        : score >= 4
-                          ? 'bg-orange-500 text-white hover:bg-orange-400'
-                          : 'bg-accent-red text-white hover:bg-accent-red/90'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ${disabled ? 'cursor-not-allowed' : ''}
+                ${score <= currentScore
+                  ? `${fillClass(score)} text-white ${disabled ? '' : 'hover:opacity-90'}`
+                  : `bg-gray-100 ${disabled ? 'text-gray-400' : 'text-gray-600 hover:bg-gray-200'}`
                 }
               `}
             >
@@ -185,22 +208,15 @@ export const SkillRatingInput: React.FC<SkillRatingInputProps> = ({
               type="button"
               disabled={disabled}
               onClick={() => handleScoreChange(score)}
-              onMouseEnter={() => setHoveredScore(score)}
-              onMouseLeave={() => setHoveredScore(0)}
+              onMouseEnter={disabled ? undefined : () => setHoveredScore(score)}
+              onMouseLeave={disabled ? undefined : () => setHoveredScore(0)}
               className={`
                 aspect-square rounded-xl text-sm font-bold transition-all duration-200
                 flex items-center justify-center relative
-                ${disabled
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : score <= currentScore
-                    ? score >= 8
-                      ? 'bg-accent-teal text-white shadow-lg hover:shadow-xl transform hover:scale-110 ring-2 ring-accent-teal/20'
-                      : score >= 6
-                        ? 'bg-accent-yellow text-white shadow-lg hover:shadow-xl transform hover:scale-110 ring-2 ring-accent-yellow/20'
-                        : score >= 4
-                          ? 'bg-orange-500 text-white shadow-lg hover:shadow-xl transform hover:scale-110 ring-2 ring-orange-200'
-                          : 'bg-accent-red text-white shadow-lg hover:shadow-xl transform hover:scale-110 ring-2 ring-red-200'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-text-primary transform hover:scale-110'
+                ${disabled ? 'cursor-not-allowed' : 'transform hover:scale-110'}
+                ${score <= currentScore
+                  ? `${fillClass(score)} ${ringClass(score)} text-white shadow-lg ${disabled ? '' : 'hover:shadow-xl'}`
+                  : `bg-gray-100 ${disabled ? 'text-gray-400' : 'text-gray-600 hover:bg-gray-200 hover:text-text-primary'}`
                 }
               `}
             >
