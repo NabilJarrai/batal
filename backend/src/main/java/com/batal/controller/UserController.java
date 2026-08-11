@@ -7,9 +7,12 @@ import com.batal.dto.UserStatusUpdateRequest;
 import com.batal.dto.ChildSummaryDTO;
 import com.batal.dto.AssignChildRequest;
 import com.batal.dto.AdminPasswordResetRequest;
+import com.batal.dto.BulkWelcomeEmailRequest;
+import com.batal.dto.BulkWelcomeEmailResponse;
 import com.batal.entity.User;
 import com.batal.repository.UserRepository;
 import com.batal.service.UserService;
+import com.batal.service.ParentBulkEmailService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -37,7 +40,10 @@ public class UserController {
     
     @Autowired
     private UserRepository userRepository;
-    
+
+    @Autowired
+    private ParentBulkEmailService parentBulkEmailService;
+
     // GET /api/users - List all staff users (Admin only) with pagination and search
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
@@ -161,15 +167,63 @@ public class UserController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "firstName") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(required = false) String search,
+            // Deactivated families are hidden unless explicitly asked for.
+            @RequestParam(defaultValue = "false") boolean includeInactive) {
 
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
             Sort.by(sortBy).descending() :
             Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<UserResponse> parents = userService.getAllParentUsers(pageable, search);
+        Page<UserResponse> parents = userService.getAllParentUsers(pageable, search, includeInactive);
         return ResponseEntity.ok(parents);
+    }
+
+    // GET /api/users/parents/deactivated-count - How many parents the default
+    // active-only view is hiding, so the Parents tab can offer to show them.
+    @GetMapping("/parents/deactivated-count")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<Map<String, Long>> getDeactivatedParentCount() {
+        Map<String, Long> response = new HashMap<>();
+        response.put("count", userService.countDeactivatedParents());
+        return ResponseEntity.ok(response);
+    }
+
+    // POST /api/users/parents/welcome-emails - Send the welcome (password setup)
+    // email to a chosen set of parents. This is how an intake created while
+    // welcome emails were paused finally gets invited.
+    @PostMapping("/parents/welcome-emails")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BulkWelcomeEmailResponse> sendParentWelcomeEmails(
+            @Valid @RequestBody BulkWelcomeEmailRequest request) {
+        BulkWelcomeEmailResponse response = parentBulkEmailService.sendWelcomeEmails(request.getUserIds());
+        return ResponseEntity.ok(response);
+    }
+
+    // POST /api/users/parents/password-resets - Send a password reset link to a
+    // chosen set of parents. For parents who already onboarded and are locked
+    // out; those who never set a password are skipped and need the welcome
+    // email instead.
+    @PostMapping("/parents/password-resets")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BulkWelcomeEmailResponse> sendParentPasswordResets(
+            @Valid @RequestBody BulkWelcomeEmailRequest request) {
+        BulkWelcomeEmailResponse response = parentBulkEmailService.sendPasswordResets(request.getUserIds());
+        return ResponseEntity.ok(response);
+    }
+
+    // GET /api/users/parents/awaiting-welcome-email - Every parent who has an
+    // account but has never been sent their setup link. Backs the "waiting to
+    // be invited" count and the select-all action.
+    @GetMapping("/parents/awaiting-welcome-email")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<Map<String, Object>> getParentsAwaitingWelcomeEmail() {
+        List<Long> ids = parentBulkEmailService.findIdsAwaitingWelcomeEmail();
+        Map<String, Object> response = new HashMap<>();
+        response.put("count", ids.size());
+        response.put("userIds", ids);
+        return ResponseEntity.ok(response);
     }
 
     // POST /api/users/{id}/reset-password - Admin sets a user's password directly

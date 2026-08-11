@@ -26,17 +26,20 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
 import { useAuth } from '@/store/hooks';
 import { useNotification } from '@/contexts/NotificationContext';
-import { groupsAPI, usersAPI, playersAPI, authAPI } from '@/lib/api';
+import { groupsAPI, usersAPI, playersAPI, authAPI, settingsAPI } from '@/lib/api';
 import {
   GroupResponse,
   UserResponse,
   PlayerDTO,
   UserType,
-  Level
+  Level,
+  ParentWelcomeEmailSetting,
+  BulkWelcomeEmailResponse,
+  getParentInviteStatus
 } from '@/types';
 
 
-const ADMIN_TABS = ['overview', 'groups', 'users', 'parents', 'players', 'assessments', 'skills'] as const;
+const ADMIN_TABS = ['overview', 'groups', 'users', 'parents', 'players', 'assessments', 'skills', 'settings'] as const;
 type AdminTab = (typeof ADMIN_TABS)[number];
 
 /** The tab named in the URL hash, or Overview when it is missing or unknown. */
@@ -103,6 +106,25 @@ export default function AdminDashboard() {
     sortDir: 'asc',
     search: ''
   });
+
+  // Welcome email state for the Parents tab.
+  //
+  // While welcomeEmailsEnabled is false, new parent accounts are created
+  // without their setup email - which is the point during an intake, when the
+  // academy is still empty and an invitation would lead somewhere with nothing
+  // in it. Those parents accumulate as "not invited" and are sent their
+  // invitations here, together, once there is something worth seeing.
+  const [welcomeEmailSetting, setWelcomeEmailSetting] = useState<ParentWelcomeEmailSetting | null>(null);
+  const [isSavingWelcomeEmailSetting, setIsSavingWelcomeEmailSetting] = useState(false);
+  const [selectedParentIds, setSelectedParentIds] = useState<Set<number>>(new Set());
+  const [isSendingWelcomeEmails, setIsSendingWelcomeEmails] = useState(false);
+  const [isSendingPasswordResets, setIsSendingPasswordResets] = useState(false);
+
+  // Deactivated families are kept for history, not day to day work, so the
+  // Parents tab hides them until asked. The count is what makes the hidden
+  // ones discoverable instead of just absent.
+  const [showDeactivatedParents, setShowDeactivatedParents] = useState(false);
+  const [deactivatedParentCount, setDeactivatedParentCount] = useState(0);
 
   const [playersPagination, setPlayersPagination] = useState({
     page: 0,
@@ -189,6 +211,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     loadDashboardData();
   }, []);
+
 
   const loadDashboardData = async () => {
     setLoading(true);
@@ -292,15 +315,20 @@ export default function AdminDashboard() {
 
   const loadParentsData = useCallback(async () => {
     try {
-      const response = await usersAPI.getParents(
-        parentsPagination.page,
-        parentsPagination.size,
-        parentsPagination.sortBy,
-        parentsPagination.sortDir,
-        parentsPagination.search || undefined
-      );
+      const [response, deactivated] = await Promise.all([
+        usersAPI.getParents(
+          parentsPagination.page,
+          parentsPagination.size,
+          parentsPagination.sortBy,
+          parentsPagination.sortDir,
+          parentsPagination.search || undefined,
+          showDeactivatedParents
+        ),
+        usersAPI.getDeactivatedParentCount(),
+      ]);
 
       setParents(response.content);
+      setDeactivatedParentCount(deactivated.count);
       setParentsPagination(prev => ({
         ...prev,
         totalElements: response.totalElements,
@@ -310,7 +338,7 @@ export default function AdminDashboard() {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load parents data';
       showError(errorMessage, 'Parents Data Error');
     }
-  }, [parentsPagination.page, parentsPagination.size, parentsPagination.sortBy, parentsPagination.sortDir, parentsPagination.search, showError]);
+  }, [parentsPagination.page, parentsPagination.size, parentsPagination.sortBy, parentsPagination.sortDir, parentsPagination.search, showDeactivatedParents, showError]);
 
   const loadPlayersData = useCallback(async () => {
     try {
@@ -581,11 +609,169 @@ export default function AdminDashboard() {
   const handleResendSetupEmail = async (userId: number) => {
     try {
       const user = findAccountById(userId);
-      const response = await authAPI.resendSetupEmail(userId);
+      await authAPI.resendSetupEmail(userId);
       showSuccess(`Password setup email sent to ${user?.email || 'user'}`);
+      // The card's badge and the waiting count both hang off this send, so
+      // refresh them rather than leaving the parent looking uninvited.
+      await Promise.all([loadParentsData(), loadWelcomeEmailSetting()]);
     } catch (error: any) {
       showError(error.message || 'Failed to send password setup email');
     }
+  };
+
+  // ===== Parent welcome emails =====
+
+  const loadWelcomeEmailSetting = useCallback(async () => {
+    try {
+      setWelcomeEmailSetting(await settingsAPI.getParentWelcomeEmails());
+    } catch (error) {
+      // Not worth an error toast: the switch is secondary to the list, and the
+      // panel simply stays hidden until a later load succeeds.
+      console.error('Failed to load the parent welcome email setting', error);
+    }
+  }, []);
+
+  // Refetched on entering either tab that shows it, so the waiting count is
+  // current even if parents were added from elsewhere since the dashboard
+  // loaded.
+  useEffect(() => {
+    if (activeTab === 'parents' || activeTab === 'settings') {
+      loadWelcomeEmailSetting();
+    }
+  }, [activeTab, loadWelcomeEmailSetting]);
+
+  const handleToggleWelcomeEmails = async (enabled: boolean) => {
+    setIsSavingWelcomeEmailSetting(true);
+    try {
+      const updated = await settingsAPI.setParentWelcomeEmails(enabled);
+      setWelcomeEmailSetting(updated);
+      showSuccess(
+        enabled
+          ? 'Welcome emails resumed. New parents will be emailed as soon as their account is created.'
+          : 'Welcome emails paused. New parents will be created quietly until you resume.'
+      );
+    } catch (error: any) {
+      showError(error.message || 'Failed to update the welcome email setting');
+    } finally {
+      setIsSavingWelcomeEmailSetting(false);
+    }
+  };
+
+  const toggleParentSelection = (userId: number) => {
+    setSelectedParentIds(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+      }
+      return next;
+    });
+  };
+
+  /** Parents on this page who have not been invited yet. */
+  const uninvitedOnPage = parents.filter(p => getParentInviteStatus(p) === 'not_invited');
+
+  const selectAllUninvitedOnPage = () => {
+    setSelectedParentIds(prev => {
+      const next = new Set(prev);
+      uninvitedOnPage.forEach(p => next.add(p.id));
+      return next;
+    });
+  };
+
+  /**
+   * Select every parent still awaiting an invitation, not just the ones on
+   * screen. The ids come from the server because an intake will usually run to
+   * several pages, and "select all" that quietly meant "this page" would send a
+   * fraction of the intake and look like it had sent all of it.
+   */
+  const selectAllUninvitedEverywhere = async () => {
+    try {
+      const { userIds } = await usersAPI.getParentsAwaitingWelcomeEmail();
+      setSelectedParentIds(new Set(userIds));
+      if (userIds.length === 0) {
+        showSuccess('Every parent has already been invited.');
+      }
+    } catch (error: any) {
+      showError(error.message || 'Failed to look up parents awaiting an invitation');
+    }
+  };
+
+  /**
+   * Shared by both bulk sends. Delivery happens in the background, so this
+   * refetches once immediately for the quick ones and again shortly after for
+   * the rest; anything that genuinely failed keeps its old state and can
+   * simply be selected again.
+   */
+  const runBulkSend = async (
+    send: (ids: number[]) => Promise<BulkWelcomeEmailResponse>,
+    setBusy: (busy: boolean) => void,
+    successNote: (count: number) => string,
+    failureLabel: string
+  ) => {
+    const userIds = Array.from(selectedParentIds);
+    if (userIds.length === 0) return;
+
+    setBusy(true);
+    try {
+      const result = await send(userIds);
+
+      if (result.queuedCount > 0) {
+        showSuccess(successNote(result.queuedCount));
+      }
+
+      if (result.skipped.length > 0) {
+        const detail = result.skipped
+          .slice(0, 3)
+          .map(s => `${s.name} (${s.reason.toLowerCase()})`)
+          .join(', ');
+        const more = result.skipped.length > 3 ? ` and ${result.skipped.length - 3} more` : '';
+        showError(
+          `Skipped ${result.skipped.length} of ${userIds.length}: ${detail}${more}`,
+          'Some parents were not emailed'
+        );
+      }
+
+      setSelectedParentIds(new Set());
+
+      await Promise.all([loadParentsData(), loadWelcomeEmailSetting()]);
+      setTimeout(() => {
+        loadParentsData();
+        loadWelcomeEmailSetting();
+      }, 4000);
+    } catch (error: any) {
+      showError(error.message || failureLabel);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleSendWelcomeEmails = () =>
+    runBulkSend(
+      usersAPI.sendParentWelcomeEmails,
+      setIsSendingWelcomeEmails,
+      (n) =>
+        `Sending welcome emails to ${n} parent${n === 1 ? '' : 's'}. ` +
+        'They will show as invited here as the emails go out.',
+      'Failed to send welcome emails'
+    );
+
+  const handleSendPasswordResets = () =>
+    runBulkSend(
+      usersAPI.sendParentPasswordResets,
+      setIsSendingPasswordResets,
+      (n) =>
+        `Sending a password reset link to ${n} parent${n === 1 ? '' : 's'}. ` +
+        'The link is valid for 48 hours.',
+      'Failed to send password resets'
+    );
+
+  const handleToggleDeactivatedParents = () => {
+    // Back to the first page: the row the admin is looking at will not be in
+    // the same position once the hidden families are folded in.
+    setShowDeactivatedParents(prev => !prev);
+    setParentsPagination(prev => ({ ...prev, page: 0 }));
   };
 
   // Delete handlers
@@ -988,7 +1174,8 @@ export default function AdminDashboard() {
             { id: 'parents', label: 'Parents', icon: <span>👪</span> },
             { id: 'players', label: 'Players', icon: <span>⚽</span> },
             { id: 'assessments', label: 'Assessments', icon: <span>📝</span> },
-            { id: 'skills', label: 'Skills', icon: <span>🎯</span> }
+            { id: 'skills', label: 'Skills', icon: <span>🎯</span> },
+            { id: 'settings', label: 'Settings', icon: <span>⚙️</span> }
           ]}
           activeTab={activeTab}
           onChange={(tabId) => setActiveTab(tabId as AdminTab)}
@@ -1195,6 +1382,48 @@ export default function AdminDashboard() {
                 </button>
               </div>
 
+              {/* A paused switch is worth surfacing here even though it now
+                  lives in Settings: without it, parents created on this screen
+                  silently do not get emailed and nothing on screen says why. */}
+              {welcomeEmailSetting && !welcomeEmailSetting.enabled && (
+                <div className="mb-6 rounded-lg border border-orange-500/30 bg-orange-500/10 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <p className="text-xs text-text-secondary">
+                    <span className="font-semibold text-orange-400">Welcome emails are paused.</span>{' '}
+                    New parents are created quietly, and
+                    {welcomeEmailSetting.awaitingWelcomeEmailCount > 0 ? (
+                      <>
+                        {' '}
+                        <span className="font-semibold text-text-primary">
+                          {welcomeEmailSetting.awaitingWelcomeEmailCount}
+                        </span>{' '}
+                        {welcomeEmailSetting.awaitingWelcomeEmailCount === 1 ? 'is' : 'are'} waiting to be
+                        invited. Select them below and send when you are ready.
+                      </>
+                    ) : (
+                      ' nothing is sent until you invite them.'
+                    )}
+                  </p>
+                  <div className="flex items-center gap-3 shrink-0">
+                    {welcomeEmailSetting.awaitingWelcomeEmailCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={selectAllUninvitedEverywhere}
+                        className="text-xs font-medium text-primary hover:underline"
+                      >
+                        Select all waiting
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('settings')}
+                      className="text-xs font-medium text-text-secondary hover:underline"
+                    >
+                      Settings
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Search Bar */}
               <div className="mb-6">
                 <div className="relative">
@@ -1215,6 +1444,26 @@ export default function AdminDashboard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
+
+                {/* Deactivated families are hidden by default. The control only
+                    appears when there are some, so it never implies hidden
+                    records that do not exist. */}
+                {(deactivatedParentCount > 0 || showDeactivatedParents) && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-xs text-text-secondary">
+                      {showDeactivatedParents
+                        ? 'Showing deactivated parents'
+                        : `${deactivatedParentCount} deactivated parent${deactivatedParentCount === 1 ? '' : 's'} hidden`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleToggleDeactivatedParents}
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      {showDeactivatedParents ? 'Hide them' : 'Show them'}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {parents.length === 0 ? (
@@ -1224,23 +1473,93 @@ export default function AdminDashboard() {
                     : 'No parents yet. Add a player to create the first one.'}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {parents.map((parent) => (
-                    <UserCard
-                      key={parent.id}
-                      user={parent}
-                      onEdit={handleEditParent}
-                      onDelete={handleDeleteUser}
-                      onDeactivate={(userId) => handleUserStatusUpdate(userId, false, 'Deactivated by admin')}
-                      onActivate={(userId) => handleUserStatusUpdate(userId, true)}
-                      onAddPlayer={handleAddPlayerForParent}
-                      onUnassignChild={handleUnassignChild}
-                      onResendSetupEmail={handleResendSetupEmail}
-                      onResetPassword={(userId) => setResetPasswordModal({ isOpen: true, userId })}
-                      showActions={true}
-                    />
-                  ))}
-                </div>
+                <>
+                  {/* Selection bar. Selection is kept across pages on purpose,
+                      so "Select all waiting" can span an intake that runs to
+                      several pages; the count is always shown so a selection
+                      reaching beyond this page is never invisible. */}
+                  <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-secondary-50 rounded-lg">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="text-sm text-text-primary font-medium">
+                        {selectedParentIds.size > 0
+                          ? `${selectedParentIds.size} selected`
+                          : 'Select parents to send their welcome email'}
+                      </span>
+
+                      {uninvitedOnPage.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={selectAllUninvitedOnPage}
+                          className="text-xs font-medium text-primary hover:underline"
+                        >
+                          Select {uninvitedOnPage.length} not invited on this page
+                        </button>
+                      )}
+
+                      {selectedParentIds.size > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedParentIds(new Set())}
+                          className="text-xs font-medium text-text-secondary hover:underline"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                      {/* Two sends, because a selected parent is in exactly one
+                          of two states: never onboarded (needs the welcome
+                          email) or onboarded and locked out (needs a reset).
+                          Each send skips the other group and says so. */}
+                      {/* btn-primary / btn-secondary rather than hand-rolled
+                          colours: --text-primary is near-black, so putting it
+                          on the dark blue --primary makes the label invisible.
+                          The shared classes already pair white with it. */}
+                      <button
+                        type="button"
+                        onClick={handleSendWelcomeEmails}
+                        disabled={selectedParentIds.size === 0 || isSendingWelcomeEmails || isSendingPasswordResets}
+                        className="btn-primary btn-sm w-full sm:w-auto disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {isSendingWelcomeEmails
+                          ? 'Sending...'
+                          : `Send welcome email${selectedParentIds.size === 1 ? '' : 's'}`}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleSendPasswordResets}
+                        disabled={selectedParentIds.size === 0 || isSendingWelcomeEmails || isSendingPasswordResets}
+                        title="For parents who already set a password and cannot get back in"
+                        className="btn-secondary btn-sm w-full sm:w-auto disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {isSendingPasswordResets ? 'Sending...' : 'Send password reset'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {parents.map((parent) => (
+                      <UserCard
+                        key={parent.id}
+                        user={parent}
+                        onEdit={handleEditParent}
+                        onDelete={handleDeleteUser}
+                        onDeactivate={(userId) => handleUserStatusUpdate(userId, false, 'Deactivated by admin')}
+                        onActivate={(userId) => handleUserStatusUpdate(userId, true)}
+                        onAddPlayer={handleAddPlayerForParent}
+                        onUnassignChild={handleUnassignChild}
+                        onResendSetupEmail={handleResendSetupEmail}
+                        onResetPassword={(userId) => setResetPasswordModal({ isOpen: true, userId })}
+                        showActions={true}
+                        isSelectable={true}
+                        isSelected={selectedParentIds.has(parent.id)}
+                        onSelect={toggleParentSelection}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
 
               {/* Pagination Controls */}
@@ -1383,6 +1702,95 @@ export default function AdminDashboard() {
 
           {activeTab === 'skills' && (
             <SkillsManagement />
+          )}
+
+          {activeTab === 'settings' && (
+            <div>
+              <div className="mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-text-primary">Settings</h2>
+                <p className="text-xs text-text-secondary mt-1">
+                  Academy-wide settings. Changes take effect immediately.
+                </p>
+              </div>
+
+              <section>
+                <h3 className="text-sm font-semibold text-text-primary mb-1">Communications</h3>
+                <p className="text-xs text-text-secondary mb-4">
+                  Control the automatic emails the system sends on your behalf.
+                </p>
+
+                {welcomeEmailSetting ? (
+                  <div
+                    className={`rounded-lg border p-4 ${
+                      welcomeEmailSetting.enabled
+                        ? 'bg-secondary-50 border-border'
+                        : 'bg-orange-500/10 border-orange-500/30'
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-semibold text-text-primary">
+                            Parent welcome emails
+                          </h4>
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                              welcomeEmailSetting.enabled
+                                ? 'bg-accent-teal/20 text-accent-teal border border-accent-teal/30'
+                                : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                            }`}
+                          >
+                            {welcomeEmailSetting.enabled ? 'Sending' : 'Paused'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-text-secondary mt-1 max-w-2xl">
+                          {welcomeEmailSetting.enabled
+                            ? 'New parents are emailed their password setup link as soon as their account is created.'
+                            : 'New parents are created quietly. Pause this while you are loading the academy in, so nobody is invited to an empty dashboard.'}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleToggleWelcomeEmails(!welcomeEmailSetting.enabled)}
+                        disabled={isSavingWelcomeEmailSetting}
+                        className="btn-secondary btn-sm w-full sm:w-auto shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSavingWelcomeEmailSetting
+                          ? 'Saving...'
+                          : welcomeEmailSetting.enabled
+                            ? 'Pause welcome emails'
+                            : 'Resume welcome emails'}
+                      </button>
+                    </div>
+
+                    {welcomeEmailSetting.awaitingWelcomeEmailCount > 0 && (
+                      <div className="mt-3 pt-3 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <p className="text-xs text-text-secondary">
+                          <span className="font-semibold text-text-primary">
+                            {welcomeEmailSetting.awaitingWelcomeEmailCount}
+                          </span>{' '}
+                          parent{welcomeEmailSetting.awaitingWelcomeEmailCount === 1 ? '' : 's'} waiting to be
+                          invited. Resuming does not email them — invite them deliberately from the
+                          Parents tab.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('parents')}
+                          className="shrink-0 text-xs font-medium text-primary hover:underline text-left sm:text-right"
+                        >
+                          Go to Parents
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-border bg-secondary-50 p-4 text-xs text-text-secondary">
+                    Could not load the communication settings. Refresh to try again.
+                  </div>
+                )}
+              </section>
+            </div>
           )}
         </div>
 

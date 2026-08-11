@@ -70,4 +70,39 @@ public interface UserRepository extends JpaRepository<User, Long> {
            "OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<User> findParentUsersWithSearch(@Param("search") String search, Pageable pageable);
 
+    // Active-only counterparts. The Parents tab hides deactivated families by
+    // default - they are kept for history, not for day to day work - and shows
+    // them on request.
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.roles WHERE u.userType = 'PARENT' " +
+           "AND u.isActive = true")
+    Page<User> findActiveParentUsers(Pageable pageable);
+
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.roles WHERE u.userType = 'PARENT' " +
+           "AND u.isActive = true " +
+           "AND (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<User> findActiveParentUsersWithSearch(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.userType = 'PARENT' AND u.isActive = false")
+    long countDeactivatedParents();
+
+    // ========== WELCOME EMAIL QUERIES ==========
+
+    /**
+     * Parents who have never been sent their setup link. Accounts created while
+     * welcome emails were paused land here, and so do sends that failed - in
+     * both cases the parent is still waiting, so both should be re-sendable.
+     * Anyone who already set a password is excluded: they are past onboarding.
+     */
+    @Query("SELECT u FROM User u WHERE u.userType = 'PARENT' " +
+           "AND u.passwordSetupEmailLastSentAt IS NULL AND u.passwordSetAt IS NULL " +
+           "ORDER BY u.createdAt ASC")
+    List<User> findParentsAwaitingWelcomeEmail();
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.userType = 'PARENT' " +
+           "AND u.passwordSetupEmailLastSentAt IS NULL AND u.passwordSetAt IS NULL")
+    long countParentsAwaitingWelcomeEmail();
+
 }

@@ -5,6 +5,10 @@ import {
   LoginResponse,
   UserResponse,
 } from "@/types/auth";
+import {
+  BulkWelcomeEmailResponse,
+  ParentWelcomeEmailSetting,
+} from "@/types/users";
 import { CreatePlayersRequest, CreatePlayersResponse } from "@/types/players";
 import { GroupResponse } from "@/types/groups";
 import {
@@ -389,12 +393,14 @@ export const usersAPI = {
   },
 
   // Parents only. getAll returns academy staff and excludes them.
+  // Deactivated families are hidden unless includeInactive is set.
   getParents: async (
     page = 0,
     size = 10,
     sortBy = "firstName",
     sortDir = "asc",
-    search?: string
+    search?: string,
+    includeInactive = false
   ): Promise<{
     content: UserResponse[];
     totalElements: number;
@@ -413,7 +419,68 @@ export const usersAPI = {
       params.append("search", search);
     }
 
+    if (includeInactive) {
+      params.append("includeInactive", "true");
+    }
+
     return apiRequest(`/users/parents?${params.toString()}`);
+  },
+
+  // How many parents the default active-only view is hiding.
+  getDeactivatedParentCount: async (): Promise<{ count: number }> => {
+    return apiRequest("/users/parents/deactivated-count");
+  },
+
+  // Send the welcome (password setup) email to a set of parents. Resolves as
+  // soon as the backend accepts the work; delivery continues in the background,
+  // so refetch the parents list to watch them flip to "invited".
+  sendParentWelcomeEmails: async (
+    userIds: number[]
+  ): Promise<BulkWelcomeEmailResponse> => {
+    return apiRequest<BulkWelcomeEmailResponse>("/users/parents/welcome-emails", {
+      method: "POST",
+      body: JSON.stringify({ userIds }),
+    });
+  },
+
+  // Send a password reset link to parents who already onboarded and are locked
+  // out. Parents who never set a password are skipped - they need the welcome
+  // email instead, and the response says so.
+  sendParentPasswordResets: async (
+    userIds: number[]
+  ): Promise<BulkWelcomeEmailResponse> => {
+    return apiRequest<BulkWelcomeEmailResponse>("/users/parents/password-resets", {
+      method: "POST",
+      body: JSON.stringify({ userIds }),
+    });
+  },
+
+  // Every parent who has an account but has never been sent their setup link.
+  // Returns ids across all pages, so "select all waiting" is not limited to
+  // whichever page happens to be on screen.
+  getParentsAwaitingWelcomeEmail: async (): Promise<{
+    count: number;
+    userIds: number[];
+  }> => {
+    return apiRequest("/users/parents/awaiting-welcome-email");
+  },
+};
+
+// Academy-wide settings
+export const settingsAPI = {
+  getParentWelcomeEmails: async (): Promise<ParentWelcomeEmailSetting> => {
+    return apiRequest<ParentWelcomeEmailSetting>("/settings/parent-welcome-emails");
+  },
+
+  // Only affects parents created from now on. Parents already held back stay
+  // held back until an admin sends their invitations explicitly.
+  setParentWelcomeEmails: async (
+    enabled: boolean
+  ): Promise<ParentWelcomeEmailSetting> => {
+    return apiRequest<ParentWelcomeEmailSetting>("/settings/parent-welcome-emails", {
+      method: "PUT",
+      body: JSON.stringify({ enabled }),
+    });
   },
 };
 
