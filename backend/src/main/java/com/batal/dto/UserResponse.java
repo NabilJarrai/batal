@@ -33,6 +33,10 @@ public class UserResponse {
     // from creation, so this - not isActive - is what tells you whether someone
     // can actually log in yet.
     private LocalDateTime passwordSetAt;
+    // Null means this person has never been sent their setup link - either the
+    // account was created while welcome emails were paused, or every send so
+    // far failed. Either way they are waiting to be invited.
+    private LocalDateTime welcomeEmailSentAt;
     private List<String> roles;
     private List<ChildSummaryDTO> children; // For PARENT user type
 
@@ -59,6 +63,7 @@ public class UserResponse {
         this.createdAt = user.getCreatedAt();
         this.updatedAt = user.getUpdatedAt();
         this.passwordSetAt = user.getPasswordSetAt();
+        this.welcomeEmailSentAt = user.getPasswordSetupEmailLastSentAt();
         this.roles = roles;
     }
     
@@ -207,7 +212,16 @@ public class UserResponse {
     public void setPasswordSetAt(LocalDateTime passwordSetAt) {
         this.passwordSetAt = passwordSetAt;
     }
-    
+
+    public LocalDateTime getWelcomeEmailSentAt() {
+        return welcomeEmailSentAt;
+    }
+
+    public void setWelcomeEmailSentAt(LocalDateTime welcomeEmailSentAt) {
+        this.welcomeEmailSentAt = welcomeEmailSentAt;
+    }
+
+
     public List<String> getRoles() {
         return roles;
     }

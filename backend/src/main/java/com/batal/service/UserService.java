@@ -60,6 +60,9 @@ public class UserService {
     private AuthService authService;
 
     @Autowired
+    private SystemSettingService systemSettingService;
+
+    @Autowired
     private ApplicationEventPublisher eventPublisher;
 
 
@@ -77,15 +80,31 @@ public class UserService {
     }
 
     // Get parent users with pagination and search, each with their children.
-    public Page<UserResponse> getAllParentUsers(Pageable pageable, String search) {
+    //
+    // Deactivated families are excluded unless asked for. They are kept for
+    // history rather than day to day work, and filtering in the query - not in
+    // the page afterwards - is what keeps paging and totals honest.
+    public Page<UserResponse> getAllParentUsers(Pageable pageable, String search, boolean includeInactive) {
         Page<User> users;
-        if (search != null && !search.trim().isEmpty()) {
-            users = userRepository.findParentUsersWithSearch(search.trim(), pageable);
+        boolean searching = search != null && !search.trim().isEmpty();
+
+        if (searching) {
+            String term = search.trim();
+            users = includeInactive
+                    ? userRepository.findParentUsersWithSearch(term, pageable)
+                    : userRepository.findActiveParentUsersWithSearch(term, pageable);
         } else {
-            users = userRepository.findParentUsers(pageable);
+            users = includeInactive
+                    ? userRepository.findParentUsers(pageable)
+                    : userRepository.findActiveParentUsers(pageable);
         }
 
         return users.map(this::toUserResponseWithChildren);
+    }
+
+    /** How many parent accounts are hidden by the default active-only view. */
+    public long countDeactivatedParents() {
+        return userRepository.countDeactivatedParents();
     }
 
     /**
@@ -242,7 +261,16 @@ public class UserService {
 
         // Sent after this transaction commits. Calling it inline would let a
         // mail failure mark the transaction rollback-only and lose the account.
-        eventPublisher.publishEvent(new PasswordSetupEmailRequestedEvent(savedUser.getId()));
+        //
+        // Parents are held back while welcome emails are paused: during an
+        // intake the academy is still empty, and an invitation to an empty
+        // dashboard is a worse first impression than no invitation at all. The
+        // account is complete either way - only the email waits, and an admin
+        // sends the held-back ones in bulk from the parents list. Staff are
+        // never held back; whoever created that account wants them logging in.
+        if (shouldSendWelcomeEmailNow(savedUser)) {
+            eventPublisher.publishEvent(new PasswordSetupEmailRequestedEvent(savedUser.getId()));
+        }
 
         List<String> roleNames = savedUser.getRoles().stream()
                 .map(role -> role.getName())
@@ -250,6 +278,18 @@ public class UserService {
         return new UserResponse(savedUser, roleNames);
     }
     
+    /**
+     * Whether a freshly created account's welcome email goes out immediately.
+     * Only PARENT accounts can be held back, and only while an admin has
+     * paused parent welcome emails.
+     */
+    private boolean shouldSendWelcomeEmailNow(User user) {
+        if (user.getUserType() != UserType.PARENT) {
+            return true;
+        }
+        return systemSettingService.isParentWelcomeEmailEnabled();
+    }
+
     // Update user
     public UserResponse updateUser(Long id, UserUpdateRequest request) {
         User user = userRepository.findByIdWithRoles(id)

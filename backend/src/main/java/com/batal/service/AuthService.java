@@ -455,6 +455,53 @@ public class AuthService {
     }
 
     /**
+     * Issue a password reset link on an admin's behalf, keeping a mail failure
+     * from taking the token with it.
+     *
+     * The admin-facing counterpart to {@link #initiatePasswordReset}, which is
+     * public and therefore deliberately silent about who does or does not
+     * exist. An admin picking people off a list already knows they exist, so
+     * this reports back instead: false means the mail did not go out.
+     *
+     * Mirrors {@link #issuePasswordSetupLink} - REQUIRES_NEW, and the mailer is
+     * called inside a try/catch so a dead SMTP server cannot mark the
+     * transaction rollback-only and lose the token with it.
+     *
+     * @return true when the email was accepted for delivery
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public boolean issuePasswordResetLink(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+
+        // Someone who never set a password has nothing to reset; they need the
+        // welcome/setup link instead.
+        if (user.getPasswordSetAt() == null) {
+            throw new BusinessRuleException("User has not set a password yet");
+        }
+
+        tokenRepository.invalidateAllUserTokensByType(user.getId(), TokenType.RESET, LocalDateTime.now());
+
+        String tokenString = generateSecureToken();
+        PasswordSetupToken token = new PasswordSetupToken();
+        token.setUser(user);
+        token.setToken(tokenString);
+        token.setTokenType(TokenType.RESET);
+        token.setExpiresAt(LocalDateTime.now().plusHours(tokenExpiryHours));
+        tokenRepository.save(token);
+
+        try {
+            emailService.sendPasswordResetEmail(user, tokenString);
+        } catch (RuntimeException e) {
+            // Swallowed so this transaction is not poisoned. The caller logs
+            // it; the token stays valid for a resend.
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Reset password using reset token
      */
     @Transactional
