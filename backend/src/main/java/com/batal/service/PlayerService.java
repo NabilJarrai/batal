@@ -17,6 +17,7 @@ import com.batal.repository.GroupRepository;
 import com.batal.repository.UserRepository;
 import com.batal.entity.User;
 import com.batal.entity.enums.UserType;
+import com.batal.util.AgeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -331,7 +332,7 @@ public class PlayerService {
         }
 
         // Calculate player age
-        int playerAge = LocalDate.now().getYear() - player.getDateOfBirth().getYear();
+        int playerAge = AgeUtils.calculateAge(player.getDateOfBirth());
         AgeGroup ageGroup = AgeGroup.getByAge(playerAge);
 
         if (ageGroup == null) {

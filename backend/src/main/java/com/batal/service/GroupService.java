@@ -14,6 +14,7 @@ import com.batal.repository.AssessmentTemplateRepository;
 import com.batal.repository.GroupRepository;
 import com.batal.repository.PlayerRepository;
 import com.batal.repository.UserRepository;
+import com.batal.util.AgeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -480,7 +481,7 @@ public class GroupService {
                 .orElseThrow(() -> new RuntimeException("Player not found"));
 
         // Calculate player age
-        int playerAge = LocalDate.now().getYear() - player.getDateOfBirth().getYear();
+        int playerAge = calculatePlayerAge(player.getDateOfBirth());
         AgeGroup ageGroup = AgeGroup.getByAge(playerAge);
 
         if (ageGroup == null) {
@@ -574,7 +575,7 @@ public class GroupService {
         if (dateOfBirth == null) {
             return 0; // Unknown age
         }
-        return LocalDate.now().getYear() - dateOfBirth.getYear();
+        return AgeUtils.calculateAge(dateOfBirth);
     }
 
     // Helper method to map Group to GroupResponse (simplified version)
