@@ -3,6 +3,7 @@ package com.batal.entity;
 import com.batal.entity.enums.AgeGroup;
 import com.batal.entity.enums.Gender;
 import com.batal.entity.enums.UserType;
+import com.batal.util.AgeUtils;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -358,8 +359,7 @@ public class User {
 
     public AgeGroup getAgeGroup() {
         if (dateOfBirth == null) return null;
-        int age = LocalDate.now().getYear() - dateOfBirth.getYear();
-        return AgeGroup.getByAge(age);
+        return AgeGroup.getByAge(AgeUtils.calculateAge(dateOfBirth));
     }
 
     @Override
