@@ -26,14 +26,14 @@ export default function ResponsiveTabs({
     <div className={`w-full ${className}`}>
       {/* Mobile: Horizontal scroll */}
       <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div className="flex space-x-2 min-w-max sm:min-w-0">
+        <div className="flex gap-2 min-w-max sm:min-w-0 sm:w-full">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => onChange(tab.id)}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-xs sm:text-base transition-colors whitespace-nowrap ${
+                className={`flex sm:flex-1 items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-xs sm:text-base transition-colors whitespace-nowrap ${
                   isActive
                     ? 'bg-primary text-white shadow-sm'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
