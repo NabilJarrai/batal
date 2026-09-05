@@ -87,7 +87,7 @@ export default function ManagerDashboard() {
   // State
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'assessments'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'assessments'>('overview');
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
 
   // Data
@@ -367,10 +367,10 @@ export default function ManagerDashboard() {
         <ResponsiveTabs
           tabs={[
             { id: 'overview', label: 'Overview', icon: <span>📊</span> },
-            { id: 'analytics', label: 'Analytics', icon: <span>📈</span> },
             { id: 'assessments', label: 'Assessments', icon: <span>📝</span> }
-            // Reports and Finances are hidden: nothing generates a report yet,
-            // and every figure the finances tab showed was invented.
+            // Analytics, Reports and Finances are gone: the first was two
+            // vanity ratios around one chart, which now sits in Overview; the
+            // others described work nobody has built.
           ]}
           activeTab={activeTab}
           onChange={(tabId) => setActiveTab(tabId as typeof activeTab)}
@@ -384,6 +384,18 @@ export default function ManagerDashboard() {
               {/* Groups Distribution */}
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Academy Overview</h2>
+
+                {stats.unassignedPlayers > 0 && (
+                  <div className="mb-4 flex items-start gap-2 rounded-lg border border-accent-yellow/30 bg-accent-yellow/10 p-3">
+                    <span className="text-accent-yellow">&#9679;</span>
+                    <p className="text-sm text-text-primary">
+                      <span className="font-medium">
+                        {stats.unassignedPlayers} active player{stats.unassignedPlayers === 1 ? ' is' : 's are'} not in a group yet
+                      </span>{' '}
+                      &mdash; they cannot be assessed until they are assigned.
+                    </p>
+                  </div>
+                )}
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Groups by Level */}
@@ -437,6 +449,49 @@ export default function ManagerDashboard() {
                 </div>
               </div>
 
+              {/* Player growth, brought over from the analytics tab. The two
+                  vanity ratios that sat beside it — average group size and
+                  coach-player ratio — were numbers nobody acted on. */}
+              <div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
+                  <h3 className="text-lg font-medium text-text-primary shrink-0">Player Growth</h3>
+                  <select
+                    value={timeRange}
+                    onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+                    className="select-base w-full sm:w-48"
+                  >
+                    <option value="week">Last Week</option>
+                    <option value="month">Last Month</option>
+                    <option value="quarter">Last Quarter</option>
+                    <option value="year">Last Year</option>
+                  </select>
+                </div>
+              {/* Player Growth Chart */}
+              <div className="bg-secondary-50 rounded-lg p-6 mb-6">
+                <p className="text-sm text-text-secondary mb-4">
+                  Active players registered by each point, from their joining dates
+                </p>
+                <div className="overflow-x-auto">
+                  <div className="h-48 flex items-stretch gap-2 min-w-full" style={{ minWidth: `${playerGrowthData.labels.length * 44}px` }}>
+                    {playerGrowthData.labels.map((label, index) => (
+                      <div key={`${label}-${index}`} className="flex-1 min-w-[36px] h-full flex flex-col justify-end items-center">
+                        <div className="w-full bg-blue-500/20 rounded-t flex-1 flex items-end">
+                          <div
+                            className="w-full bg-gradient-to-t from-blue-500 to-cyan-400 rounded-t transition-all duration-500"
+                            style={{
+                              height: `${(playerGrowthData.values[index] / Math.max(1, ...playerGrowthData.values)) * 100}%`
+                            }}
+                          />
+                        </div>
+                        <p className="text-xs text-text-secondary mt-2 whitespace-nowrap">{label}</p>
+                        <p className="text-xs font-medium text-text-primary">{playerGrowthData.values[index]}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              </div>
+
               {/* Top Performing Groups */}
               <div>
                 {/* Ranked by how full each group is — not by any performance
@@ -471,85 +526,6 @@ export default function ManagerDashboard() {
                       </div>
                     ))}
                   </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'analytics' && (
-            <div>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
-                <h2 className="text-xl font-semibold text-text-primary shrink-0">Performance Analytics</h2>
-                <select
-                  value={timeRange}
-                  onChange={(e) => setTimeRange(e.target.value as any)}
-                  className="select-base w-full sm:w-48"
-                >
-                  <option value="week">Last Week</option>
-                  <option value="month">Last Month</option>
-                  <option value="quarter">Last Quarter</option>
-                  <option value="year">Last Year</option>
-                </select>
-              </div>
-
-              {/* Player Growth Chart */}
-              <div className="bg-secondary-50 rounded-lg p-6 mb-6">
-                <h3 className="text-lg font-medium text-text-primary">Player Growth</h3>
-                <p className="text-sm text-text-secondary mb-4">
-                  Active players registered by each point, from their joining dates
-                </p>
-                <div className="overflow-x-auto">
-                  <div className="h-48 flex items-stretch gap-2 min-w-full" style={{ minWidth: `${playerGrowthData.labels.length * 44}px` }}>
-                    {playerGrowthData.labels.map((label, index) => (
-                      <div key={`${label}-${index}`} className="flex-1 min-w-[36px] h-full flex flex-col justify-end items-center">
-                        <div className="w-full bg-blue-500/20 rounded-t flex-1 flex items-end">
-                          <div
-                            className="w-full bg-gradient-to-t from-blue-500 to-cyan-400 rounded-t transition-all duration-500"
-                            style={{
-                              height: `${(playerGrowthData.values[index] / Math.max(1, ...playerGrowthData.values)) * 100}%`
-                            }}
-                          />
-                        </div>
-                        <p className="text-xs text-text-secondary mt-2 whitespace-nowrap">{label}</p>
-                        <p className="text-xs font-medium text-text-primary">{playerGrowthData.values[index]}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Key Metrics Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
-                <div className="bg-secondary-50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-text-secondary mb-2">Average Group Size</h4>
-                  <p className="text-2xl font-bold text-text-primary">
-                    {stats.activeGroups > 0 ? Math.round(stats.assignedPlayers / stats.activeGroups) : 0}
-                  </p>
-                  <p className="text-xs text-text-secondary mt-1">
-                    players per active group
-                  </p>
-                </div>
-
-                <div className="bg-secondary-50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-text-secondary mb-2">Coach-Player Ratio</h4>
-                  <p className="text-2xl font-bold text-text-primary">
-                    1:{stats.totalCoaches > 0 ? Math.round(stats.activePlayers / stats.totalCoaches) : 0}
-                  </p>
-                  <p className="text-xs text-text-secondary mt-1">
-                    active players per coach
-                  </p>
-                </div>
-
-                {/* Was a 94% retention rate with a +2% trend, both invented. This
-                    is the same shape of number and the academy actually has it. */}
-                <div className="bg-secondary-50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-text-secondary mb-2">Players Without a Group</h4>
-                  <p className="text-2xl font-bold text-text-primary">{stats.unassignedPlayers}</p>
-                  <p className="text-xs text-text-secondary mt-1">
-                    {stats.unassignedPlayers === 0
-                      ? 'every active player is assigned'
-                      : 'waiting to be assigned'}
-                  </p>
                 </div>
               </div>
             </div>

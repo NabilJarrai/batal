@@ -3,10 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
-  BarChart3, 
   Users, 
   Calendar, 
-  TrendingUp, 
   AlertCircle,
   RefreshCw,
   FileText,
@@ -26,7 +24,7 @@ import { AssessmentList } from './AssessmentList';
 import { assessmentsAPI } from '@/lib/api/assessments';
 import { useAuth } from '@/store/hooks';
 
-type ViewMode = 'list' | 'create' | 'edit' | 'view' | 'analytics';
+type ViewMode = 'list' | 'create' | 'edit' | 'view';
 
 interface AssessmentManagementProps {
   initialMode?: ViewMode;
@@ -199,14 +197,6 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
                   <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
                 </button>
 
-                <button
-                  onClick={() => setViewMode('analytics')}
-                  className="flex items-center gap-2 px-4 py-2 border border-border text-text-primary rounded-lg hover:bg-secondary-100 transition-colors"
-                >
-                  <BarChart3 size={16} />
-                  Analytics
-                </button>
-
                 {allowCreate && (
                   <button
                     onClick={handleCreateNew}
@@ -340,46 +330,6 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
             onCancel={handleCancel}
             mode={viewMode === 'view' ? 'view' : viewMode === 'edit' ? 'edit' : 'create'}
           />
-        )}
-
-        {viewMode === 'analytics' && (
-          <div className="bg-white border rounded-lg p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Assessment Analytics</h2>
-              <button
-                onClick={() => setViewMode('list')}
-                className="text-gray-600 hover:text-gray-800"
-              >
-                Back to List
-              </button>
-            </div>
-
-            {/* Analytics Content */}
-            <div className="space-y-6">
-              {/* Trends Chart Placeholder */}
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <TrendingUp className="mx-auto text-text-secondary mb-4" size={48} />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Performance Trends</h3>
-                <p className="text-text-secondary">
-                  Detailed analytics and progress charts will be implemented here
-                </p>
-              </div>
-
-              {/* Recent Activity */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
-                <AssessmentList
-                  assessments={assessments.slice(0, 5)}
-                  onView={handleView}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  showPlayerInfo={!playerId}
-                  compact={true}
-                  canManageFinalized={canManageFinalized}
-                />
-              </div>
-            </div>
-          </div>
         )}
       </div>
     </div>
