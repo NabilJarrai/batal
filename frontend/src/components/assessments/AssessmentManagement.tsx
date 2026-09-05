@@ -175,10 +175,10 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
       {/* Header */}
       {viewMode === 'list' && (
         <>
-          <div className="bg-background border border-border rounded-xl p-6">
+          <div className="bg-background border border-border rounded-xl p-4 sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <h1 className="text-2xl font-bold text-text-primary">
+                <h1 className="text-xl sm:text-2xl font-bold text-text-primary">
                   {title || 'Assessment Management'}
                 </h1>
                 <p className="text-text-secondary mt-1">
@@ -235,60 +235,60 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
           )}
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-background border border-border rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Assessments</p>
-                  <p className="text-2xl font-bold text-gray-900">{assessments.length}</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <div className="bg-background border border-border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-gray-600">Total Assessments</p>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">{assessments.length}</p>
                 </div>
-                <FileText className="text-text-secondary" size={24} />
+                <FileText className="text-text-secondary shrink-0" size={20} />
               </div>
             </div>
 
-            <div className="bg-background border border-border rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Completed</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+            <div className="bg-background border border-border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-gray-600">Completed</p>
+                  <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.completed}</p>
                 </div>
-                <CheckCircle className="text-accent-teal" size={24} />
+                <CheckCircle className="text-accent-teal shrink-0" size={20} />
               </div>
             </div>
 
-            <div className="bg-background border border-border rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">In Progress</p>
-                  <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+            <div className="bg-background border border-border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-gray-600">In Progress</p>
+                  <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.pending}</p>
                 </div>
-                <Clock className="text-accent-yellow" size={24} />
+                <Clock className="text-accent-yellow shrink-0" size={20} />
               </div>
             </div>
 
-            <div className="bg-background border border-border rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">This Month</p>
-                  <p className="text-2xl font-bold text-primary">{stats.thisMonth}</p>
+            <div className="bg-background border border-border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-gray-600">This Month</p>
+                  <p className="text-xl sm:text-2xl font-bold text-primary">{stats.thisMonth}</p>
                 </div>
-                <Calendar className="text-text-primary" size={24} />
+                <Calendar className="text-text-primary shrink-0" size={20} />
               </div>
             </div>
           </div>
 
           {/* Category Performance Overview */}
           {summary && (
-            <div className="bg-white border rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Overview</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white border rounded-lg p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Performance Overview</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                 {SKILL_CATEGORIES.map(category => {
                   const avgScore = summary.averageScoreByCategory[category.key] || 0;
                   const percentage = (avgScore / 10) * 100;
 
                   return (
                     <div key={category.key} className="text-center">
-                      <div className={`w-12 h-12 rounded-full ${category.color} flex items-center justify-center text-text-primary text-xl mx-auto mb-2`}>
+                      <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full ${category.color} flex items-center justify-center text-text-primary text-base sm:text-xl mx-auto mb-2`}>
                         {category.icon}
                       </div>
                       <p className="font-medium text-gray-900">{category.label}</p>
@@ -316,7 +316,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
       <div>
         {viewMode === 'list' && (
           <div className="bg-background border border-border rounded-xl">
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <AssessmentList
                 assessments={assessments}
                 onView={handleView}

@@ -487,17 +487,17 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-accent-teal/5 p-4 sm:p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-accent-teal/5 p-3 sm:p-6">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sm:p-8">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-8">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <h2 className="text-2xl sm:text-3xl font-bold text-text-primary mb-2">
+              <h2 className="text-xl sm:text-3xl font-bold text-text-primary mb-1 sm:mb-2">
                 {isCreating ? 'New Assessment' : isEditing ? 'Edit Assessment' : 'View Assessment'}
               </h2>
               {selectedPlayer ? (
-                <p className="text-text-secondary text-lg">
+                <p className="text-text-secondary text-sm sm:text-lg">
                   {selectedPlayer.fullName} • {selectedPlayer.level} Level
                 </p>
               ) : assessment ? (
@@ -520,7 +520,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
             <AlertCircle className="text-red-600" size={20} />
@@ -529,16 +529,16 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
         )}
 
         {/* Basic Information */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <div className="flex items-center gap-2 mb-6">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
+          <div className="flex items-center gap-2 mb-4 sm:mb-6">
             <div className="p-2 bg-primary/10 rounded-lg">
               <User className="w-5 h-5 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold text-text-primary">Basic Information</h3>
+            <h3 className="text-base sm:text-xl font-semibold text-text-primary">Basic Information</h3>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-text-primary mb-3">
+              <label className="block text-sm font-semibold text-text-primary mb-2">
                 Player Selection
               </label>
               <select
@@ -563,7 +563,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-text-primary mb-3">
+              <label className="block text-sm font-semibold text-text-primary mb-2">
                 Assessment Date
               </label>
               <input
@@ -576,7 +576,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-text-primary mb-3">
+              <label className="block text-sm font-semibold text-text-primary mb-2">
                 Assessment Period
               </label>
               <select
@@ -596,13 +596,13 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
         </div>
 
         {/* Skill Ratings by Category */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <div className="flex items-center gap-2 mb-8">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
+          <div className="flex items-center gap-2 mb-5 sm:mb-8">
             <div className="p-2 bg-accent-teal/10 rounded-lg">
               <FileText className="w-5 h-5 text-accent-teal" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-text-primary">Skill Ratings</h3>
+              <h3 className="text-base sm:text-xl font-semibold text-text-primary">Skill Ratings</h3>
               {templateTitle && (
                 <p className="text-sm text-text-secondary">
                   From &ldquo;{templateTitle}&rdquo;, the assessment assigned to this player&apos;s group
@@ -636,13 +636,13 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 if (categorySkills.length === 0) return null;
 
                 return (
-                  <div key={category.key} className="bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-2xl p-6 hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className={`w-12 h-12 rounded-xl ${category.color} flex items-center justify-center text-white text-xl shadow-lg`}>
+                  <div key={category.key} className="bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-2xl p-3 sm:p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                      <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl ${category.color} flex items-center justify-center text-white text-base sm:text-xl shadow-lg shrink-0`}>
                         {category.icon}
                       </div>
                       <div>
-                        <h4 className="text-xl font-semibold text-text-primary">{category.label}</h4>
+                        <h4 className="text-base sm:text-xl font-semibold text-text-primary">{category.label}</h4>
                         <span className="text-sm text-text-secondary">{categorySkills.length} skills to evaluate</span>
                       </div>
                     </div>
@@ -669,16 +669,16 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
         </div>
 
         {/* Comments Section */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <div className="flex items-center gap-2 mb-6">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
+          <div className="flex items-center gap-2 mb-4 sm:mb-6">
             <div className="p-2 bg-accent-yellow/10 rounded-lg">
               <FileText className="w-5 h-5 text-accent-yellow" />
             </div>
-            <h3 className="text-xl font-semibold text-text-primary">Comments & Notes</h3>
+            <h3 className="text-base sm:text-xl font-semibold text-text-primary">Comments & Notes</h3>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-text-primary mb-3">
+              <label className="block text-sm font-semibold text-text-primary mb-2">
                 General Comments
               </label>
               <textarea
@@ -692,7 +692,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-text-primary mb-3">
+              <label className="block text-sm font-semibold text-text-primary mb-2">
                 Private Coach Notes
               </label>
               <textarea
@@ -709,7 +709,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
         {/* Actions */}
         {!isReadOnly && (
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
               {/* Save state, in the coach's words. The form stays open through
                   every background save, so this line is the only thing that
@@ -746,11 +746,11 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                 )}
               </div>
 
-              <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-3 shrink-0">
+              <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 shrink-0">
                 <button
                   onClick={onCancel}
                   disabled={saving}
-                  className="px-6 py-3 text-text-secondary hover:text-text-primary disabled:opacity-50 transition-colors font-medium"
+                  className="px-4 sm:px-6 py-2.5 sm:py-3 text-text-secondary hover:text-text-primary disabled:opacity-50 transition-colors font-medium"
                 >
                   Cancel
                 </button>
@@ -771,7 +771,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                     <button
                       onClick={() => handleSave(false)}
                       disabled={saving || isAssessmentEmpty()}
-                      className="flex items-center justify-center gap-2 whitespace-nowrap px-6 py-3 bg-gray-100 text-text-primary rounded-xl hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                      className="flex items-center justify-center gap-2 whitespace-nowrap px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-100 text-text-primary rounded-xl hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                     >
                       <Save size={18} />
                       Save &amp; Close
@@ -780,7 +780,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
                     <button
                       onClick={() => handleSave(true)}
                       disabled={saving || isAssessmentEmpty()}
-                      className="flex items-center justify-center gap-2 whitespace-nowrap px-6 py-3 bg-gradient-to-r from-primary to-primary-hover text-white rounded-xl hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-0.5 font-medium"
+                      className="flex items-center justify-center gap-2 whitespace-nowrap px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-primary to-primary-hover text-white rounded-xl hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-0.5 font-medium"
                     >
                       <Send size={18} />
                       {saving ? 'Finalizing...' : 'Finalize Assessment'}

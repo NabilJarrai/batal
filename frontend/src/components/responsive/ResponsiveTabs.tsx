@@ -33,21 +33,21 @@ export default function ResponsiveTabs({
               <button
                 key={tab.id}
                 onClick={() => onChange(tab.id)}
-                className={`flex items-center space-x-2 px-4 py-2.5 sm:py-3 rounded-lg font-medium text-sm sm:text-base transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-xs sm:text-base transition-colors whitespace-nowrap ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-sm'
+                    ? 'bg-primary text-white shadow-sm'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 {tab.icon && (
-                  <span className="flex-shrink-0">{tab.icon}</span>
+                  <span className="hidden sm:inline flex-shrink-0">{tab.icon}</span>
                 )}
                 <span>{tab.label}</span>
                 {tab.count !== undefined && (
                   <span
                     className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                       isActive
-                        ? 'bg-blue-500 text-white'
+                        ? 'bg-white/25 text-white'
                         : 'bg-gray-200 text-gray-600'
                     }`}
                   >

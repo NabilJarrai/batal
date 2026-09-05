@@ -7,6 +7,7 @@ import { useAuth } from '@/store/hooks';
 import { groupsAPI, usersAPI, playersAPI } from '@/lib/api';
 import { assessmentsAPI } from '@/lib/api/assessments';
 import { AssessmentManagement } from '@/components/assessments/AssessmentManagement';
+import { ResponsiveTabs } from '@/components/responsive';
 import {
   GroupResponse,
   UserResponse,
@@ -222,7 +223,7 @@ export default function ManagerDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background p-6">
+      <div className="min-h-screen bg-background p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-gray-200 rounded w-1/4"></div>
@@ -266,10 +267,10 @@ export default function ManagerDashboard() {
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="mb-5 sm:mb-8 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Manager Dashboard</h1>
-              <p className="text-gray-600">Comprehensive academy oversight and analytics</p>
+              <h1 className="text-xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Manager Dashboard</h1>
+              <p className="text-sm sm:text-base text-gray-600">Comprehensive academy oversight and analytics</p>
             </div>
             <div className="flex items-center gap-4 shrink-0">
               <div className="min-w-0 sm:text-right">
@@ -281,21 +282,21 @@ export default function ManagerDashboard() {
           </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           {/* Academy Status */}
-          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-green-500/20 rounded-full">
-                <svg className="w-6 h-6 text-accent-teal" fill="currentColor" viewBox="0 0 20 20">
+          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-3 sm:p-6">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="p-2 sm:p-3 bg-green-500/20 rounded-full">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-accent-teal" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
               </div>
-              <span className="text-sm text-accent-teal font-medium">
+              <span className="text-[11px] sm:text-sm text-accent-teal font-medium">
                 {stats.capacityUtilization}% of capacity
               </span>
             </div>
-            <p className="text-gray-600 text-sm font-medium">Active Players</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.activePlayers}</p>
+            <p className="text-gray-600 text-xs sm:text-sm font-medium">Active Players</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.activePlayers}</p>
             <p className="text-xs text-gray-600 mt-1">
               {stats.unassignedPlayers > 0
                 ? `${stats.assignedPlayers} in a group • ${stats.unassignedPlayers} unassigned`
@@ -305,34 +306,34 @@ export default function ManagerDashboard() {
 
           {/* Groups. Replaces a revenue card whose figures were invented;
               finances come back when the business side is settled. */}
-          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-blue-500/20 rounded-full">
-                <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
+          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-3 sm:p-6">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="p-2 sm:p-3 bg-blue-500/20 rounded-full">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
                 </svg>
               </div>
-              <span className="text-sm text-text-primary font-medium">{stats.activeGroups} active</span>
+              <span className="text-[11px] sm:text-sm text-text-primary font-medium">{stats.activeGroups} active</span>
             </div>
-            <p className="text-gray-600 text-sm font-medium">Groups</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.totalGroups}</p>
+            <p className="text-gray-600 text-xs sm:text-sm font-medium">Groups</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.totalGroups}</p>
             <p className="text-xs text-gray-600 mt-1">
               {stats.filledPlaces} of {stats.totalCapacity} places filled
             </p>
           </div>
 
           {/* Staff Overview */}
-          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-purple-500/20 rounded-full">
-                <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
+          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-3 sm:p-6">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="p-2 sm:p-3 bg-purple-500/20 rounded-full">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
                 </svg>
               </div>
-              <span className="text-sm text-text-primary font-medium">{stats.totalStaff}</span>
+              <span className="text-[11px] sm:text-sm text-text-primary font-medium">{stats.totalStaff}</span>
             </div>
-            <p className="text-gray-600 text-sm font-medium">Total Staff</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.totalCoaches} Coaches</p>
+            <p className="text-gray-600 text-xs sm:text-sm font-medium">Total Staff</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.totalCoaches} Coaches</p>
             <p className="text-xs text-gray-600 mt-1">
               {stats.totalManagers} manager{stats.totalManagers === 1 ? '' : 's'} • {stats.totalAdmins} admin
               {stats.totalAdmins === 1 ? '' : 's'}
@@ -340,54 +341,41 @@ export default function ManagerDashboard() {
           </div>
 
           {/* Assessments */}
-          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-cyan-500/20 rounded-full">
-                <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
+          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-3 sm:p-6">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="p-2 sm:p-3 bg-cyan-500/20 rounded-full">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                 </svg>
               </div>
-              <span className="text-sm text-text-primary font-medium">This Month</span>
+              <span className="text-[11px] sm:text-sm text-text-primary font-medium">This Month</span>
             </div>
-            <p className="text-gray-600 text-sm font-medium">Assessments</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.assessmentsThisMonth} Done</p>
+            <p className="text-gray-600 text-xs sm:text-sm font-medium">Assessments</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.assessmentsThisMonth} Done</p>
             <p className="text-xs text-gray-600 mt-1">
               {stats.assessmentsCompleted} all time • {stats.assessmentsInProgress} in progress
             </p>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-1 mb-8">
-          <div className="grid grid-cols-2 gap-1 sm:flex sm:space-x-1">
-            {[
-              { key: 'overview', label: 'Overview', icon: '📊' },
-              { key: 'analytics', label: 'Analytics', icon: '📈' },
-              { key: 'assessments', label: 'Assessments', icon: '📝' },
-              { key: 'reports', label: 'Reports', icon: '📋' }
-              // Finances is hidden until the business side is settled; every
-              // figure it showed was invented.
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key as any)}
-                className={`
-                  sm:flex-1 flex items-center justify-center gap-2 py-3 px-2 sm:px-4 rounded-lg text-sm font-medium transition-all duration-200
-                  ${activeTab === tab.key
-                    ? 'bg-primary text-white shadow-lg'
-                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                  }
-                `}
-              >
-                <span>{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Tab Navigation. ResponsiveTabs is the shared strip the admin page
+            already uses: it scrolls rather than squeezing on a phone. */}
+        <ResponsiveTabs
+          tabs={[
+            { id: 'overview', label: 'Overview', icon: <span>📊</span> },
+            { id: 'analytics', label: 'Analytics', icon: <span>📈</span> },
+            { id: 'assessments', label: 'Assessments', icon: <span>📝</span> },
+            { id: 'reports', label: 'Reports', icon: <span>📋</span> }
+            // Finances is hidden until the business side is settled; every
+            // figure it showed was invented.
+          ]}
+          activeTab={activeTab}
+          onChange={(tabId) => setActiveTab(tabId as typeof activeTab)}
+          className="mb-5 sm:mb-8"
+        />
 
         {/* Main Content Area */}
-        <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-4 sm:p-6">
           {activeTab === 'overview' && (
             <div className="space-y-8">
               {/* Groups Distribution */}
@@ -454,7 +442,7 @@ export default function ManagerDashboard() {
                 <div className="bg-secondary-50 rounded-lg">
                   <div className="divide-y divide-white/10">
                     {topGroups.map((group, index) => (
-                      <div key={group.id} className="p-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div key={group.id} className="p-3 sm:p-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-4 min-w-0">
                           <div className={`
                             w-8 h-8 rounded-full flex items-center justify-center text-text-primary font-bold
@@ -528,7 +516,7 @@ export default function ManagerDashboard() {
               </div>
 
               {/* Key Metrics Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
                 <div className="bg-secondary-50 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-text-secondary mb-2">Average Group Size</h4>
                   <p className="text-2xl font-bold text-text-primary">

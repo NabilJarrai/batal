@@ -279,7 +279,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
       <div
         key={assessment.id}
         className={`bg-white border rounded-lg hover:shadow-md transition-shadow ${
-          compact ? 'p-3' : 'p-4'
+          compact ? 'p-2.5' : 'p-3 sm:p-4'
         }`}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -438,7 +438,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
 
       {/* Filter Panel */}
       {showFilters && (
-        <div className="bg-gray-50 border rounded-lg p-4 space-y-4">
+        <div className="bg-gray-50 border rounded-lg p-3 sm:p-4 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {availableGroups.length > 1 && (
               <div>

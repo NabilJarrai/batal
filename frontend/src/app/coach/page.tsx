@@ -6,6 +6,7 @@ import PlayerCard from '@/components/PlayerCard';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
 import { AssessmentManagement } from '@/components/assessments/AssessmentManagement';
+import { ResponsiveTabs } from '@/components/responsive';
 import { useAuth } from '@/store/hooks';
 import { groupsAPI, playersAPI, usersAPI } from '@/lib/api';
 import { GroupResponse, PlayerDTO, UserResponse } from '@/types';
@@ -132,10 +133,10 @@ export default function CoachDashboard() {
 
   return (
     <ProtectedRoute allowedRoles={['COACH', 'ADMIN']}>
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="mb-5 sm:mb-8 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 className="text-heading-1 mb-2">Coach Dashboard</h1>
               <p className="text-body-lg">
@@ -152,71 +153,71 @@ export default function CoachDashboard() {
           </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">My Groups</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalGroups}</p>
+                <p className="text-gray-600 text-xs sm:text-sm font-medium">My Groups</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.totalGroups}</p>
               </div>
-              <div className="p-3 bg-primary/20 rounded-full">
-                <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
+              <div className="p-2 sm:p-3 bg-primary/20 rounded-full">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                 </svg>
               </div>
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
+          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Total Players</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalPlayers}</p>
+                <p className="text-gray-600 text-xs sm:text-sm font-medium">Total Players</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.totalPlayers}</p>
               </div>
-              <div className="p-3 bg-green-500/20 rounded-full">
-                <svg className="w-6 h-6 text-accent-teal" fill="currentColor" viewBox="0 0 20 20">
+              <div className="p-2 sm:p-3 bg-green-500/20 rounded-full">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-accent-teal" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                 </svg>
               </div>
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
+          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Avg Group Size</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.averageGroupSize}</p>
+                <p className="text-gray-600 text-xs sm:text-sm font-medium">Avg Group Size</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.averageGroupSize}</p>
               </div>
-              <div className="p-3 bg-purple-500/20 rounded-full">
-                <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
+              <div className="p-2 sm:p-3 bg-purple-500/20 rounded-full">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                 </svg>
               </div>
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
+          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Development</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.developmentPlayers}</p>
+                <p className="text-gray-600 text-xs sm:text-sm font-medium">Development</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.developmentPlayers}</p>
               </div>
-              <div className="p-3 bg-cyan-500/20 rounded-full">
-                <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
+              <div className="p-2 sm:p-3 bg-cyan-500/20 rounded-full">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
               </div>
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
+          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Advanced</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.advancedPlayers}</p>
+                <p className="text-gray-600 text-xs sm:text-sm font-medium">Advanced</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.advancedPlayers}</p>
               </div>
-              <div className="p-3 bg-yellow-500/20 rounded-full">
-                <svg className="w-6 h-6 text-accent-yellow" fill="currentColor" viewBox="0 0 20 20">
+              <div className="p-2 sm:p-3 bg-yellow-500/20 rounded-full">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-accent-yellow" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
               </div>
@@ -224,34 +225,20 @@ export default function CoachDashboard() {
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-1 mb-8">
-          <div className="flex space-x-1 overflow-x-auto">
-            {[
-              { key: 'groups', label: 'My Groups', icon: '👥' },
-              { key: 'players', label: 'My Players', icon: '⚽' },
-              { key: 'assessments', label: 'Assessments', icon: '📊' }
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key as any)}
-                className={`
-                  flex-1 whitespace-nowrap flex items-center justify-center gap-2 py-3 px-3 sm:px-4 rounded-lg text-sm font-medium transition-all duration-200
-                  ${activeTab === tab.key
-                    ? 'bg-primary text-white shadow-lg'
-                    : 'text-text-primary hover:text-text-primary hover:bg-secondary-100'
-                  }
-                `}
-              >
-                <span>{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Tab Navigation, the shared strip rather than a hand-rolled one. */}
+        <ResponsiveTabs
+          tabs={[
+            { id: 'groups', label: 'My Groups', icon: <span>👥</span> },
+            { id: 'players', label: 'My Players', icon: <span>⚽</span> },
+            { id: 'assessments', label: 'Assessments', icon: <span>📊</span> }
+          ]}
+          activeTab={activeTab}
+          onChange={(tabId) => setActiveTab(tabId as typeof activeTab)}
+          className="mb-5 sm:mb-8"
+        />
 
         {/* Main Content */}
-        <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-4 sm:p-6">
           {activeTab === 'groups' && (
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">My Assigned Groups</h2>

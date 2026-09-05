@@ -1070,7 +1070,7 @@ export default function AdminDashboard() {
           </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-background border border-border shadow-sm rounded-xl p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
@@ -1183,7 +1183,7 @@ export default function AdminDashboard() {
         />
 
         {/* Tab Content */}
-        <div className="bg-background border border-border shadow-sm rounded-xl p-6">
+        <div className="bg-background border border-border shadow-sm rounded-xl p-4 sm:p-6">
           {activeTab === 'overview' && (
             <div>
               <h2 className="text-xl font-semibold text-text-primary mb-4">Academy Overview</h2>
