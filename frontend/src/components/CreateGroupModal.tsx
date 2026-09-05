@@ -44,7 +44,9 @@ export default function CreateGroupModal({
 
   const loadAvailableCoaches = async () => {
     try {
-      const usersResponse = await usersAPI.getAll();
+      // Every user, not the default first page of ten: past ten staff accounts
+      // the coaches beyond it silently vanished from this dropdown.
+      const usersResponse = await usersAPI.getAll(0, 1000);
       const users = usersResponse.content || usersResponse;
       const coaches = users.filter(u =>
         u.userType === UserType.COACH && u.isActive

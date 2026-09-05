@@ -3,10 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
-  BarChart3, 
   Users, 
   Calendar, 
-  TrendingUp, 
   AlertCircle,
   RefreshCw,
   FileText,
@@ -24,18 +22,37 @@ import { SkillCategory, SKILL_CATEGORIES } from '@/types/skills';
 import { AssessmentForm } from './AssessmentForm';
 import { AssessmentList } from './AssessmentList';
 import { assessmentsAPI } from '@/lib/api/assessments';
+import { useAuth } from '@/store/hooks';
 
-type ViewMode = 'list' | 'create' | 'edit' | 'view' | 'analytics';
+type ViewMode = 'list' | 'create' | 'edit' | 'view';
 
 interface AssessmentManagementProps {
   initialMode?: ViewMode;
   playerId?: number;
+  /**
+   * Whether this view can start a new assessment. Off for management, who come
+   * here to review and correct what the coaches have already done.
+   */
+  allowCreate?: boolean;
+  /** Break the list into a section per group — how a manager navigates it. */
+  groupByGroup?: boolean;
+  title?: string;
+  subtitle?: string;
 }
 
 export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
   initialMode = 'list',
-  playerId
+  playerId,
+  allowCreate = true,
+  groupByGroup = false,
+  title,
+  subtitle
 }) => {
+  const { user } = useAuth();
+  const roles = user?.roles || [];
+  /** Admins and managers may reopen a finalized assessment; the coach may not. */
+  const canManageFinalized = roles.includes('ADMIN') || roles.includes('MANAGER');
+
   const [viewMode, setViewMode] = useState<ViewMode>(initialMode);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [summary, setSummary] = useState<AssessmentSummary | null>(null);
@@ -96,6 +113,19 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
     }
   };
 
+  /**
+   * A background draft save. Keep the list in step, but do not touch viewMode:
+   * the coach is still in the form and must stay there.
+   */
+  const handleDraftSaved = (assessment: Assessment) => {
+    setAssessments(prev => {
+      const existing = prev.find(a => a.id === assessment.id);
+      return existing
+        ? prev.map(a => (a.id === assessment.id ? assessment : a))
+        : [assessment, ...prev];
+    });
+  };
+
   const handleSave = (assessment: Assessment) => {
     setAssessments(prev => {
       const existing = prev.find(a => a.id === assessment.id);
@@ -143,16 +173,21 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
       {/* Header */}
       {viewMode === 'list' && (
         <>
-          <div className="bg-background border border-border rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-text-primary">Assessment Management</h1>
+          <div className="bg-background border border-border rounded-xl p-4 sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-text-primary">
+                  {title || 'Assessment Management'}
+                </h1>
                 <p className="text-text-secondary mt-1">
-                  {playerId ? 'Player assessment history and progress' : 'Manage player assessments and track progress'}
+                  {subtitle ||
+                    (playerId
+                      ? 'Player assessment history and progress'
+                      : 'Manage player assessments and track progress')}
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 shrink-0">
                 <button
                   onClick={loadData}
                   disabled={loading}
@@ -162,21 +197,15 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
                   <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
                 </button>
 
-                <button
-                  onClick={() => setViewMode('analytics')}
-                  className="flex items-center gap-2 px-4 py-2 border border-border text-text-primary rounded-lg hover:bg-secondary-100 transition-colors"
-                >
-                  <BarChart3 size={16} />
-                  Analytics
-                </button>
-
-                <button
-                  onClick={handleCreateNew}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
-                >
-                  <Plus size={16} />
-                  New Assessment
-                </button>
+                {allowCreate && (
+                  <button
+                    onClick={handleCreateNew}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
+                  >
+                    <Plus size={16} />
+                    New Assessment
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -196,60 +225,60 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
           )}
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-background border border-border rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Assessments</p>
-                  <p className="text-2xl font-bold text-gray-900">{assessments.length}</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <div className="bg-background border border-border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-gray-600">Total Assessments</p>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">{assessments.length}</p>
                 </div>
-                <FileText className="text-text-secondary" size={24} />
+                <FileText className="text-text-secondary shrink-0" size={20} />
               </div>
             </div>
 
-            <div className="bg-background border border-border rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Completed</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+            <div className="bg-background border border-border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-gray-600">Completed</p>
+                  <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.completed}</p>
                 </div>
-                <CheckCircle className="text-accent-teal" size={24} />
+                <CheckCircle className="text-accent-teal shrink-0" size={20} />
               </div>
             </div>
 
-            <div className="bg-background border border-border rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">In Progress</p>
-                  <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+            <div className="bg-background border border-border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-gray-600">In Progress</p>
+                  <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.pending}</p>
                 </div>
-                <Clock className="text-accent-yellow" size={24} />
+                <Clock className="text-accent-yellow shrink-0" size={20} />
               </div>
             </div>
 
-            <div className="bg-background border border-border rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">This Month</p>
-                  <p className="text-2xl font-bold text-primary">{stats.thisMonth}</p>
+            <div className="bg-background border border-border rounded-lg p-3 sm:p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-gray-600">This Month</p>
+                  <p className="text-xl sm:text-2xl font-bold text-primary">{stats.thisMonth}</p>
                 </div>
-                <Calendar className="text-text-primary" size={24} />
+                <Calendar className="text-text-primary shrink-0" size={20} />
               </div>
             </div>
           </div>
 
           {/* Category Performance Overview */}
           {summary && (
-            <div className="bg-white border rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Overview</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white border rounded-lg p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Performance Overview</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                 {SKILL_CATEGORIES.map(category => {
                   const avgScore = summary.averageScoreByCategory[category.key] || 0;
                   const percentage = (avgScore / 10) * 100;
 
                   return (
                     <div key={category.key} className="text-center">
-                      <div className={`w-12 h-12 rounded-full ${category.color} flex items-center justify-center text-text-primary text-xl mx-auto mb-2`}>
+                      <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full ${category.color} flex items-center justify-center text-text-primary text-base sm:text-xl mx-auto mb-2`}>
                         {category.icon}
                       </div>
                       <p className="font-medium text-gray-900">{category.label}</p>
@@ -277,7 +306,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
       <div>
         {viewMode === 'list' && (
           <div className="bg-background border border-border rounded-xl">
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <AssessmentList
                 assessments={assessments}
                 onView={handleView}
@@ -285,6 +314,8 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
                 onDelete={handleDelete}
                 loading={loading}
                 showPlayerInfo={!playerId}
+                canManageFinalized={canManageFinalized}
+                groupByGroup={groupByGroup}
               />
             </div>
           </div>
@@ -295,48 +326,10 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
             assessment={selectedAssessment || undefined}
             playerId={playerId}
             onSave={handleSave}
+            onDraftSaved={handleDraftSaved}
             onCancel={handleCancel}
             mode={viewMode === 'view' ? 'view' : viewMode === 'edit' ? 'edit' : 'create'}
           />
-        )}
-
-        {viewMode === 'analytics' && (
-          <div className="bg-white border rounded-lg p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Assessment Analytics</h2>
-              <button
-                onClick={() => setViewMode('list')}
-                className="text-gray-600 hover:text-gray-800"
-              >
-                Back to List
-              </button>
-            </div>
-
-            {/* Analytics Content */}
-            <div className="space-y-6">
-              {/* Trends Chart Placeholder */}
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <TrendingUp className="mx-auto text-text-secondary mb-4" size={48} />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Performance Trends</h3>
-                <p className="text-text-secondary">
-                  Detailed analytics and progress charts will be implemented here
-                </p>
-              </div>
-
-              {/* Recent Activity */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
-                <AssessmentList
-                  assessments={assessments.slice(0, 5)}
-                  onView={handleView}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  showPlayerInfo={!playerId}
-                  compact={true}
-                />
-              </div>
-            </div>
-          </div>
         )}
       </div>
     </div>

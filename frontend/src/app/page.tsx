@@ -68,15 +68,9 @@ export default function HomePage() {
             <nav className="flex space-x-4">
               <Link
                 href="/login"
-                className="btn-secondary btn-md"
-              >
-                Login
-              </Link>
-              <Link
-                href="/register"
                 className="btn-primary btn-md"
               >
-                Register
+                Login
               </Link>
             </nav>
           </div>

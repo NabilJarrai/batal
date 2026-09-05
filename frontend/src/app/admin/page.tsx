@@ -1055,22 +1055,26 @@ export default function AdminDashboard() {
       <div className="min-h-screen bg-background p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold text-text-primary mb-2">Admin Dashboard</h1>
-              <p className="text-sm sm:text-base text-text-secondary">Manage users, groups, and academy operations</p>
+          <div className="mb-5 sm:mb-8 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-3xl font-bold text-text-primary">Admin Dashboard</h1>
+              {/* On a phone the subtitle gives way to who you are signed in as,
+                  which is the part worth the line. */}
+              <p className="mt-1 text-sm sm:text-base text-text-secondary truncate">
+                <span className="hidden sm:inline">Manage users, groups, and academy operations</span>
+                <span className="sm:hidden">{user?.email || 'Admin'}</span>
+              </p>
             </div>
-            <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
-              <div className="text-right">
-                <p className="text-xs sm:text-sm text-text-secondary">Welcome back,</p>
-                <p className="text-sm sm:text-base text-text-primary font-semibold truncate max-w-[150px] sm:max-w-none">{user?.email || 'Admin'}</p>
-              </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="hidden sm:block text-sm text-text-secondary truncate max-w-[220px]">
+                {user?.email || 'Admin'}
+              </span>
               <LogoutButton />
             </div>
           </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-background border border-border shadow-sm rounded-xl p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
@@ -1183,7 +1187,7 @@ export default function AdminDashboard() {
         />
 
         {/* Tab Content */}
-        <div className="bg-background border border-border shadow-sm rounded-xl p-6">
+        <div className="bg-background border border-border shadow-sm rounded-xl p-4 sm:p-6">
           {activeTab === 'overview' && (
             <div>
               <h2 className="text-xl font-semibold text-text-primary mb-4">Academy Overview</h2>
@@ -1274,10 +1278,14 @@ export default function AdminDashboard() {
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <h2 className="text-lg sm:text-xl font-semibold text-text-primary">Staff Management</h2>
+                {/* btn-primary rather than a hand-rolled gradient:
+                    --text-primary is near-black, so on the dark blue --primary
+                    the label read as black on blue. The shared class pairs
+                    white with it. */}
                 <button
                   type="button"
                   onClick={handleCreateUser}
-                  className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-primary to-primary-hover hover:from-primary-hover hover:to-primary/80 rounded-lg text-text-primary text-sm sm:text-base font-medium transition-all duration-200"
+                  className="btn-primary btn-md w-full sm:w-auto"
                 >
                   Add Staff Member
                 </button>

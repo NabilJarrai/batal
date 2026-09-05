@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
 import { useAuth } from '@/store/hooks';
 import { groupsAPI, usersAPI, playersAPI } from '@/lib/api';
+import { assessmentsAPI } from '@/lib/api/assessments';
+import { AssessmentManagement } from '@/components/assessments/AssessmentManagement';
+import { ResponsiveTabs } from '@/components/responsive';
 import {
   GroupResponse,
   UserResponse,
@@ -19,38 +22,100 @@ interface ChartData {
   values: number[];
 }
 
+type TimeRange = 'week' | 'month' | 'quarter' | 'year';
+
+const endOfDay = (d: Date) =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+
+/**
+ * Cumulative active players at the end of each bucket, taken from the date
+ * each player actually joined. This chart used to plot invented figures.
+ */
+const buildGrowthSeries = (players: PlayerDTO[], range: TimeRange): ChartData => {
+  const joinDates = players
+    .filter(player => player.isActive !== false)
+    .map(player => new Date(player.joiningDate || player.createdAt || ''))
+    .filter(date => !isNaN(date.getTime()));
+
+  const now = new Date();
+  const buckets: { label: string; end: Date }[] = [];
+
+  if (range === 'week') {
+    for (let i = 6; i >= 0; i--) {
+      const day = new Date(now);
+      day.setDate(now.getDate() - i);
+      buckets.push({ label: day.toLocaleDateString(undefined, { weekday: 'short' }), end: endOfDay(day) });
+    }
+  } else if (range === 'month') {
+    for (let i = 4; i >= 0; i--) {
+      const day = new Date(now);
+      day.setDate(now.getDate() - i * 7);
+      buckets.push({
+        label: day.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }),
+        end: endOfDay(day)
+      });
+    }
+  } else {
+    const months = range === 'quarter' ? 3 : 12;
+    for (let i = months - 1; i >= 0; i--) {
+      // Day 0 of the following month is the last day of this one.
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+      buckets.push({ label: monthEnd.toLocaleDateString(undefined, { month: 'short' }), end: endOfDay(monthEnd) });
+    }
+  }
+
+  return {
+    labels: buckets.map(bucket => bucket.label),
+    values: buckets.map(bucket => joinDates.filter(date => date <= bucket.end).length)
+  };
+};
+
+/** First and last day of the current month, as the API's ISO date strings. */
+const currentMonthRange = () => {
+  const now = new Date();
+  const iso = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return {
+    dateFrom: iso(new Date(now.getFullYear(), now.getMonth(), 1)),
+    dateTo: iso(new Date(now.getFullYear(), now.getMonth() + 1, 0))
+  };
+};
+
 export default function ManagerDashboard() {
   const { user } = useAuth();
   
   // State
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'reports' | 'finances'>('overview');
-  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
+  const [activeTab, setActiveTab] = useState<'overview' | 'assessments'>('overview');
+  const [timeRange, setTimeRange] = useState<TimeRange>('month');
 
   // Data
   const [groups, setGroups] = useState<GroupResponse[]>([]);
-  const [users, setUsers] = useState<UserResponse[]>([]);
   const [players, setPlayers] = useState<PlayerDTO[]>([]);
   const [stats, setStats] = useState({
     totalGroups: 0,
-    totalCoaches: 0,
-    totalPlayers: 0,
-    totalAdmins: 0,
     activeGroups: 0,
+    totalStaff: 0,
+    totalCoaches: 0,
+    totalManagers: 0,
+    totalAdmins: 0,
     activePlayers: 0,
+    assignedPlayers: 0,
+    unassignedPlayers: 0,
+    totalCapacity: 0,
+    filledPlaces: 0,
     capacityUtilization: 0,
-    monthlyRevenue: 0,
-    pendingPayments: 0,
-    completedAssessments: 0,
-    pendingAssessments: 0
+    assessmentsThisMonth: 0,
+    assessmentsCompleted: 0,
+    assessmentsInProgress: 0
   });
 
-  // Chart data
-  const [playerGrowthData, setPlayerGrowthData] = useState<ChartData>({
-    labels: [],
-    values: []
-  });
+  // Real growth, recomputed when the range changes rather than refetched.
+  const playerGrowthData = useMemo(
+    () => buildGrowthSeries(players, timeRange),
+    [players, timeRange]
+  );
 
   // Load initial data
   useEffect(() => {
@@ -60,48 +125,63 @@ export default function ManagerDashboard() {
   const loadManagerData = async () => {
     setLoading(true);
     try {
-      const [groupsResponse, usersResponse, playersResponse, playerStatsResponse] = await Promise.all([
-        groupsAPI.getAll(),
-        usersAPI.getAll(),
-        playersAPI.getAll(),
-        playersAPI.getStats()
-      ]);
+      const thisMonth = currentMonthRange();
+
+      const [groupsResponse, usersResponse, playersResponse, playerStatsResponse, allTimeAssessments, monthAssessments] =
+        await Promise.all([
+          groupsAPI.getAll(),
+          // Every staff member, not the default first page of ten — the role
+          // counts below are wrong the moment the academy has more than that.
+          usersAPI.getAll(0, 1000),
+          playersAPI.getAllList(),
+          playersAPI.getStats(),
+          // The assessment counts are a headline number, not the dashboard's
+          // reason to exist, so a failure here leaves the rest of it standing.
+          assessmentsAPI.getSummary().catch(() => null),
+          assessmentsAPI.getSummary(thisMonth).catch(() => null)
+        ]);
+
+      const allUsers: UserResponse[] = usersResponse.content || usersResponse;
+      const allPlayers: PlayerDTO[] = playersResponse;
 
       setGroups(groupsResponse);
-      setUsers(usersResponse.content || usersResponse);
-      setPlayers(playersResponse.content || playersResponse);
+      setPlayers(allPlayers);
 
-      // Calculate comprehensive stats
-      const allUsers = usersResponse.content || usersResponse;
-      const coaches = allUsers.filter(user => 
-        user.userType === UserType.COACH || user.roles.includes('COACH')
-      );
-      const admins = allUsers.filter(user => 
-        user.userType === UserType.ADMIN || user.roles.includes('ADMIN')
-      );
+      const isStaff = (user: UserResponse, role: UserType) =>
+        user.userType === role || !!user.roles?.includes(role);
+      const staffWithRole = (role: UserType) => allUsers.filter(user => isStaff(user, role)).length;
+      // Distinct people, not the sum of the three role counts: one person can
+      // be both a coach and an admin, and would otherwise be counted twice.
+      const totalStaff = allUsers.filter(user =>
+        isStaff(user, UserType.COACH) || isStaff(user, UserType.MANAGER) || isStaff(user, UserType.ADMIN)
+      ).length;
+
       const activeGroups = groupsResponse.filter((group: GroupResponse) => group.isActive);
       const totalCapacity = groupsResponse.reduce((acc: number, g: GroupResponse) => acc + g.capacity, 0);
-      const totalOccupancy = groupsResponse.reduce((acc: number, g: GroupResponse) => acc + g.currentPlayerCount, 0);
-      const capacityUtilization = totalCapacity > 0 ? Math.round((totalOccupancy / totalCapacity) * 100) : 0;
+      const filledPlaces = groupsResponse.reduce((acc: number, g: GroupResponse) => acc + g.currentPlayerCount, 0);
+      const capacityUtilization = totalCapacity > 0 ? Math.round((filledPlaces / totalCapacity) * 100) : 0;
+
+      // Active players and players sitting in a group are different numbers:
+      // the gap is players nobody has assigned yet, which is worth showing.
+      const activePlayers = allPlayers.filter(player => player.isActive !== false);
+      const unassignedPlayers = activePlayers.filter(player => !player.groupId).length;
 
       setStats({
         totalGroups: groupsResponse.length,
-        totalCoaches: coaches.length,
-        totalPlayers: playerStatsResponse.totalActivePlayers || players.length,
-        totalAdmins: admins.length,
         activeGroups: activeGroups.length,
-        activePlayers: playerStatsResponse.totalActivePlayers || 0,
+        totalStaff,
+        totalCoaches: staffWithRole(UserType.COACH),
+        totalManagers: staffWithRole(UserType.MANAGER),
+        totalAdmins: staffWithRole(UserType.ADMIN),
+        activePlayers: playerStatsResponse.totalActivePlayers ?? activePlayers.length,
+        assignedPlayers: activePlayers.length - unassignedPlayers,
+        unassignedPlayers,
+        totalCapacity,
+        filledPlaces,
         capacityUtilization,
-        monthlyRevenue: 125000, // Mock data - would come from backend
-        pendingPayments: 15000, // Mock data
-        completedAssessments: 85, // Mock data
-        pendingAssessments: 12 // Mock data
-      });
-
-      // Generate mock growth data
-      setPlayerGrowthData({
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        values: [120, 135, 148, 155, 168, playerStatsResponse.totalActivePlayers || 180]
+        assessmentsThisMonth: monthAssessments?.completedAssessments ?? 0,
+        assessmentsCompleted: allTimeAssessments?.completedAssessments ?? 0,
+        assessmentsInProgress: allTimeAssessments?.pendingAssessments ?? 0
       });
 
     } catch (err) {
@@ -143,7 +223,7 @@ export default function ManagerDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background p-6">
+      <div className="min-h-screen bg-background p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-gray-200 rounded w-1/4"></div>
@@ -187,124 +267,135 @@ export default function ManagerDashboard() {
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8 flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Manager Dashboard</h1>
-              <p className="text-gray-600">Comprehensive academy oversight and analytics</p>
+          <div className="mb-5 sm:mb-8 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-3xl font-bold text-gray-900">Manager Dashboard</h1>
+              {/* On a phone the subtitle gives way to who you are signed in as,
+                  which is the part worth the line. */}
+              <p className="mt-1 text-sm sm:text-base text-text-secondary truncate">
+                <span className="hidden sm:inline">Comprehensive academy oversight and analytics</span>
+                <span className="sm:hidden">{user?.email || 'Manager'}</span>
+              </p>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm text-gray-600">Welcome back,</p>
-                <p className="text-gray-900 font-semibold">{user?.email || 'Manager'}</p>
-              </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="hidden sm:block text-sm text-text-secondary truncate max-w-[220px]">
+                {user?.email || 'Manager'}
+              </span>
               <LogoutButton />
             </div>
           </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           {/* Academy Status */}
-          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-green-500/20 rounded-full">
-                <svg className="w-6 h-6 text-accent-teal" fill="currentColor" viewBox="0 0 20 20">
+          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-3 sm:p-6">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="p-2 sm:p-3 bg-green-500/20 rounded-full">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-accent-teal" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
               </div>
-              <span className="text-sm text-accent-teal font-medium">Operational</span>
+              <span className="text-[11px] sm:text-sm text-accent-teal font-medium">
+                {stats.capacityUtilization}% of capacity
+              </span>
             </div>
-            <p className="text-gray-600 text-sm font-medium">Academy Status</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.activePlayers} Active</p>
+            <p className="text-gray-600 text-xs sm:text-sm font-medium">Active Players</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.activePlayers}</p>
             <p className="text-xs text-gray-600 mt-1">
-              {stats.capacityUtilization}% capacity utilization
+              {stats.unassignedPlayers > 0
+                ? `${stats.assignedPlayers} in a group • ${stats.unassignedPlayers} unassigned`
+                : 'all assigned to a group'}
             </p>
           </div>
 
-          {/* Financial Overview */}
-          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-yellow-500/20 rounded-full">
-                <svg className="w-6 h-6 text-accent-yellow" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+          {/* Groups. Replaces a revenue card whose figures were invented;
+              finances come back when the business side is settled. */}
+          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-3 sm:p-6">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="p-2 sm:p-3 bg-blue-500/20 rounded-full">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
                 </svg>
               </div>
-              <span className="text-sm text-accent-yellow font-medium">+12%</span>
+              <span className="text-[11px] sm:text-sm text-text-primary font-medium">{stats.activeGroups} active</span>
             </div>
-            <p className="text-gray-600 text-sm font-medium">Monthly Revenue</p>
-            <p className="text-2xl font-bold text-gray-900">AED {stats.monthlyRevenue.toLocaleString()}</p>
+            <p className="text-gray-600 text-xs sm:text-sm font-medium">Groups</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.totalGroups}</p>
             <p className="text-xs text-gray-600 mt-1">
-              AED {stats.pendingPayments.toLocaleString()} pending
+              {stats.filledPlaces} of {stats.totalCapacity} places filled
             </p>
           </div>
 
           {/* Staff Overview */}
-          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-purple-500/20 rounded-full">
-                <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
+          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-3 sm:p-6">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="p-2 sm:p-3 bg-purple-500/20 rounded-full">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
                 </svg>
               </div>
-              <span className="text-sm text-text-primary font-medium">{stats.totalCoaches + stats.totalAdmins}</span>
+              <span className="text-[11px] sm:text-sm text-text-primary font-medium">{stats.totalStaff}</span>
             </div>
-            <p className="text-gray-600 text-sm font-medium">Total Staff</p>
-            <p className="text-lg font-bold text-gray-900">{stats.totalCoaches} Coaches</p>
-            <p className="text-lg font-bold text-gray-900">{stats.totalAdmins} Admins</p>
+            <p className="text-gray-600 text-xs sm:text-sm font-medium">Total Staff</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.totalCoaches} Coaches</p>
+            <p className="text-xs text-gray-600 mt-1">
+              {stats.totalManagers} manager{stats.totalManagers === 1 ? '' : 's'} • {stats.totalAdmins} admin
+              {stats.totalAdmins === 1 ? '' : 's'}
+            </p>
           </div>
 
           {/* Assessments */}
-          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-cyan-500/20 rounded-full">
-                <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
+          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-3 sm:p-6">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="p-2 sm:p-3 bg-cyan-500/20 rounded-full">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                 </svg>
               </div>
-              <span className="text-sm text-text-primary font-medium">This Month</span>
+              <span className="text-[11px] sm:text-sm text-text-primary font-medium">This Month</span>
             </div>
-            <p className="text-gray-600 text-sm font-medium">Assessments</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.completedAssessments} Done</p>
+            <p className="text-gray-600 text-xs sm:text-sm font-medium">Assessments</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.assessmentsThisMonth} Done</p>
             <p className="text-xs text-gray-600 mt-1">
-              {stats.pendingAssessments} pending
+              {stats.assessmentsCompleted} all time • {stats.assessmentsInProgress} in progress
             </p>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-1 mb-8">
-          <div className="flex space-x-1">
-            {[
-              { key: 'overview', label: 'Overview', icon: '📊' },
-              { key: 'analytics', label: 'Analytics', icon: '📈' },
-              { key: 'reports', label: 'Reports', icon: '📋' },
-              { key: 'finances', label: 'Finances', icon: '💰' }
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key as any)}
-                className={`
-                  flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200
-                  ${activeTab === tab.key
-                    ? 'bg-primary text-white shadow-lg'
-                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                  }
-                `}
-              >
-                <span>{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Tab Navigation. ResponsiveTabs is the shared strip the admin page
+            already uses: it scrolls rather than squeezing on a phone. */}
+        <ResponsiveTabs
+          tabs={[
+            { id: 'overview', label: 'Overview', icon: <span>📊</span> },
+            { id: 'assessments', label: 'Assessments', icon: <span>📝</span> }
+            // Analytics, Reports and Finances are gone: the first was two
+            // vanity ratios around one chart, which now sits in Overview; the
+            // others described work nobody has built.
+          ]}
+          activeTab={activeTab}
+          onChange={(tabId) => setActiveTab(tabId as typeof activeTab)}
+          className="mb-5 sm:mb-8"
+        />
 
         {/* Main Content Area */}
-        <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-4 sm:p-6">
           {activeTab === 'overview' && (
             <div className="space-y-8">
               {/* Groups Distribution */}
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Academy Overview</h2>
+
+                {stats.unassignedPlayers > 0 && (
+                  <div className="mb-4 flex items-start gap-2 rounded-lg border border-accent-yellow/30 bg-accent-yellow/10 p-3">
+                    <span className="text-accent-yellow">&#9679;</span>
+                    <p className="text-sm text-text-primary">
+                      <span className="font-medium">
+                        {stats.unassignedPlayers} active player{stats.unassignedPlayers === 1 ? ' is' : 's are'} not in a group yet
+                      </span>{' '}
+                      &mdash; they cannot be assessed until they are assigned.
+                    </p>
+                  </div>
+                )}
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Groups by Level */}
@@ -358,28 +449,73 @@ export default function ManagerDashboard() {
                 </div>
               </div>
 
+              {/* Player growth, brought over from the analytics tab. The two
+                  vanity ratios that sat beside it — average group size and
+                  coach-player ratio — were numbers nobody acted on. */}
+              <div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
+                  <h3 className="text-lg font-medium text-text-primary shrink-0">Player Growth</h3>
+                  <select
+                    value={timeRange}
+                    onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+                    className="select-base w-full sm:w-48"
+                  >
+                    <option value="week">Last Week</option>
+                    <option value="month">Last Month</option>
+                    <option value="quarter">Last Quarter</option>
+                    <option value="year">Last Year</option>
+                  </select>
+                </div>
+              {/* Player Growth Chart */}
+              <div className="bg-secondary-50 rounded-lg p-6 mb-6">
+                <p className="text-sm text-text-secondary mb-4">
+                  Active players registered by each point, from their joining dates
+                </p>
+                <div className="overflow-x-auto">
+                  <div className="h-48 flex items-stretch gap-2 min-w-full" style={{ minWidth: `${playerGrowthData.labels.length * 44}px` }}>
+                    {playerGrowthData.labels.map((label, index) => (
+                      <div key={`${label}-${index}`} className="flex-1 min-w-[36px] h-full flex flex-col justify-end items-center">
+                        <div className="w-full bg-blue-500/20 rounded-t flex-1 flex items-end">
+                          <div
+                            className="w-full bg-gradient-to-t from-blue-500 to-cyan-400 rounded-t transition-all duration-500"
+                            style={{
+                              height: `${(playerGrowthData.values[index] / Math.max(1, ...playerGrowthData.values)) * 100}%`
+                            }}
+                          />
+                        </div>
+                        <p className="text-xs text-text-secondary mt-2 whitespace-nowrap">{label}</p>
+                        <p className="text-xs font-medium text-text-primary">{playerGrowthData.values[index]}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              </div>
+
               {/* Top Performing Groups */}
               <div>
-                <h3 className="text-lg font-medium text-text-primary mb-3">Top Performing Groups</h3>
+                {/* Ranked by how full each group is — not by any performance
+                    measure, which is what the old heading implied. */}
+                <h3 className="text-lg font-medium text-text-primary mb-3">Fullest Groups</h3>
                 <div className="bg-secondary-50 rounded-lg">
                   <div className="divide-y divide-white/10">
                     {topGroups.map((group, index) => (
-                      <div key={group.id} className="p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
+                      <div key={group.id} className="p-3 sm:p-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-4 min-w-0">
                           <div className={`
                             w-8 h-8 rounded-full flex items-center justify-center text-text-primary font-bold
                             ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-orange-600' : 'bg-blue-500'}
                           `}>
                             {index + 1}
                           </div>
-                          <div>
-                            <p className="font-medium text-text-primary">{group.name}</p>
+                          <div className="min-w-0">
+                            <p className="font-medium text-text-primary truncate">{group.name}</p>
                             <p className="text-sm text-text-secondary">
                               {group.level} • {group.ageGroup}
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="shrink-0 pl-12 sm:pl-0 sm:text-right">
                           <p className="font-medium text-text-primary">
                             {group.currentPlayerCount}/{group.capacity} players
                           </p>
@@ -395,220 +531,15 @@ export default function ManagerDashboard() {
             </div>
           )}
 
-          {activeTab === 'analytics' && (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-text-primary">Performance Analytics</h2>
-                <select
-                  value={timeRange}
-                  onChange={(e) => setTimeRange(e.target.value as any)}
-                  className="select-base"
-                >
-                  <option value="week">Last Week</option>
-                  <option value="month">Last Month</option>
-                  <option value="quarter">Last Quarter</option>
-                  <option value="year">Last Year</option>
-                </select>
-              </div>
-
-              {/* Player Growth Chart */}
-              <div className="bg-secondary-50 rounded-lg p-6 mb-6">
-                <h3 className="text-lg font-medium text-text-primary mb-4">Player Growth Trend</h3>
-                <div className="h-64 flex items-end justify-between gap-2">
-                  {playerGrowthData.labels.map((label, index) => (
-                    <div key={label} className="flex-1 flex flex-col items-center">
-                      <div className="w-full bg-blue-500/20 rounded-t flex-1 flex items-end">
-                        <div 
-                          className="w-full bg-gradient-to-t from-blue-500 to-cyan-400 rounded-t transition-all duration-500"
-                          style={{ 
-                            height: `${(playerGrowthData.values[index] / Math.max(...playerGrowthData.values)) * 100}%` 
-                          }}
-                        />
-                      </div>
-                      <p className="text-xs text-text-secondary mt-2">{label}</p>
-                      <p className="text-xs font-medium text-text-primary">{playerGrowthData.values[index]}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Key Metrics Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-secondary-50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-text-secondary mb-2">Average Group Size</h4>
-                  <p className="text-2xl font-bold text-text-primary">
-                    {groups.length > 0 ? Math.round(stats.totalPlayers / groups.length) : 0}
-                  </p>
-                  <p className="text-xs text-text-secondary mt-1">players per group</p>
-                </div>
-
-                <div className="bg-secondary-50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-text-secondary mb-2">Coach-Player Ratio</h4>
-                  <p className="text-2xl font-bold text-text-primary">
-                    1:{stats.totalCoaches > 0 ? Math.round(stats.totalPlayers / stats.totalCoaches) : 0}
-                  </p>
-                  <p className="text-xs text-text-secondary mt-1">optimal ratio maintained</p>
-                </div>
-
-                <div className="bg-secondary-50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-text-secondary mb-2">Retention Rate</h4>
-                  <p className="text-2xl font-bold text-text-primary">94%</p>
-                  <p className="text-xs text-accent-teal mt-1">+2% from last month</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'reports' && (
-            <div>
-              <h2 className="text-xl font-semibold text-text-primary mb-6">Generate Reports</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <button className="bg-secondary-50 hover:bg-secondary-100 border border-border rounded-lg p-6 text-left transition-colors duration-200">
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="p-3 bg-blue-500/20 rounded-full">
-                      <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-text-primary">Player Progress Report</h3>
-                  </div>
-                  <p className="text-sm text-text-secondary mb-2">
-                    Comprehensive overview of all player development metrics
-                  </p>
-                  <span className="text-xs text-text-secondary">Last generated: 2 days ago</span>
-                </button>
-
-                <button className="bg-secondary-50 hover:bg-secondary-100 border border-border rounded-lg p-6 text-left transition-colors duration-200">
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="p-3 bg-purple-500/20 rounded-full">
-                      <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-text-primary">Coach Performance</h3>
-                  </div>
-                  <p className="text-sm text-text-secondary mb-2">
-                    Evaluation of coach effectiveness and group management
-                  </p>
-                  <span className="text-xs text-text-secondary">Last generated: 1 week ago</span>
-                </button>
-
-                <button className="bg-secondary-50 hover:bg-secondary-100 border border-border rounded-lg p-6 text-left transition-colors duration-200">
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="p-3 bg-green-500/20 rounded-full">
-                      <svg className="w-6 h-6 text-accent-teal" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-text-primary">Financial Summary</h3>
-                  </div>
-                  <p className="text-sm text-text-secondary mb-2">
-                    Revenue, expenses, and payment status overview
-                  </p>
-                  <span className="text-xs text-text-secondary">Last generated: 3 days ago</span>
-                </button>
-
-                <button className="bg-secondary-50 hover:bg-secondary-100 border border-border rounded-lg p-6 text-left transition-colors duration-200">
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="p-3 bg-yellow-500/20 rounded-full">
-                      <svg className="w-6 h-6 text-accent-yellow" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-text-primary">Academy Snapshot</h3>
-                  </div>
-                  <p className="text-sm text-text-secondary mb-2">
-                    Executive summary of all academy operations
-                  </p>
-                  <span className="text-xs text-text-secondary">Generate monthly</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'finances' && (
-            <div>
-              <h2 className="text-xl font-semibold text-text-primary mb-6">Financial Overview</h2>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                <div className="lg:col-span-2 bg-secondary-50 rounded-lg p-6">
-                  <h3 className="text-lg font-medium text-text-primary mb-4">Revenue Breakdown</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-text-secondary">Membership Fees</span>
-                        <span className="text-sm font-medium text-text-primary">AED 95,000</span>
-                      </div>
-                      <div className="w-full bg-secondary-100 rounded-full h-2">
-                        <div className="h-2 rounded-full bg-green-500" style={{ width: '76%' }} />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-text-secondary">Training Programs</span>
-                        <span className="text-sm font-medium text-text-primary">AED 20,000</span>
-                      </div>
-                      <div className="w-full bg-secondary-100 rounded-full h-2">
-                        <div className="h-2 rounded-full bg-blue-500" style={{ width: '16%' }} />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-text-secondary">Equipment & Merchandise</span>
-                        <span className="text-sm font-medium text-text-primary">AED 10,000</span>
-                      </div>
-                      <div className="w-full bg-secondary-100 rounded-full h-2">
-                        <div className="h-2 rounded-full bg-purple-500" style={{ width: '8%' }} />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6 pt-6 border-t border-border">
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-medium text-text-primary">Total Revenue</span>
-                      <span className="text-2xl font-bold text-text-primary">AED 125,000</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-secondary-50 rounded-lg p-6">
-                  <h3 className="text-lg font-medium text-text-primary mb-4">Payment Status</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                      <span className="text-sm text-accent-teal">Paid</span>
-                      <span className="text-sm font-medium text-text-primary">165</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                      <span className="text-sm text-accent-yellow">Pending</span>
-                      <span className="text-sm font-medium text-text-primary">12</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                      <span className="text-sm text-accent-red">Overdue</span>
-                      <span className="text-sm font-medium text-text-primary">3</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="bg-secondary-50 rounded-lg p-6">
-                <h3 className="text-lg font-medium text-text-primary mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <button className="p-3 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-white text-sm font-medium transition-colors duration-200">
-                    Send Payment Reminders
-                  </button>
-                  <button className="p-3 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-white text-sm font-medium transition-colors duration-200">
-                    Export Financial Report
-                  </button>
-                  <button className="p-3 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-white text-sm font-medium transition-colors duration-200">
-                    Sync with ERPNext
-                  </button>
-                </div>
-              </div>
-            </div>
+          {activeTab === 'assessments' && (
+            /* Oversight, not authoring: every assessment the coaches have
+               written, open to edit or delete, including finalized ones. */
+            <AssessmentManagement
+              allowCreate={false}
+              groupByGroup
+              title="Assessments"
+              subtitle="Every assessment the coaches have recorded, by group — review, correct or remove one"
+            />
           )}
         </div>
       </div>

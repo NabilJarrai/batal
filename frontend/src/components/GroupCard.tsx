@@ -75,7 +75,7 @@ export default function GroupCard({
   return (
     <div
       className={`
-        card-base p-6 relative
+        card-base p-4 sm:p-6 relative
         ${isSelectable ? 'card-interactive' : 'card-hover'}
         ${isSelected ? 'card-selected' : ''}
         ${group.isActive ? '' : 'opacity-60'}
@@ -93,9 +93,9 @@ export default function GroupCard({
       </div>
 
       {/* Group Header */}
-      <div className="mb-4">
+      <div className="mb-3">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-xl font-semibold text-text-primary">
+          <h3 className="text-lg sm:text-xl font-semibold text-text-primary">
             {group.name}
           </h3>
           {group.isFull && (
@@ -107,7 +107,7 @@ export default function GroupCard({
         
         {/* Level Badge */}
         <div className={`
-          inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white
+          inline-flex items-center px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-medium text-white
           bg-gradient-to-r ${getLevelColor(group.level)}
         `}>
           {group.level}
@@ -115,20 +115,20 @@ export default function GroupCard({
       </div>
 
       {/* Age Group Info */}
-      <div className="mb-4">
-        <div className="flex items-center text-primary mb-2">
+      <div className="mb-3">
+        <div className="flex items-center flex-wrap text-primary">
           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
           </svg>
           <span className="text-sm font-medium">{ageGroupMeta.displayName}</span>
+          <span className="text-sm text-primary ml-2">
+            &bull; Ages {ageGroupMeta.minAge}-{ageGroupMeta.maxAge} years
+          </span>
         </div>
-        <p className="text-sm text-primary">
-          Ages {ageGroupMeta.minAge}-{ageGroupMeta.maxAge} years
-        </p>
       </div>
 
       {/* Capacity Info */}
-      <div className="mb-4">
+      <div className="mb-3">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-primary">Capacity</span>
           <span className={`text-sm font-medium ${getCapacityColor(utilizationPercentage)}`}>
@@ -153,60 +153,63 @@ export default function GroupCard({
       </div>
 
       {/* Coach Info */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between text-primary mb-1">
+      <div className="mb-3">
+        <div className="flex items-center justify-between flex-wrap gap-x-3 gap-y-1 text-primary">
           <div className="flex items-center">
             <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 2a4 4 0 100 8 4 4 0 000-8zM8 14a6 6 0 00-6 6 2 2 0 002 2h12a2 2 0 002-2 6 6 0 00-6-6H8z" clipRule="evenodd" />
             </svg>
             <span className="text-sm font-medium">Coach</span>
           </div>
-          {showActions && group.coach && onRemoveCoach && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemoveCoach(group.id);
-              }}
-              className="btn-destructive btn-xs"
-              title="Remove Coach"
-            >
-              Remove
-            </button>
-          )}
-        </div>
-        {group.coach ? (
-          <p className="text-sm text-text-primary">
-            {group.coach.firstName} {group.coach.lastName}
-          </p>
-        ) : (
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-text-secondary italic">No coach assigned</p>
-            {showActions && onAssignCoach && (
+
+          <div className="flex items-center gap-2 min-w-0">
+            {group.coach ? (
+              <p className="text-sm text-text-primary truncate">
+                {group.coach.firstName} {group.coach.lastName}
+              </p>
+            ) : (
+              <p className="text-sm text-text-secondary italic">No coach assigned</p>
+            )}
+
+            {showActions && group.coach && onRemoveCoach && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemoveCoach(group.id);
+                }}
+                className="btn-destructive btn-xs flex-shrink-0"
+                title="Remove Coach"
+              >
+                Remove
+              </button>
+            )}
+            {showActions && !group.coach && onAssignCoach && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onAssignCoach(group.id);
                 }}
-                className={`btn-secondary ${CARD_ACTION_CLASS}`}
+                className={`btn-secondary ${CARD_ACTION_CLASS} flex-shrink-0`}
               >
                 Assign Coach
               </button>
             )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Assessment. Without one, this group's players cannot be assessed at
           all, so its absence is called out rather than left blank. */}
-      <div className="mb-4">
-        <div className="flex items-center text-primary mb-1">
-          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-          </svg>
-          <span className="text-sm font-medium">Assessment</span>
-        </div>
+      <div className="mb-3">
+        <div className="flex items-center justify-between flex-wrap gap-x-3 gap-y-1 text-primary">
+          <div className="flex items-center">
+            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+            </svg>
+            <span className="text-sm font-medium">Assessment</span>
+          </div>
         {group.assessmentTemplateTitle ? (
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between gap-2 min-w-0">
             <p className="text-sm text-text-primary truncate">{group.assessmentTemplateTitle}</p>
             {showActions && onAssignAssessment && (
               <button
@@ -238,11 +241,12 @@ export default function GroupCard({
             )}
           </div>
         )}
+        </div>
       </div>
 
       {/* Zone Info */}
       {group.zone && (
-        <div className="mb-4">
+        <div className="mb-3">
           <div className="flex items-center text-primary mb-1">
             <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
@@ -254,7 +258,7 @@ export default function GroupCard({
       )}
 
       {/* Player Management Section */}
-      <div className="mb-4">
+      <div className="mb-3">
         <div className="flex items-center justify-between text-primary mb-2">
           <div className="flex items-center">
             <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
