@@ -24,18 +24,37 @@ import { SkillCategory, SKILL_CATEGORIES } from '@/types/skills';
 import { AssessmentForm } from './AssessmentForm';
 import { AssessmentList } from './AssessmentList';
 import { assessmentsAPI } from '@/lib/api/assessments';
+import { useAuth } from '@/store/hooks';
 
 type ViewMode = 'list' | 'create' | 'edit' | 'view' | 'analytics';
 
 interface AssessmentManagementProps {
   initialMode?: ViewMode;
   playerId?: number;
+  /**
+   * Whether this view can start a new assessment. Off for management, who come
+   * here to review and correct what the coaches have already done.
+   */
+  allowCreate?: boolean;
+  /** Break the list into a section per group — how a manager navigates it. */
+  groupByGroup?: boolean;
+  title?: string;
+  subtitle?: string;
 }
 
 export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
   initialMode = 'list',
-  playerId
+  playerId,
+  allowCreate = true,
+  groupByGroup = false,
+  title,
+  subtitle
 }) => {
+  const { user } = useAuth();
+  const roles = user?.roles || [];
+  /** Admins and managers may reopen a finalized assessment; the coach may not. */
+  const canManageFinalized = roles.includes('ADMIN') || roles.includes('MANAGER');
+
   const [viewMode, setViewMode] = useState<ViewMode>(initialMode);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [summary, setSummary] = useState<AssessmentSummary | null>(null);
@@ -96,6 +115,19 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
     }
   };
 
+  /**
+   * A background draft save. Keep the list in step, but do not touch viewMode:
+   * the coach is still in the form and must stay there.
+   */
+  const handleDraftSaved = (assessment: Assessment) => {
+    setAssessments(prev => {
+      const existing = prev.find(a => a.id === assessment.id);
+      return existing
+        ? prev.map(a => (a.id === assessment.id ? assessment : a))
+        : [assessment, ...prev];
+    });
+  };
+
   const handleSave = (assessment: Assessment) => {
     setAssessments(prev => {
       const existing = prev.find(a => a.id === assessment.id);
@@ -144,15 +176,20 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
       {viewMode === 'list' && (
         <>
           <div className="bg-background border border-border rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-text-primary">Assessment Management</h1>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <h1 className="text-2xl font-bold text-text-primary">
+                  {title || 'Assessment Management'}
+                </h1>
                 <p className="text-text-secondary mt-1">
-                  {playerId ? 'Player assessment history and progress' : 'Manage player assessments and track progress'}
+                  {subtitle ||
+                    (playerId
+                      ? 'Player assessment history and progress'
+                      : 'Manage player assessments and track progress')}
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 shrink-0">
                 <button
                   onClick={loadData}
                   disabled={loading}
@@ -170,13 +207,15 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
                   Analytics
                 </button>
 
-                <button
-                  onClick={handleCreateNew}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
-                >
-                  <Plus size={16} />
-                  New Assessment
-                </button>
+                {allowCreate && (
+                  <button
+                    onClick={handleCreateNew}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
+                  >
+                    <Plus size={16} />
+                    New Assessment
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -285,6 +324,8 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
                 onDelete={handleDelete}
                 loading={loading}
                 showPlayerInfo={!playerId}
+                canManageFinalized={canManageFinalized}
+                groupByGroup={groupByGroup}
               />
             </div>
           </div>
@@ -295,6 +336,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
             assessment={selectedAssessment || undefined}
             playerId={playerId}
             onSave={handleSave}
+            onDraftSaved={handleDraftSaved}
             onCancel={handleCancel}
             mode={viewMode === 'view' ? 'view' : viewMode === 'edit' ? 'edit' : 'create'}
           />
@@ -333,6 +375,7 @@ export const AssessmentManagement: React.FC<AssessmentManagementProps> = ({
                   onDelete={handleDelete}
                   showPlayerInfo={!playerId}
                   compact={true}
+                  canManageFinalized={canManageFinalized}
                 />
               </div>
             </div>

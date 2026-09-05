@@ -188,23 +188,40 @@ public class AssessmentController {
      * Update an existing assessment
      */
     @PutMapping("/{id}")
-    public ResponseEntity<AssessmentResponse> updateAssessment(
+    public ResponseEntity<?> updateAssessment(
             @PathVariable Long id, 
             @Valid @RequestBody AssessmentUpdateRequest request) {
         try {
             if (!request.hasUpdates()) {
-                return ResponseEntity.badRequest().build();
+                return badRequest("The update contained no changes");
             }
             
             AssessmentResponse response = assessmentService.updateAssessment(id, request);
             return ResponseEntity.ok(response);
         } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "error", "Forbidden",
+                "message", "Access denied",
+                "status", 403
+            ));
         } catch (IllegalStateException | IllegalArgumentException | ValidationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            // Carries the reason the caller needs — a finalized assessment, a
+            // duplicate for the month, a skill outside the template — so send
+            // the message rather than a bare 400.
+            return badRequest(e.getMessage());
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", "Not Found",
+                "message", e.getMessage(),
+                "status", 404
+            ));
         } catch (Exception e) {
             logger.error("Unexpected error updating assessment {}", id, e);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "error", "Internal Server Error",
+                "message", "An unexpected error occurred",
+                "status", 500
+            ));
         }
     }
 
@@ -306,6 +323,15 @@ public class AssessmentController {
             "status", "UP",
             "service", "Assessment Service",
             "timestamp", LocalDate.now().toString()
+        ));
+    }
+
+    /** A 400 that carries its reason, in the shape the frontend reads. */
+    private ResponseEntity<Map<String, Object>> badRequest(String message) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+            "error", "Bad Request",
+            "message", message != null ? message : "Bad Request",
+            "status", 400
         ));
     }
 

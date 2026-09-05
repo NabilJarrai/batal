@@ -135,17 +135,17 @@ export default function CoachDashboard() {
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8 flex justify-between items-start">
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 className="text-heading-1 mb-2">Coach Dashboard</h1>
               <p className="text-body-lg">
                 Welcome back, {currentCoach?.firstName} {currentCoach?.lastName}
               </p>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
+            <div className="flex items-center gap-4 shrink-0">
+              <div className="min-w-0 sm:text-right">
                 <p className="text-sm text-gray-600">Logged in as</p>
-                <p className="text-gray-900 font-semibold">{user?.email || 'Coach'}</p>
+                <p className="text-gray-900 font-semibold truncate">{user?.email || 'Coach'}</p>
               </div>
               <LogoutButton />
             </div>
@@ -226,7 +226,7 @@ export default function CoachDashboard() {
 
         {/* Tab Navigation */}
         <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-1 mb-8">
-          <div className="flex space-x-1">
+          <div className="flex space-x-1 overflow-x-auto">
             {[
               { key: 'groups', label: 'My Groups', icon: '👥' },
               { key: 'players', label: 'My Players', icon: '⚽' },
@@ -236,7 +236,7 @@ export default function CoachDashboard() {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as any)}
                 className={`
-                  flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200
+                  flex-1 whitespace-nowrap flex items-center justify-center gap-2 py-3 px-3 sm:px-4 rounded-lg text-sm font-medium transition-all duration-200
                   ${activeTab === tab.key
                     ? 'bg-primary text-white shadow-lg'
                     : 'text-text-primary hover:text-text-primary hover:bg-secondary-100'

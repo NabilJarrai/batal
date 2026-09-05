@@ -1274,10 +1274,14 @@ export default function AdminDashboard() {
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <h2 className="text-lg sm:text-xl font-semibold text-text-primary">Staff Management</h2>
+                {/* btn-primary rather than a hand-rolled gradient:
+                    --text-primary is near-black, so on the dark blue --primary
+                    the label read as black on blue. The shared class pairs
+                    white with it. */}
                 <button
                   type="button"
                   onClick={handleCreateUser}
-                  className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-primary to-primary-hover hover:from-primary-hover hover:to-primary/80 rounded-lg text-text-primary text-sm sm:text-base font-medium transition-all duration-200"
+                  className="btn-primary btn-md w-full sm:w-auto"
                 >
                   Add Staff Member
                 </button>

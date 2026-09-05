@@ -114,7 +114,7 @@ export const SkillRatingInput: React.FC<SkillRatingInputProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-10 gap-1">
+        <div className="grid grid-cols-5 sm:grid-cols-10 gap-1">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
             <button
               key={score}
@@ -201,7 +201,7 @@ export const SkillRatingInput: React.FC<SkillRatingInputProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-10 gap-2">
+        <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
             <button
               key={score}
@@ -226,7 +226,7 @@ export const SkillRatingInput: React.FC<SkillRatingInputProps> = ({
         </div>
 
         {/* Scale Guide */}
-        <div className="grid grid-cols-4 gap-3 mt-6 p-4 bg-gray-50 rounded-xl">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 p-4 bg-gray-50 rounded-xl">
           <div className="text-center">
             <div className="w-4 h-4 bg-accent-red rounded-full mx-auto mb-2" />
             <span className="text-xs font-medium text-gray-600">Poor</span>

@@ -185,8 +185,9 @@ public class AssessmentService {
         // Validate permissions
         validateCanEditAssessment(currentUser, assessment);
 
-        // Check if assessment is finalized (only admins can edit finalized assessments)
-        if (assessment.getIsFinalized() && !hasRole(currentUser, "ADMIN")) {
+        // A finalized assessment is closed to the coach who wrote it; correcting
+        // one after the fact is an oversight job, so admins and managers can.
+        if (assessment.getIsFinalized() && !canManageFinalizedAssessments(currentUser)) {
             throw new IllegalStateException("Cannot edit finalized assessment");
         }
 
@@ -250,8 +251,8 @@ public class AssessmentService {
             }
         }
 
-        // Only allow deletion of non-finalized assessments or by admins
-        if (assessment.getIsFinalized() && !hasRole(currentUser, "ADMIN")) {
+        // Only admins and managers can remove an assessment once it is finalized
+        if (assessment.getIsFinalized() && !canManageFinalizedAssessments(currentUser)) {
             throw new BusinessRuleException("Cannot delete finalized assessment");
         }
 
@@ -417,6 +418,24 @@ public class AssessmentService {
                 .anyMatch(role -> role.getName().equalsIgnoreCase(roleName));
     }
 
+    /**
+     * Who may edit or delete an assessment the coach has already finalized.
+     * Coaches deliberately cannot: finalizing is what publishes the scores to
+     * the player's parent, so undoing it is a management decision.
+     */
+    /**
+     * Identity by id. The entity's own equals() compares the email field
+     * directly, which reads as null through a lazy proxy and quietly answers
+     * "different person" for the same person.
+     */
+    private boolean isSameUser(User a, User b) {
+        return a != null && b != null && a.getId() != null && a.getId().equals(b.getId());
+    }
+
+    private boolean canManageFinalizedAssessments(User user) {
+        return hasRole(user, "ADMIN") || hasRole(user, "MANAGER");
+    }
+
     private void validateCoachCanAssessPlayer(User coach, Player player) {
         if (hasRole(coach, "ADMIN") || hasRole(coach, "MANAGER")) {
             return; // Admins and managers can assess any player
@@ -448,16 +467,18 @@ public class AssessmentService {
         }
 
         if (hasRole(user, "COACH")) {
-            // First check: Coach can view their own assessments regardless of group assignment
-            if (user.equals(assessment.getAssessor())) {
+            // Compared by id, not with equals: User.equals reads the email
+            // field directly, which is still null on an uninitialized Hibernate
+            // proxy, so a coach was refused their own assessment. The edit
+            // check below has always compared ids.
+            if (isSameUser(user, assessment.getAssessor())) {
                 return;
             }
 
             // Second check: Coach can view assessments for players in their groups (if properly assigned)
             if (assessment.getPlayer() != null &&
                     assessment.getPlayer().getGroup() != null &&
-                    assessment.getPlayer().getGroup().getCoach() != null &&
-                    user.equals(assessment.getPlayer().getGroup().getCoach())) {
+                    isSameUser(user, assessment.getPlayer().getGroup().getCoach())) {
                 return;
             }
         }
@@ -471,7 +492,7 @@ public class AssessmentService {
         }
 
         if (hasRole(user, "COACH")) {
-            if (player.getGroup() != null && user.equals(player.getGroup().getCoach())) {
+            if (player.getGroup() != null && isSameUser(user, player.getGroup().getCoach())) {
                 return;
             }
         }
@@ -486,15 +507,14 @@ public class AssessmentService {
 
         if (hasRole(user, "COACH")) {
             // First check: Coach can edit their own assessments regardless of group assignment
-            if (user.getId().equals(assessment.getAssessor().getId())) {
+            if (isSameUser(user, assessment.getAssessor())) {
                 return;
             }
 
             // Second check: Coach can edit assessments for players in their groups (if properly assigned)
             if (assessment.getPlayer() != null &&
                     assessment.getPlayer().getGroup() != null &&
-                    assessment.getPlayer().getGroup().getCoach() != null &&
-                    user.getId().equals(assessment.getPlayer().getGroup().getCoach().getId())) {
+                    isSameUser(user, assessment.getPlayer().getGroup().getCoach())) {
                 return;
             }
         }
