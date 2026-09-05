@@ -1055,16 +1055,20 @@ export default function AdminDashboard() {
       <div className="min-h-screen bg-background p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold text-text-primary mb-2">Admin Dashboard</h1>
-              <p className="text-sm sm:text-base text-text-secondary">Manage users, groups, and academy operations</p>
+          <div className="mb-5 sm:mb-8 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-3xl font-bold text-text-primary">Admin Dashboard</h1>
+              {/* On a phone the subtitle gives way to who you are signed in as,
+                  which is the part worth the line. */}
+              <p className="mt-1 text-sm sm:text-base text-text-secondary truncate">
+                <span className="hidden sm:inline">Manage users, groups, and academy operations</span>
+                <span className="sm:hidden">{user?.email || 'Admin'}</span>
+              </p>
             </div>
-            <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
-              <div className="text-right">
-                <p className="text-xs sm:text-sm text-text-secondary">Welcome back,</p>
-                <p className="text-sm sm:text-base text-text-primary font-semibold truncate max-w-[150px] sm:max-w-none">{user?.email || 'Admin'}</p>
-              </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="hidden sm:block text-sm text-text-secondary truncate max-w-[220px]">
+                {user?.email || 'Admin'}
+              </span>
               <LogoutButton />
             </div>
           </div>

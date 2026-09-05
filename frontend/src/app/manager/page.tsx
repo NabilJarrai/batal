@@ -267,16 +267,20 @@ export default function ManagerDashboard() {
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-5 sm:mb-8 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h1 className="text-xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Manager Dashboard</h1>
-              <p className="text-sm sm:text-base text-gray-600">Comprehensive academy oversight and analytics</p>
+          <div className="mb-5 sm:mb-8 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-3xl font-bold text-gray-900">Manager Dashboard</h1>
+              {/* On a phone the subtitle gives way to who you are signed in as,
+                  which is the part worth the line. */}
+              <p className="mt-1 text-sm sm:text-base text-text-secondary truncate">
+                <span className="hidden sm:inline">Comprehensive academy oversight and analytics</span>
+                <span className="sm:hidden">{user?.email || 'Manager'}</span>
+              </p>
             </div>
-            <div className="flex items-center gap-4 shrink-0">
-              <div className="min-w-0 sm:text-right">
-                <p className="text-sm text-gray-600">Welcome back,</p>
-                <p className="text-gray-900 font-semibold truncate">{user?.email || 'Manager'}</p>
-              </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="hidden sm:block text-sm text-text-secondary truncate max-w-[220px]">
+                {user?.email || 'Manager'}
+              </span>
               <LogoutButton />
             </div>
           </div>

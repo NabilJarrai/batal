@@ -136,18 +136,19 @@ export default function CoachDashboard() {
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-5 sm:mb-8 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h1 className="text-heading-1 mb-2">Coach Dashboard</h1>
-              <p className="text-body-lg">
+          <div className="mb-5 sm:mb-8 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-3xl font-bold text-text-primary">Coach Dashboard</h1>
+              {/* The coach's own name is the greeting; the account they are
+                  signed in under is a detail, so it stays quiet. */}
+              <p className="mt-1 text-sm sm:text-base text-text-secondary truncate">
                 Welcome back, {currentCoach?.firstName} {currentCoach?.lastName}
               </p>
             </div>
-            <div className="flex items-center gap-4 shrink-0">
-              <div className="min-w-0 sm:text-right">
-                <p className="text-sm text-gray-600">Logged in as</p>
-                <p className="text-gray-900 font-semibold truncate">{user?.email || 'Coach'}</p>
-              </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="hidden sm:block text-sm text-text-secondary truncate max-w-[220px]">
+                {user?.email || 'Coach'}
+              </span>
               <LogoutButton />
             </div>
           </div>
