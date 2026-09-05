@@ -60,17 +60,8 @@ export default function LoginPage() {
 
         {/* Links */}
         <div className="text-center space-y-2">
-          <p className="text-sm text-text-secondary">
-            <Link href="/forgot-password" className="font-medium text-primary hover:text-primary-hover transition-colors duration-200 underline underline-offset-4">
-              Forgot your password?
-            </Link>
-          </p>
-          <p className="text-sm text-text-secondary">
-            Don't have an account?{" "}
-            <Link href="/register" className="font-medium text-primary hover:text-primary-hover transition-colors duration-200 underline underline-offset-4">
-              Create account
-            </Link>
-          </p>
+          {/* No self-service sign-up: accounts are created by an admin, who
+              sends an invitation to set a password. */}
           <p className="text-sm text-text-secondary">
             <Link href="/" className="font-medium text-primary hover:text-primary-hover transition-colors duration-200">
               ← Back to Home

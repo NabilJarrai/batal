@@ -1,5 +1,16 @@
 "use client";
 
+/*
+ * Parked, not deleted. Accounts are created by an admin, who sends an
+ * invitation to set a password, so there is no self-service sign-up — and the
+ * backend agrees: POST /auth/register is @PreAuthorize("hasRole('ADMIN')"),
+ * so this form answered 403 for every visitor who filled it in.
+ *
+ * The leading underscore on the folder opts it out of the App Router. To bring
+ * the route back, rename the folder to "register" and restore the links on the
+ * login and landing pages.
+ */
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";

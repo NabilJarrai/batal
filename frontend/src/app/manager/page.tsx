@@ -87,7 +87,7 @@ export default function ManagerDashboard() {
   // State
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'assessments' | 'reports'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'assessments'>('overview');
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
 
   // Data
@@ -368,10 +368,9 @@ export default function ManagerDashboard() {
           tabs={[
             { id: 'overview', label: 'Overview', icon: <span>📊</span> },
             { id: 'analytics', label: 'Analytics', icon: <span>📈</span> },
-            { id: 'assessments', label: 'Assessments', icon: <span>📝</span> },
-            { id: 'reports', label: 'Reports', icon: <span>📋</span> }
-            // Finances is hidden until the business side is settled; every
-            // figure it showed was invented.
+            { id: 'assessments', label: 'Assessments', icon: <span>📝</span> }
+            // Reports and Finances are hidden: nothing generates a report yet,
+            // and every figure the finances tab showed was invented.
           ]}
           activeTab={activeTab}
           onChange={(tabId) => setActiveTab(tabId as typeof activeTab)}
@@ -565,64 +564,6 @@ export default function ManagerDashboard() {
               title="Assessments"
               subtitle="Every assessment the coaches have recorded, by group — review, correct or remove one"
             />
-          )}
-
-          {activeTab === 'reports' && (
-            <div>
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-text-primary">Reports</h2>
-                <p className="text-sm text-text-secondary mt-1">
-                  Planned reports — none of these generate anything yet.
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-secondary-50 border border-border rounded-lg p-6 text-left opacity-75">
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="p-3 bg-blue-500/20 rounded-full">
-                      <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-text-primary">Player Progress Report</h3>
-                  </div>
-                  <p className="text-sm text-text-secondary mb-2">
-                    Comprehensive overview of all player development metrics
-                  </p>
-                  <span className="badge-secondary">Not available yet</span>
-                </div>
-
-                <div className="bg-secondary-50 border border-border rounded-lg p-6 text-left opacity-75">
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="p-3 bg-purple-500/20 rounded-full">
-                      <svg className="w-6 h-6 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-text-primary">Coach Performance</h3>
-                  </div>
-                  <p className="text-sm text-text-secondary mb-2">
-                    Evaluation of coach effectiveness and group management
-                  </p>
-                  <span className="badge-secondary">Not available yet</span>
-                </div>
-
-                <div className="bg-secondary-50 border border-border rounded-lg p-6 text-left opacity-75">
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="p-3 bg-yellow-500/20 rounded-full">
-                      <svg className="w-6 h-6 text-accent-yellow" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-text-primary">Academy Snapshot</h3>
-                  </div>
-                  <p className="text-sm text-text-secondary mb-2">
-                    Executive summary of all academy operations
-                  </p>
-                  <span className="badge-secondary">Not available yet</span>
-                </div>
-              </div>
-            </div>
           )}
         </div>
       </div>
