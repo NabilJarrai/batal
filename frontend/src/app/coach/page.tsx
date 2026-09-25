@@ -80,10 +80,6 @@ export default function CoachDashboard() {
     }
   };
 
-  const handleViewPlayerDetails = (playerId: number) => {
-    // TODO: Implement player details view
-    console.log('View player details:', playerId);
-  };
 
   const handleCreateAssessment = () => {
     setActiveTab('assessments');
@@ -312,7 +308,6 @@ export default function CoachDashboard() {
                     <PlayerCard
                       key={player.id}
                       player={player}
-                      onViewDetails={handleViewPlayerDetails}
                       showActions={false}
                     />
                   ))}

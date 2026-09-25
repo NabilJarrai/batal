@@ -445,6 +445,8 @@ public class PlayerService {
             User mainParent = parentList.get(0);
             dto.setParentId(mainParent.getId());
             dto.setParentName(mainParent.getFullName());
+            dto.setParentEmail(mainParent.getEmail());
+            dto.setParentPhone(mainParent.getPhone());
 
             // Read-only, and owned by the parent account.
             dto.setSecondaryParentName(mainParent.getSecondaryParentName());

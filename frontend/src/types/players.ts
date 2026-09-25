@@ -23,6 +23,8 @@ export interface PlayerDTO {
   address?: string;
   parentId?: number;
   parentName?: string; // read-only, computed from parent User
+  parentEmail?: string; // read-only
+  parentPhone?: string; // read-only
   // Second parent, read-only. Owned by the main parent's account, so update
   // it through the parent, not the player.
   secondaryParentName?: string;

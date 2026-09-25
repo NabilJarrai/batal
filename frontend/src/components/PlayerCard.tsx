@@ -58,6 +58,12 @@ export default function PlayerCard({
     return age;
   };
 
+  const contacts = [
+    { role: 'Parent', name: player.parentName, phone: player.parentPhone, email: player.parentEmail },
+    { role: 'Parent 2', name: player.secondaryParentName, phone: player.secondaryParentPhone, email: player.secondaryParentEmail },
+    { role: 'Emergency', name: player.emergencyContactName, phone: player.emergencyContactPhone },
+  ].filter((c) => c.name || c.phone);
+
   const handleClick = () => {
     if (isSelectable && onSelect) {
       onSelect(player.id!);
@@ -147,26 +153,44 @@ export default function PlayerCard({
           </div>
         )}
 
-        {/* Parent Info */}
-        {(player.parentName || player.secondaryParentName) && (
+        {/* Family contacts - tap to call, so staff can reach a parent quickly */}
+        {contacts.length > 0 && (
           <div className="mb-3">
             <div className="flex items-center text-primary mb-1">
               <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
               </svg>
-              <span className="text-sm font-medium">{player.secondaryParentName ? 'Parents' : 'Parent'}</span>
+              <span className="text-sm font-medium">Contacts</span>
             </div>
-            {player.parentName && (
-              <p className="text-sm text-text-primary">
-                {player.secondaryParentName ? `Main: ${player.parentName}` : player.parentName}
-              </p>
-            )}
-            {player.secondaryParentName && (
-              <p className="text-sm text-text-primary">
-                Secondary: {player.secondaryParentName}
-                {player.secondaryParentPhone ? ` • ${player.secondaryParentPhone}` : ''}
-              </p>
-            )}
+            <div className="space-y-1">
+              {contacts.map((c) => (
+                <div key={c.role} className="flex items-baseline justify-between gap-2 text-sm">
+                  <span className="min-w-0 truncate text-text-primary">
+                    {c.name || '—'}
+                    <span className="ml-1 text-xs text-text-secondary">{c.role}</span>
+                  </span>
+                  {c.phone ? (
+                    <a
+                      href={`tel:${c.phone.replace(/[^\d+]/g, '')}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="shrink-0 whitespace-nowrap font-medium text-primary hover:underline"
+                    >
+                      {c.phone}
+                    </a>
+                  ) : c.email ? (
+                    <a
+                      href={`mailto:${c.email}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="min-w-0 truncate text-primary hover:underline"
+                    >
+                      {c.email}
+                    </a>
+                  ) : (
+                    <span className="shrink-0 text-xs italic text-text-secondary">No number</span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
