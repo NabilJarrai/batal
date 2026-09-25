@@ -29,6 +29,10 @@ public class PlayerDTO {
     @Size(max = 200, message = "Parent name must not exceed 200 characters")
     private String parentName;  // Computed field for display only
 
+    // Main parent's contact details, read-only, so coaches can reach the family.
+    private String parentEmail;
+    private String parentPhone;
+
     // Second parent, for display only. Owned by the main parent's account, so
     // these are read here and ignored on write - update them through the
     // parent. See User.secondaryParentName.
@@ -100,6 +104,12 @@ public class PlayerDTO {
     
     public String getParentName() { return parentName; }
     public void setParentName(String parentName) { this.parentName = parentName; }
+
+    public String getParentEmail() { return parentEmail; }
+    public void setParentEmail(String parentEmail) { this.parentEmail = parentEmail; }
+
+    public String getParentPhone() { return parentPhone; }
+    public void setParentPhone(String parentPhone) { this.parentPhone = parentPhone; }
     
     public LocalDate getJoiningDate() { return joiningDate; }
     public void setJoiningDate(LocalDate joiningDate) { this.joiningDate = joiningDate; }
