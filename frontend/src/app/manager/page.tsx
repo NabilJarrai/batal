@@ -8,6 +8,7 @@ import { groupsAPI, usersAPI, playersAPI } from '@/lib/api';
 import { assessmentsAPI } from '@/lib/api/assessments';
 import { AssessmentManagement } from '@/components/assessments/AssessmentManagement';
 import { ResponsiveTabs } from '@/components/responsive';
+import { PlayersRoster, GroupsRoster, ALL_GROUPS } from '@/components/manager/AcademyRoster';
 import {
   GroupResponse,
   UserResponse,
@@ -87,8 +88,10 @@ export default function ManagerDashboard() {
   // State
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'assessments'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'players' | 'groups' | 'assessments'>('overview');
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
+  // Lives here so a group card on the Groups tab can open the Players tab on that group.
+  const [playersGroupFilter, setPlayersGroupFilter] = useState<string>(ALL_GROUPS);
 
   // Data
   const [groups, setGroups] = useState<GroupResponse[]>([]);
@@ -367,6 +370,8 @@ export default function ManagerDashboard() {
         <ResponsiveTabs
           tabs={[
             { id: 'overview', label: 'Overview', icon: <span>📊</span> },
+            { id: 'players', label: 'Players', icon: <span>⚽</span> },
+            { id: 'groups', label: 'Groups', icon: <span>👥</span> },
             { id: 'assessments', label: 'Assessments', icon: <span>📝</span> }
             // Analytics, Reports and Finances are gone: the first was two
             // vanity ratios around one chart, which now sits in Overview; the
@@ -529,6 +534,27 @@ export default function ManagerDashboard() {
                 </div>
               </div>
             </div>
+          )}
+
+          {activeTab === 'players' && (
+            <PlayersRoster
+              players={players}
+              groups={groups}
+              groupFilter={playersGroupFilter}
+              onGroupFilterChange={setPlayersGroupFilter}
+            />
+          )}
+
+          {activeTab === 'groups' && (
+            <GroupsRoster
+              players={players}
+              groups={groups}
+              onOpenGroup={(groupId) => {
+                setPlayersGroupFilter(String(groupId));
+                setActiveTab('players');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
           )}
 
           {activeTab === 'assessments' && (
